@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(mv /Users/hyeonmi/Documents/study/portraq/Portraq_PRD_v1_1.docx /tmp/)",
-      "Bash(npx create-next-app@latest /Users/hyeonmi/Documents/study/portraq --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)"
-    ]
-  }
-}
