@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포트폴리오 편집 — Portraq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Pretendard','system-ui','sans-serif'] } } } }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Pretendard', system-ui, sans-serif; background: #f8f9fe; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+    * { word-break: keep-all; }
+
+    .nav-glass { background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,0,0,.06); }
+
+    .btn-primary { display:inline-flex; align-items:center; gap:8px; background:#355df9; color:#fff; padding:11px 22px; border-radius:8px; font-weight:700; font-size:14px; transition:all .4s cubic-bezier(.16,1,.3,1); text-decoration:none; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#1a35c7; transform:translateY(-1px); box-shadow:0 6px 20px rgba(53,93,249,.35); }
+    .btn-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#4b4b6a; padding:11px 18px; border-radius:8px; font-weight:600; font-size:14px; border:1.5px solid #e4e4e7; transition:all .3s; text-decoration:none; cursor:pointer; }
+    .btn-ghost:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+
+    .card { background:#fff; border:1.5px solid #ebebef; border-radius:16px; }
+
+    .ratio-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; }
+    .ratio-seg { border-radius:4px; height:100%; transition:flex .4s cubic-bezier(.16,1,.3,1); }
+
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-value { background:#fff7ed; color:#c2410c; }
+    .badge-us { background:#eff6ff; color:#1d4ed8; }
+
+    /* Asset rows */
+    .asset-row { background:#fff; border:1.5px solid #ebebef; border-radius:12px; padding:14px 16px; transition:all .3s; }
+    .asset-row.draggable { cursor:grab; }
+    .asset-row.draggable:hover { border-color:#c7d5fd; }
+    .asset-row.dragging { opacity:.4; border-color:#355df9; }
+
+    /* Undetermined slot */
+    .slot-undetermined { background:#fafbff; border:1.5px dashed #c7d5fd; border-radius:12px; padding:14px 16px; cursor:pointer; transition:all .3s; }
+    .slot-undetermined:hover { background:#f0f4ff; border-color:#355df9; }
+
+    /* Slider */
+    .slider-track { -webkit-appearance:none; appearance:none; height:6px; border-radius:4px; outline:none; cursor:pointer; width:100%; }
+    .slider-track::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#355df9; cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px rgba(53,93,249,.35); }
+
+    /* Ratio direct input */
+    .ratio-input { width:52px; text-align:center; font-size:15px; font-weight:800; color:#355df9; background:#f0f4ff; border:1.5px solid #c7d5fd; border-radius:8px; padding:4px 6px; font-family:inherit; outline:none; -moz-appearance:textfield; }
+    .ratio-input::-webkit-inner-spin-button, .ratio-input::-webkit-outer-spin-button { -webkit-appearance:none; }
+    .ratio-input:focus { border-color:#355df9; background:#eef2ff; }
+
+    /* Portfolio name input */
+    .name-input { font-size:16px; font-weight:800; color:#1c1c1e; background:transparent; border:none; outline:none; font-family:inherit; width:100%; border-bottom:1.5px solid transparent; transition:border-color .2s; padding:2px 0; }
+    .name-input:hover { border-bottom-color:#ebebef; }
+    .name-input:focus { border-bottom-color:#355df9; }
+
+    /* Warning banners */
+    .warn-over { background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:10px 14px; color:#dc2626; font-size:13px; font-weight:600; display:none; align-items:center; gap:8px; }
+    .warn-over.show { display:flex; }
+    .warn-slot { background:#fff7ed; border:1.5px solid #fed7aa; border-radius:10px; padding:10px 14px; color:#c2410c; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); backdrop-filter:blur(4px); z-index:50; display:none; align-items:center; justify-content:center; padding:16px; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:24px; max-width:480px; width:100%; overflow:hidden; animation:modalIn .35s cubic-bezier(.16,1,.3,1); }
+    @keyframes modalIn { from { opacity:0; transform:translateY(2rem) scale(.97); } to { opacity:1; transform:none; } }
+
+    .search-result { border:1.5px solid #ebebef; border-radius:10px; overflow:hidden; }
+    .search-result-item { padding:12px 16px; font-size:14px; cursor:pointer; transition:background .15s; display:flex; justify-content:space-between; align-items:center; }
+    .search-result-item:hover { background:#f8f9fe; }
+    .search-result-item:not(:last-child) { border-bottom:1px solid #f4f4f5; }
+
+    /* Toast */
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1c1c1e; color:#fff; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; z-index:60; transition:transform .4s cubic-bezier(.16,1,.3,1), opacity .4s; opacity:0; white-space:nowrap; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav-glass sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+          <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+          <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+        </a>
+        <button class="btn-primary" style="padding:9px 18px; font-size:13px;" onclick="handleSave()">
+          <iconify-icon icon="solar:cloud-upload-bold" style="font-size:15px;"></iconify-icon>
+          저장
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- LEFT: Asset list -->
+      <div class="lg:col-span-2 flex flex-col gap-4">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between">
+          <div style="flex:1; min-width:0;">
+            <input type="text" id="portfolio-name"
+              value="워런 버핏 전략"
+              placeholder="포트폴리오 이름을 입력하세요"
+              class="name-input"
+              style="font-size:20px; font-weight:800; margin-bottom:4px;">
+            <textarea id="portfolio-memo" placeholder="메모 (선택)"
+              style="width:100%; background:transparent; border:none; outline:none; resize:none; font-size:13px; font-family:inherit; color:#6b6b7b; line-height:1.5; padding:0;" rows="1"
+              >버핏 스타일 가치투자 집중 포트폴리오</textarea>
+          </div>
+          <button class="btn-ghost" style="padding:9px 16px; font-size:13px; flex-shrink:0; margin-left:12px;" onclick="openModal('search')">
+            <iconify-icon icon="solar:add-circle-linear" style="font-size:15px;"></iconify-icon>
+            종목 추가
+          </button>
+        </div>
+
+        <!-- Ratio bar preview + warnings (모바일 전용 — ID 없음, JS는 데스크탑 카드 ID 참조) -->
+        <div class="card lg:hidden" style="padding:20px;">
+          <div style="font-size:12px; font-weight:700; color:#6b6b7b; margin-bottom:10px; text-transform:uppercase; letter-spacing:.05em;">전체 배분 현황</div>
+          <div class="ratio-bar mb-3">
+            <div class="ratio-seg" style="flex:42; background:#355df9;"></div>
+            <div class="ratio-seg" style="flex:28; background:#6b8ffb;"></div>
+            <div class="ratio-seg" style="flex:12; background:#93c5fd;"></div>
+            <div class="ratio-seg" style="flex:10; background:#f59e0b;"></div>
+            <div class="ratio-seg" style="flex:8; background:#22c55e;"></div>
+            <div class="ratio-seg" style="flex:0; background:#ebebef;"></div>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#355df9;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">AAPL</span><span style="font-size:12px;color:#6b6b7b;">42%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#6b8ffb;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">BRK.B</span><span style="font-size:12px;color:#6b6b7b;">28%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#93c5fd;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">BAC</span><span style="font-size:12px;color:#6b6b7b;">12%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">KO</span><span style="font-size:12px;color:#6b6b7b;">10%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">OXY</span><span style="font-size:12px;color:#6b6b7b;">8%</span></div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; border-top:1px solid #f4f4f5; padding-top:12px;">
+            <span style="color:#6b6b7b;">합계</span>
+            <span style="color:#1c1c1e; font-size:15px;">100%</span>
+          </div>
+        </div>
+
+        <!-- [FIX 1] 미확정 슬롯 경고 배너 — 슬롯이 있을 때 표시 -->
+        <div class="warn-slot" id="warn-slot">
+          <iconify-icon icon="solar:danger-triangle-bold" style="font-size:16px; flex-shrink:0;"></iconify-icon>
+          <div>
+            <span style="font-weight:800;">미확정 슬롯이 남아 있습니다.</span> 종목을 채워야 리밸런싱 가이드 Step 3 결과가 표시됩니다. 저장은 가능하지만 결과가 정확하지 않을 수 있습니다.
+          </div>
+        </div>
+
+        <!-- Asset rows -->
+        <div id="asset-list" class="flex flex-col gap-3">
+
+          <!-- AAPL -->
+          <div class="asset-row draggable" draggable="true" data-key="AAPL">
+            <div class="flex items-center gap-3 mb-3">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:18px; color:#d1d5db; cursor:grab; flex-shrink:0;"></iconify-icon>
+              <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span style="font-size:11px; font-weight:800; color:#355df9;">AAPL</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e;">AAPL</div>
+                <div style="font-size:12px; color:#6b6b7b;">Apple Inc. · 나스닥</div>
+              </div>
+              <!-- [FIX 2] 비율 직접 입력 -->
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <input type="number" class="ratio-input" id="input-AAPL" value="42" min="0" max="100"
+                  oninput="syncFromInput(this,'AAPL','#355df9')">
+                <span style="font-size:14px; font-weight:700; color:#9ca3af;">%</span>
+              </div>
+              <button style="padding:6px; border:none; background:transparent; cursor:pointer; color:#d1d5db; border-radius:6px; flex-shrink:0;" onmouseover="this.style.color='#dc2626';this.style.background='#fef2f2'" onmouseout="this.style.color='#d1d5db';this.style.background='transparent'">
+                <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+              </button>
+            </div>
+            <input type="range" class="slider-track" id="slider-AAPL" min="0" max="100" value="42"
+              style="background:linear-gradient(to right,#355df9 42%,#ebebef 42%);"
+              oninput="syncFromSlider(this,'AAPL','#355df9')">
+          </div>
+
+          <!-- BRK.B -->
+          <div class="asset-row draggable" draggable="true" data-key="BRKB">
+            <div class="flex items-center gap-3 mb-3">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:18px; color:#d1d5db; cursor:grab; flex-shrink:0;"></iconify-icon>
+              <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span style="font-size:11px; font-weight:800; color:#355df9;">BRK</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e;">BRK.B</div>
+                <div style="font-size:12px; color:#6b6b7b;">Berkshire Hathaway · NYSE</div>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <input type="number" class="ratio-input" id="input-BRKB" value="28" min="0" max="100"
+                  oninput="syncFromInput(this,'BRKB','#6b8ffb')">
+                <span style="font-size:14px; font-weight:700; color:#9ca3af;">%</span>
+              </div>
+              <button style="padding:6px; border:none; background:transparent; cursor:pointer; color:#d1d5db; border-radius:6px; flex-shrink:0;" onmouseover="this.style.color='#dc2626';this.style.background='#fef2f2'" onmouseout="this.style.color='#d1d5db';this.style.background='transparent'">
+                <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+              </button>
+            </div>
+            <input type="range" class="slider-track" id="slider-BRKB" min="0" max="100" value="28"
+              style="background:linear-gradient(to right,#6b8ffb 28%,#ebebef 28%);"
+              oninput="syncFromSlider(this,'BRKB','#6b8ffb')">
+          </div>
+
+          <!-- BAC -->
+          <div class="asset-row draggable" draggable="true" data-key="BAC">
+            <div class="flex items-center gap-3 mb-3">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:18px; color:#d1d5db; cursor:grab; flex-shrink:0;"></iconify-icon>
+              <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span style="font-size:11px; font-weight:800; color:#355df9;">BAC</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e;">BAC</div>
+                <div style="font-size:12px; color:#6b6b7b;">Bank of America · NYSE</div>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <input type="number" class="ratio-input" id="input-BAC" value="12" min="0" max="100"
+                  oninput="syncFromInput(this,'BAC','#93c5fd')">
+                <span style="font-size:14px; font-weight:700; color:#9ca3af;">%</span>
+              </div>
+              <button style="padding:6px; border:none; background:transparent; cursor:pointer; color:#d1d5db; border-radius:6px; flex-shrink:0;" onmouseover="this.style.color='#dc2626';this.style.background='#fef2f2'" onmouseout="this.style.color='#d1d5db';this.style.background='transparent'">
+                <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+              </button>
+            </div>
+            <input type="range" class="slider-track" id="slider-BAC" min="0" max="100" value="12"
+              style="background:linear-gradient(to right,#93c5fd 12%,#ebebef 12%);"
+              oninput="syncFromSlider(this,'BAC','#93c5fd')">
+          </div>
+
+          <!-- KO -->
+          <div class="asset-row draggable" draggable="true" data-key="KO">
+            <div class="flex items-center gap-3 mb-3">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:18px; color:#d1d5db; cursor:grab; flex-shrink:0;"></iconify-icon>
+              <div style="width:36px; height:36px; border-radius:10px; background:#fff7ed; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span style="font-size:11px; font-weight:800; color:#c2410c;">KO</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e;">KO</div>
+                <div style="font-size:12px; color:#6b6b7b;">Coca-Cola · NYSE</div>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <input type="number" class="ratio-input" id="input-KO" value="10" min="0" max="100"
+                  oninput="syncFromInput(this,'KO','#f59e0b')">
+                <span style="font-size:14px; font-weight:700; color:#9ca3af;">%</span>
+              </div>
+              <button style="padding:6px; border:none; background:transparent; cursor:pointer; color:#d1d5db; border-radius:6px; flex-shrink:0;" onmouseover="this.style.color='#dc2626';this.style.background='#fef2f2'" onmouseout="this.style.color='#d1d5db';this.style.background='transparent'">
+                <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+              </button>
+            </div>
+            <input type="range" class="slider-track" id="slider-KO" min="0" max="100" value="10"
+              style="background:linear-gradient(to right,#f59e0b 10%,#ebebef 10%);"
+              oninput="syncFromSlider(this,'KO','#f59e0b')">
+          </div>
+
+          <!-- OXY -->
+          <div class="asset-row draggable" draggable="true" data-key="OXY">
+            <div class="flex items-center gap-3 mb-3">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:18px; color:#d1d5db; cursor:grab; flex-shrink:0;"></iconify-icon>
+              <div style="width:36px; height:36px; border-radius:10px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <span style="font-size:11px; font-weight:800; color:#15803d;">OXY</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e;">OXY</div>
+                <div style="font-size:12px; color:#6b6b7b;">Occidental Petroleum · NYSE</div>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <input type="number" class="ratio-input" id="input-OXY" value="8" min="0" max="100"
+                  oninput="syncFromInput(this,'OXY','#22c55e')">
+                <span style="font-size:14px; font-weight:700; color:#9ca3af;">%</span>
+              </div>
+              <button style="padding:6px; border:none; background:transparent; cursor:pointer; color:#d1d5db; border-radius:6px; flex-shrink:0;" onmouseover="this.style.color='#dc2626';this.style.background='#fef2f2'" onmouseout="this.style.color='#d1d5db';this.style.background='transparent'">
+                <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+              </button>
+            </div>
+            <input type="range" class="slider-track" id="slider-OXY" min="0" max="100" value="8"
+              style="background:linear-gradient(to right,#22c55e 8%,#ebebef 8%);"
+              oninput="syncFromSlider(this,'OXY','#22c55e')">
+          </div>
+
+          <!-- [FIX 1] 미확정 슬롯 -->
+          <div class="slot-undetermined" id="slot-undetermined" onclick="openModal('search')">
+            <div class="flex items-center gap-3">
+              <div style="width:36px; height:36px; border-radius:10px; background:#eef2ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:1.5px dashed #c7d5fd;">
+                <iconify-icon icon="solar:add-circle-linear" style="font-size:18px; color:#355df9;"></iconify-icon>
+              </div>
+              <div class="flex-1">
+                <div style="font-size:14px; font-weight:800; color:#355df9;">종목을 직접 추가하세요</div>
+                <div style="font-size:12px; color:#9ca3af; margin-top:1px;">미확정 슬롯 · 비중 <span id="slot-ratio-display">0%</span> 남음</div>
+              </div>
+              <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px; color:#c7d5fd;"></iconify-icon>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Add button -->
+        <button class="w-full btn-ghost justify-center" style="padding:14px; border-style:dashed;" onclick="openModal('search')">
+          <iconify-icon icon="solar:add-circle-linear" style="font-size:18px;"></iconify-icon>
+          종목 추가하기
+        </button>
+      </div>
+
+      <!-- RIGHT: Summary panel -->
+      <div class="flex flex-col gap-4">
+
+        <!-- Portfolio template info -->
+        <div class="card" style="padding:20px;">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div style="font-size:11px; font-weight:700; color:#6b6b7b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px;">기반 전략</div>
+              <div style="font-size:15px; font-weight:800; color:#1c1c1e;">워런 버핏</div>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              <span class="badge badge-value">가치투자</span>
+              <span class="badge badge-us">US</span>
+            </div>
+          </div>
+          <div style="background:#f8f9fe; border-radius:10px; padding:12px;" class="flex justify-between">
+            <div class="text-center">
+              <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">CAGR</div>
+              <div style="font-size:16px; font-weight:800; color:#16a34a;">+10.4%</div>
+            </div>
+            <div style="width:1px; background:#ebebef;"></div>
+            <div class="text-center">
+              <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">MDD</div>
+              <div style="font-size:16px; font-weight:800; color:#dc2626;">-32.7%</div>
+            </div>
+            <div style="width:1px; background:#ebebef;"></div>
+            <div class="text-center">
+              <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">종목수</div>
+              <div style="font-size:16px; font-weight:800; color:#1c1c1e;" id="asset-count">5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ratio bar preview + warnings (데스크탑 전용) -->
+        <div class="card hidden lg:block" style="padding:20px;">
+          <div style="font-size:12px; font-weight:700; color:#6b6b7b; margin-bottom:10px; text-transform:uppercase; letter-spacing:.05em;">전체 배분 현황</div>
+          <div class="ratio-bar mb-3">
+            <div class="ratio-seg" id="seg-AAPL" style="flex:42; background:#355df9;"></div>
+            <div class="ratio-seg" id="seg-BRKB" style="flex:28; background:#6b8ffb;"></div>
+            <div class="ratio-seg" id="seg-BAC" style="flex:12; background:#93c5fd;"></div>
+            <div class="ratio-seg" id="seg-KO" style="flex:10; background:#f59e0b;"></div>
+            <div class="ratio-seg" id="seg-OXY" style="flex:8; background:#22c55e;"></div>
+            <div class="ratio-seg" id="seg-SLOT" style="flex:0; background:#ebebef;"></div>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#355df9;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">AAPL</span><span style="font-size:12px;color:#6b6b7b;" id="leg-AAPL">42%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#6b8ffb;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">BRK.B</span><span style="font-size:12px;color:#6b6b7b;" id="leg-BRKB">28%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#93c5fd;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">BAC</span><span style="font-size:12px;color:#6b6b7b;" id="leg-BAC">12%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">KO</span><span style="font-size:12px;color:#6b6b7b;" id="leg-KO">10%</span></div>
+            <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div><span style="font-size:12px;font-weight:700;color:#1c1c1e;">OXY</span><span style="font-size:12px;color:#6b6b7b;" id="leg-OXY">8%</span></div>
+            <div class="flex items-center gap-1" id="leg-slot-wrap"><div style="width:8px;height:8px;border-radius:50%;background:#ebebef; border:1px dashed #d1d5db;"></div><span style="font-size:12px;font-weight:700;color:#9ca3af;">미확정</span><span style="font-size:12px;color:#9ca3af;" id="leg-SLOT">0%</span></div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; border-top:1px solid #f4f4f5; padding-top:12px;">
+            <span style="color:#6b6b7b;">합계</span>
+            <span id="total-display" style="color:#1c1c1e; font-size:15px;">100%</span>
+          </div>
+          <div class="warn-over mt-3" id="warn-over">
+            <iconify-icon icon="solar:danger-circle-bold" style="font-size:16px;"></iconify-icon>
+            비중 합계가 100%를 초과합니다. 저장 전 조정이 필요합니다.
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col gap-2">
+          <button class="btn-primary justify-center" style="padding:14px;" onclick="handleSave()">
+            <iconify-icon icon="solar:cloud-upload-bold" style="font-size:16px;"></iconify-icon>
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="modal-overlay" id="modal-search" onclick="if(event.target===this)closeModal('search')">
+    <div class="modal">
+      <div style="padding:24px; border-bottom:1.5px solid #f4f4f5;">
+        <div class="flex items-center justify-between mb-4">
+          <h3 style="font-size:17px; font-weight:800; color:#1c1c1e;">종목 추가</h3>
+          <button onclick="closeModal('search')" style="border:none; background:transparent; cursor:pointer; padding:6px; color:#6b6b7b;">
+            <iconify-icon icon="solar:close-circle-linear" style="font-size:22px;"></iconify-icon>
+          </button>
+        </div>
+        <div style="position:relative;">
+          <iconify-icon icon="solar:magnifer-linear" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:#9ca3af;"></iconify-icon>
+          <input type="text" placeholder="종목명 또는 티커 검색 (예: TSLA, 삼성)"
+            style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:10px; padding:12px 14px 12px 42px; font-size:14px; width:100%; font-family:inherit; outline:none; color:#1c1c1e; transition:border-color .2s;"
+            onfocus="this.style.borderColor='#355df9'" onblur="this.style.borderColor='#ebebef'">
+        </div>
+      </div>
+      <div style="padding:16px 24px; max-height:360px; overflow-y:auto;">
+        <div style="font-size:11px; font-weight:700; color:#6b6b7b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">인기 종목</div>
+        <div class="search-result">
+          <div class="search-result-item" onclick="addTicker('TSLA','Tesla','나스닥')">
+            <div><span style="font-weight:800; font-size:14px; color:#1c1c1e;">TSLA</span> <span style="font-size:13px; color:#6b6b7b; margin-left:8px;">Tesla</span></div>
+            <span style="font-size:12px; color:#9ca3af;">나스닥</span>
+          </div>
+          <div class="search-result-item" onclick="addTicker('MSFT','Microsoft','나스닥')">
+            <div><span style="font-weight:800; font-size:14px; color:#1c1c1e;">MSFT</span> <span style="font-size:13px; color:#6b6b7b; margin-left:8px;">Microsoft</span></div>
+            <span style="font-size:12px; color:#9ca3af;">나스닥</span>
+          </div>
+          <div class="search-result-item" onclick="addTicker('NVDA','NVIDIA','나스닥')">
+            <div><span style="font-weight:800; font-size:14px; color:#1c1c1e;">NVDA</span> <span style="font-size:13px; color:#6b6b7b; margin-left:8px;">NVIDIA</span></div>
+            <span style="font-size:12px; color:#9ca3af;">나스닥</span>
+          </div>
+          <div class="search-result-item" onclick="addTicker('005930','삼성전자','코스피')">
+            <div><span style="font-weight:800; font-size:14px; color:#1c1c1e;">005930</span> <span style="font-size:13px; color:#6b6b7b; margin-left:8px;">삼성전자</span></div>
+            <span style="font-size:12px; color:#9ca3af;">코스피</span>
+          </div>
+          <div class="search-result-item" onclick="addTicker('VTI','Vanguard Total Stock','NYSE')">
+            <div><span style="font-weight:800; font-size:14px; color:#1c1c1e;">VTI</span> <span style="font-size:13px; color:#6b6b7b; margin-left:8px;">Vanguard Total Stock ETF</span></div>
+            <span style="font-size:12px; color:#9ca3af;">NYSE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Modal (login nudge) -->
+  <div class="modal-overlay" id="modal-save" onclick="if(event.target===this)closeModal('save')">
+    <div class="modal">
+      <div style="padding:28px;">
+        <div style="text-align:center; margin-bottom:20px;">
+          <div style="width:56px; height:56px; background:#eef2ff; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+            <iconify-icon icon="solar:cloud-upload-bold" style="font-size:28px; color:#355df9;"></iconify-icon>
+          </div>
+          <h3 style="font-size:18px; font-weight:800; color:#1c1c1e; margin-bottom:8px;">로그인이 필요합니다</h3>
+          <p style="font-size:14px; color:#6b6b7b; line-height:1.65;">포트폴리오를 저장하려면 로그인이 필요합니다.<br>계정을 만들면 편집 내용을 유지하고 리밸런싱 기록도 관리할 수 있습니다.</p>
+        </div>
+        <!-- 저장될 포트폴리오 이름 미리보기 -->
+        <div style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:10px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+          <iconify-icon icon="solar:folder-with-files-bold" style="font-size:20px; color:#355df9;"></iconify-icon>
+          <div>
+            <div style="font-size:11px; color:#9ca3af; font-weight:600; margin-bottom:2px;">저장할 포트폴리오</div>
+            <div style="font-size:14px; font-weight:800; color:#1c1c1e;" id="save-modal-name">워런 버핏 전략</div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <a href="06-auth.html" class="btn-primary justify-center" style="padding:14px;">
+            <iconify-icon icon="solar:user-bold" style="font-size:16px;"></iconify-icon>
+            로그인 후 저장하기
+          </a>
+          <a href="04-guide.html" class="btn-ghost justify-center" style="padding:14px;">
+            <iconify-icon icon="solar:refresh-circle-linear" style="font-size:16px;"></iconify-icon>
+            리밸런싱 가이드로 이동
+          </a>
+          <button onclick="closeModal('save')" class="btn-ghost justify-center" style="padding:12px; font-size:13px; color:#9ca3af; border-color:#f4f4f5;">계속 편집하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ─────────────────────────────────────────────
+    // State
+    // ─────────────────────────────────────────────
+    const ASSETS = ['AAPL', 'BRKB', 'BAC', 'KO', 'OXY'];
+    const COLORS = {
+      AAPL: '#355df9', BRKB: '#6b8ffb', BAC: '#93c5fd', KO: '#f59e0b', OXY: '#22c55e'
+    };
+    // undetermined slot: remaining ratio when defined assets don't sum to 100
+    let hasUndetermined = true; // 초기: 워런 버핏 템플릿은 기타 비중이 있는 것으로 시작
+
+    // ─────────────────────────────────────────────
+    // Bidirectional sync: slider ↔ number input
+    // ─────────────────────────────────────────────
+    function syncFromSlider(slider, key, color) {
+      const v = parseInt(slider.value);
+      // update number input
+      const inp = document.getElementById('input-' + key);
+      if (inp) inp.value = v;
+      // update slider fill
+      slider.style.background = `linear-gradient(to right,${color} ${v}%,#ebebef ${v}%)`;
+      // update preview bar segment
+      const seg = document.getElementById('seg-' + key);
+      if (seg) seg.style.flex = v;
+      // update legend
+      const leg = document.getElementById('leg-' + key);
+      if (leg) leg.textContent = v + '%';
+      updateTotal();
+    }
+
+    function syncFromInput(input, key, color) {
+      let v = parseInt(input.value) || 0;
+      v = Math.max(0, Math.min(100, v));
+      input.value = v;
+      // update slider
+      const sl = document.getElementById('slider-' + key);
+      if (sl) {
+        sl.value = v;
+        sl.style.background = `linear-gradient(to right,${color} ${v}%,#ebebef ${v}%)`;
+      }
+      // update preview bar segment
+      const seg = document.getElementById('seg-' + key);
+      if (seg) seg.style.flex = v;
+      // update legend
+      const leg = document.getElementById('leg-' + key);
+      if (leg) leg.textContent = v + '%';
+      updateTotal();
+    }
+
+    // ─────────────────────────────────────────────
+    // Total calculation + warnings
+    // ─────────────────────────────────────────────
+    function updateTotal() {
+      let sum = 0;
+      ASSETS.forEach(key => {
+        const inp = document.getElementById('input-' + key);
+        sum += inp ? (parseInt(inp.value) || 0) : 0;
+      });
+
+      const display = document.getElementById('total-display');
+      const warnOver = document.getElementById('warn-over');
+      const warnSlot = document.getElementById('warn-slot');
+      const segSlot = document.getElementById('seg-SLOT');
+      const legSlot = document.getElementById('leg-SLOT');
+      const slotDisplay = document.getElementById('slot-ratio-display');
+      const legSlotWrap = document.getElementById('leg-slot-wrap');
+
+      // [FIX 3] 100% 초과 시에만 경고
+      if (sum > 100) {
+        display.textContent = sum + '% (초과 ' + (sum - 100) + '%)';
+        display.style.color = '#dc2626';
+        warnOver.classList.add('show');
+      } else {
+        display.textContent = sum + '%';
+        display.style.color = sum === 100 ? '#16a34a' : '#1c1c1e';
+        warnOver.classList.remove('show');
+      }
+
+      // undetermined slot 비중 = 100 - 정의된 합계 (양수일 때만)
+      const remaining = Math.max(0, 100 - sum);
+      if (segSlot) segSlot.style.flex = (sum <= 100) ? remaining : 0;
+      if (legSlot) legSlot.textContent = remaining + '%';
+      if (slotDisplay) slotDisplay.textContent = remaining + '%';
+
+      // 슬롯 경고: 미확정 슬롯이 있고 remaining > 0이면 표시
+      if (hasUndetermined && remaining > 0 && sum <= 100) {
+        warnSlot.style.display = 'flex';
+        legSlotWrap.style.display = 'flex';
+        document.getElementById('slot-undetermined').style.display = '';
+      } else {
+        warnSlot.style.display = 'none';
+        legSlotWrap.style.display = 'none';
+        document.getElementById('slot-undetermined').style.display = 'none';
+      }
+
+    }
+
+    // ─────────────────────────────────────────────
+    // Save handler
+    // ─────────────────────────────────────────────
+    function handleSave() {
+      // 미확정 슬롯 경고 토스트 (저장은 가능)
+      if (hasUndetermined) {
+        const remaining = 100 - getSum();
+        if (remaining > 0) {
+          showToast('미확정 슬롯이 남아 있습니다. 저장은 가능하지만 리밸런싱 결과가 정확하지 않을 수 있습니다.');
+        }
+      }
+      // 로그인 유도 모달
+      document.getElementById('save-modal-name').textContent =
+        document.getElementById('portfolio-name').value || '내 포트폴리오';
+      openModal('save');
+    }
+
+    function getSum() {
+      let sum = 0;
+      ASSETS.forEach(key => {
+        const inp = document.getElementById('input-' + key);
+        sum += inp ? (parseInt(inp.value) || 0) : 0;
+      });
+      return sum;
+    }
+
+    // ─────────────────────────────────────────────
+    // Modal helpers
+    // ─────────────────────────────────────────────
+    function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+    function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+    // ─────────────────────────────────────────────
+    // Toast
+    // ─────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ─────────────────────────────────────────────
+    // Add ticker (search modal)
+    // ─────────────────────────────────────────────
+    function addTicker(ticker, name, exchange) {
+      closeModal('search');
+      // 미확정 슬롯을 이 종목으로 교체하는 UX 흐름 (mockup: 토스트로 시뮬레이션)
+      hasUndetermined = false;
+      updateTotal();
+      showToast(`${ticker} (${name}) 종목이 추가되었습니다.`);
+    }
+
+    // ─────────────────────────────────────────────
+    // Init
+    // ─────────────────────────────────────────────
+    updateTotal();
+  </script>
+</body>
+</html>

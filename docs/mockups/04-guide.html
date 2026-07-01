@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>리밸런싱 가이드 — Portraq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Pretendard','system-ui','sans-serif'] } } } }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Pretendard', system-ui, sans-serif; background: #f8f9fe; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+    * { word-break: keep-all; }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(.8rem); } to { opacity:1; transform:translateY(0); } }
+    .nav-glass { background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,0,0,.06); }
+    .btn-primary { display:inline-flex; align-items:center; gap:8px; background:#355df9; color:#fff; padding:11px 22px; border-radius:8px; font-weight:700; font-size:14px; transition:all .4s cubic-bezier(.16,1,.3,1); text-decoration:none; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#1a35c7; transform:translateY(-1px); box-shadow:0 6px 20px rgba(53,93,249,.35); }
+    .btn-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#4b4b6a; padding:11px 18px; border-radius:8px; font-weight:600; font-size:14px; border:1.5px solid #e4e4e7; transition:all .3s; text-decoration:none; cursor:pointer; }
+    .btn-ghost:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+    .card { background:#fff; border:1.5px solid #ebebef; border-radius:16px; }
+    .chip-buy { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+    .chip-sell { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+    .chip-hold { background:#f4f4f5; color:#71717a; border:1px solid #e4e4e7; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+    .section-label { display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#355df9; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .step-tab { padding:10px 0; font-size:14px; font-weight:700; color:#9ca3af; border:none; background:transparent; cursor:pointer; text-align:center; transition:color .2s; flex:1; position:relative; }
+    .step-tab.active { color:#355df9; }
+    .step-tab.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:#355df9; border-radius:1px; }
+    .step-tab.done { color:#16a34a; }
+    .input-field { background:#f8f9fe; border:1.5px solid #ebebef; border-radius:10px; padding:11px 14px; font-size:14px; color:#1c1c1e; font-family:inherit; font-weight:600; outline:none; transition:border-color .2s; width:100%; }
+    .input-field:focus { border-color:#355df9; background:#fff; }
+    .step-panel { display:none; animation:fadeInUp .4s cubic-bezier(.16,1,.3,1); }
+    .step-panel.active { display:block; }
+    .result-row { display:flex; align-items:center; gap:12px; background:#fff; border:1.5px solid #ebebef; border-radius:12px; padding:14px 16px; transition:border-color .3s; }
+    .result-row.buy-row { border-color:#bbf7d0; background:#f8fff9; }
+    .result-row.sell-row { border-color:#fecaca; background:#fff8f8; }
+    .result-row.hold-row { border-color:#ebebef; }
+    .ratio-bar { display:flex; height:6px; border-radius:4px; overflow:hidden; gap:2px; }
+    .ratio-seg { border-radius:4px; height:100%; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav-glass sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+            <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+            <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Page title -->
+    <div class="mb-6">
+      <span class="section-label mb-3" style="display:inline-flex; margin-bottom:12px;">
+        <iconify-icon icon="solar:refresh-circle-bold" style="font-size:12px;"></iconify-icon>
+        리밸런싱 가이드
+      </span>
+      <h1 style="font-size:clamp(1.6rem,3.5vw,2.2rem); font-weight:800; color:#1c1c1e; letter-spacing:-.04em; margin-bottom:6px;">워런 버핏 전략 리밸런싱</h1>
+      <p style="font-size:14px; color:#6b6b7b;">3단계로 이번 달 매수·매도 액션을 확인하세요.</p>
+    </div>
+
+    <!-- Step tabs -->
+    <div class="card mb-6" style="border-radius:14px; overflow:hidden;">
+      <div style="display:flex; border-bottom:1.5px solid #ebebef;">
+        <button class="step-tab active" id="tab-1" onclick="goStep(1)">
+          <span style="display:block; font-size:10px; margin-bottom:2px; opacity:.7;">STEP 1</span>
+          보유 주수 입력
+        </button>
+        <button class="step-tab" id="tab-2" onclick="goStep(2)">
+          <span style="display:block; font-size:10px; margin-bottom:2px; opacity:.7;">STEP 2</span>
+          투자금 설정
+        </button>
+        <button class="step-tab" id="tab-3" onclick="goStep(3)">
+          <span style="display:block; font-size:10px; margin-bottom:2px; opacity:.7;">STEP 3</span>
+          액션 확인
+        </button>
+      </div>
+
+      <!-- STEP 1: Current holdings -->
+      <div class="step-panel active" id="panel-1" style="padding:24px;">
+        <p style="font-size:13px; color:#6b6b7b; margin-bottom:16px; line-height:1.65;">현재 보유 중인 각 종목의 주수를 입력해 주세요. 보유하지 않은 종목은 0으로 두면 됩니다.</p>
+        <div class="flex flex-col gap-3">
+
+          <div style="display:flex; align-items:center; gap:12px; background:#f8f9fe; border-radius:12px; padding:14px 16px;">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#355df9;">AAPL</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e;">AAPL</div>
+              <div style="font-size:12px; color:#6b6b7b;">Apple · 목표 42%</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" class="input-field" value="12" style="width:80px; text-align:center;">
+              <span style="font-size:13px; color:#6b6b7b; font-weight:600; white-space:nowrap;">주</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; background:#f8f9fe; border-radius:12px; padding:14px 16px;">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:10px; font-weight:800; color:#355df9;">BRK</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e;">BRK.B</div>
+              <div style="font-size:12px; color:#6b6b7b;">Berkshire · 목표 28%</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" class="input-field" value="5" style="width:80px; text-align:center;">
+              <span style="font-size:13px; color:#6b6b7b; font-weight:600; white-space:nowrap;">주</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; background:#f8f9fe; border-radius:12px; padding:14px 16px;">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#355df9;">BAC</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e;">BAC</div>
+              <div style="font-size:12px; color:#6b6b7b;">Bank of America · 목표 12%</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" class="input-field" value="18" style="width:80px; text-align:center;">
+              <span style="font-size:13px; color:#6b6b7b; font-weight:600; white-space:nowrap;">주</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; background:#f8f9fe; border-radius:12px; padding:14px 16px;">
+            <div style="width:36px; height:36px; border-radius:10px; background:#fff7ed; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#c2410c;">KO</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e;">KO</div>
+              <div style="font-size:12px; color:#6b6b7b;">Coca-Cola · 목표 10%</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" class="input-field" value="0" style="width:80px; text-align:center;">
+              <span style="font-size:13px; color:#6b6b7b; font-weight:600; white-space:nowrap;">주</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; background:#f8f9fe; border-radius:12px; padding:14px 16px;">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#15803d;">OXY</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e;">OXY</div>
+              <div style="font-size:12px; color:#6b6b7b;">Occidental · 목표 8%</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" class="input-field" value="0" style="width:80px; text-align:center;">
+              <span style="font-size:13px; color:#6b6b7b; font-weight:600; white-space:nowrap;">주</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary mt-5 w-full justify-center" style="padding:14px;" onclick="goStep(2)">
+          투자금 설정
+          <iconify-icon icon="solar:arrow-right-linear" style="font-size:16px;"></iconify-icon>
+        </button>
+      </div>
+
+      <!-- STEP 2: Monthly investment + exchange rate + prices -->
+      <div class="step-panel" id="panel-2" style="padding:24px;">
+        <p style="font-size:13px; color:#6b6b7b; margin-bottom:20px; line-height:1.65;">이번 달 투자금, 원/달러 환율, 종목별 현재가(달러)를 입력하면 매수 주수를 자동으로 계산합니다.</p>
+
+        <!-- 투자금 -->
+        <div class="mb-5">
+          <label style="font-size:13px; font-weight:800; color:#1c1c1e; display:block; margin-bottom:8px;">이번 달 투자금</label>
+          <div style="position:relative;">
+            <input type="number" id="s2-budget" class="input-field" value="500000"
+              style="padding-right:40px; font-size:18px; font-weight:800;" oninput="recalcKrw()">
+            <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:14px; color:#6b6b7b; font-weight:600;">원</span>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button class="btn-ghost" style="padding:7px 14px; font-size:12px;" onclick="setBudget(100000)">10만</button>
+            <button class="btn-ghost" style="padding:7px 14px; font-size:12px;" onclick="setBudget(300000)">30만</button>
+            <button class="btn-ghost" style="padding:7px 14px; font-size:12px; background:#eef2ff; border-color:#c7d5fd; color:#355df9; font-weight:800;" onclick="setBudget(500000)">50만</button>
+            <button class="btn-ghost" style="padding:7px 14px; font-size:12px;" onclick="setBudget(1000000)">100만</button>
+          </div>
+        </div>
+
+        <!-- 환율 입력 -->
+        <div class="mb-5" style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:12px; padding:16px;">
+          <div class="flex items-center gap-2 mb-3">
+            <iconify-icon icon="solar:dollar-minimalistic-bold" style="font-size:16px; color:#355df9;"></iconify-icon>
+            <span style="font-size:13px; font-weight:800; color:#1c1c1e;">원/달러 환율</span>
+            <span style="font-size:11px; color:#9ca3af; font-weight:600; margin-left:auto;">미국 주식 현재가 원화 환산에 사용</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="position:relative; flex:1;">
+              <input type="number" id="s2-rate" class="input-field" value="1380" step="1" min="1"
+                style="padding-right:56px; font-size:16px; font-weight:800;" oninput="recalcKrw()">
+              <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:12px; color:#6b6b7b; font-weight:700; white-space:nowrap;">원/$</span>
+            </div>
+            <div style="font-size:13px; color:#6b6b7b; white-space:nowrap;">
+              $1 = <span id="rate-display" style="font-weight:800; color:#1c1c1e;">1,380</span>원
+            </div>
+          </div>
+          <p style="font-size:11px; color:#9ca3af; margin-top:8px; line-height:1.55;">
+            실시간 환율이 아닙니다. 매매 시점의 실제 환율을 직접 확인 후 입력하세요.
+          </p>
+        </div>
+
+        <!-- 종목별 현재가 (USD) -->
+        <div>
+          <label style="font-size:13px; font-weight:800; color:#1c1c1e; display:block; margin-bottom:10px;">
+            종목별 현재가
+            <span style="font-weight:500; color:#9ca3af; margin-left:6px;">미국 주식은 달러($) 입력</span>
+          </label>
+          <div class="flex flex-col gap-2">
+
+            <!-- AAPL -->
+            <div style="background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:8px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <span style="font-size:9px; font-weight:800; color:#355df9;">AAPL</span>
+                </div>
+                <span style="font-size:13px; font-weight:800; color:#1c1c1e; min-width:52px;">AAPL</span>
+                <span style="font-size:11px; color:#6b6b7b; flex:1;">Apple · US</span>
+                <div style="position:relative; width:120px;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:#6b6b7b; font-weight:700;">$</span>
+                  <input type="number" id="price-AAPL" class="input-field" value="190.22" step="0.01" min="0"
+                    style="padding-left:22px; padding-right:8px; font-size:14px; font-weight:700; text-align:right;" oninput="recalcKrw()">
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12px; color:#6b6b7b; font-weight:600;">
+                = <span id="krw-AAPL" style="color:#355df9; font-weight:800;">262,504원</span>
+              </div>
+            </div>
+
+            <!-- BRK.B -->
+            <div style="background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:8px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <span style="font-size:9px; font-weight:800; color:#355df9;">BRK</span>
+                </div>
+                <span style="font-size:13px; font-weight:800; color:#1c1c1e; min-width:52px;">BRK.B</span>
+                <span style="font-size:11px; color:#6b6b7b; flex:1;">Berkshire · US</span>
+                <div style="position:relative; width:120px;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:#6b6b7b; font-weight:700;">$</span>
+                  <input type="number" id="price-BRKB" class="input-field" value="421.10" step="0.01" min="0"
+                    style="padding-left:22px; padding-right:8px; font-size:14px; font-weight:700; text-align:right;" oninput="recalcKrw()">
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12px; color:#6b6b7b; font-weight:600;">
+                = <span id="krw-BRKB" style="color:#355df9; font-weight:800;">581,118원</span>
+              </div>
+            </div>
+
+            <!-- BAC -->
+            <div style="background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:8px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <span style="font-size:9px; font-weight:800; color:#355df9;">BAC</span>
+                </div>
+                <span style="font-size:13px; font-weight:800; color:#1c1c1e; min-width:52px;">BAC</span>
+                <span style="font-size:11px; color:#6b6b7b; flex:1;">Bank of America · US</span>
+                <div style="position:relative; width:120px;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:#6b6b7b; font-weight:700;">$</span>
+                  <input type="number" id="price-BAC" class="input-field" value="36.97" step="0.01" min="0"
+                    style="padding-left:22px; padding-right:8px; font-size:14px; font-weight:700; text-align:right;" oninput="recalcKrw()">
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12px; color:#6b6b7b; font-weight:600;">
+                = <span id="krw-BAC" style="color:#355df9; font-weight:800;">51,019원</span>
+              </div>
+            </div>
+
+            <!-- KO -->
+            <div style="background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:8px; background:#fff7ed; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <span style="font-size:9px; font-weight:800; color:#c2410c;">KO</span>
+                </div>
+                <span style="font-size:13px; font-weight:800; color:#1c1c1e; min-width:52px;">KO</span>
+                <span style="font-size:11px; color:#6b6b7b; flex:1;">Coca-Cola · US</span>
+                <div style="position:relative; width:120px;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:#6b6b7b; font-weight:700;">$</span>
+                  <input type="number" id="price-KO" class="input-field" value="62.30" step="0.01" min="0"
+                    style="padding-left:22px; padding-right:8px; font-size:14px; font-weight:700; text-align:right;" oninput="recalcKrw()">
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12px; color:#6b6b7b; font-weight:600;">
+                = <span id="krw-KO" style="color:#355df9; font-weight:800;">85,974원</span>
+              </div>
+            </div>
+
+            <!-- OXY -->
+            <div style="background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:8px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <span style="font-size:9px; font-weight:800; color:#15803d;">OXY</span>
+                </div>
+                <span style="font-size:13px; font-weight:800; color:#1c1c1e; min-width:52px;">OXY</span>
+                <span style="font-size:11px; color:#6b6b7b; flex:1;">Occidental · US</span>
+                <div style="position:relative; width:120px;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:#6b6b7b; font-weight:700;">$</span>
+                  <input type="number" id="price-OXY" class="input-field" value="47.85" step="0.01" min="0"
+                    style="padding-left:22px; padding-right:8px; font-size:14px; font-weight:700; text-align:right;" oninput="recalcKrw()">
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12px; color:#6b6b7b; font-weight:600;">
+                = <span id="krw-OXY" style="color:#355df9; font-weight:800;">66,033원</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button class="btn-ghost" onclick="goStep(1)">
+            <iconify-icon icon="solar:alt-arrow-left-linear" style="font-size:15px;"></iconify-icon>
+            이전
+          </button>
+          <button class="btn-primary flex-1 justify-center" style="padding:14px;" onclick="goStep(3)">
+            계산하기
+            <iconify-icon icon="solar:calculator-bold" style="font-size:16px;"></iconify-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Result -->
+      <div class="step-panel" id="panel-3" style="padding:24px;">
+        <!-- Summary bar -->
+        <div style="background:#f8f9fe; border-radius:12px; padding:16px; margin-bottom:20px; display:flex; gap:0; overflow:hidden; flex-wrap:wrap;">
+          <div style="flex:1; text-align:center; padding:8px 12px; border-right:1px solid #ebebef; min-width:80px;">
+            <div style="font-size:11px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">매수</div>
+            <div style="font-size:20px; font-weight:800; color:#16a34a;">3종</div>
+          </div>
+          <div style="flex:1; text-align:center; padding:8px 12px; border-right:1px solid #ebebef; min-width:80px;">
+            <div style="font-size:11px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">매도</div>
+            <div style="font-size:20px; font-weight:800; color:#dc2626;">1종</div>
+          </div>
+          <div style="flex:1; text-align:center; padding:8px 12px; min-width:80px;">
+            <div style="font-size:11px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">유지</div>
+            <div style="font-size:20px; font-weight:800; color:#71717a;">1종</div>
+          </div>
+        </div>
+
+        <!-- Result rows -->
+        <div class="flex flex-col gap-3">
+          <!-- BUY: AAPL -->
+          <div class="result-row buy-row">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f0f4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#355df9;">AAPL</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e; margin-bottom:2px;">AAPL <span style="font-size:12px; font-weight:500; color:#6b6b7b;">Apple</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">현재 12주 → 목표 13.3주</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <span class="chip-buy"><iconify-icon icon="solar:arrow-up-bold" style="font-size:12px;"></iconify-icon>매수 +1주</span>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:4px; font-weight:600;">≈ 262,000원</div>
+            </div>
+          </div>
+
+          <!-- SELL: BAC -->
+          <div class="result-row sell-row">
+            <div style="width:36px; height:36px; border-radius:10px; background:#fef2f2; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#dc2626;">BAC</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e; margin-bottom:2px;">BAC <span style="font-size:12px; font-weight:500; color:#6b6b7b;">Bank of America</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">현재 18주 → 목표 14.7주</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <span class="chip-sell"><iconify-icon icon="solar:arrow-down-bold" style="font-size:12px;"></iconify-icon>매도 -3주</span>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:4px; font-weight:600;">≈ 153,000원 수령</div>
+            </div>
+          </div>
+
+          <!-- BUY: KO -->
+          <div class="result-row buy-row">
+            <div style="width:36px; height:36px; border-radius:10px; background:#fff7ed; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#c2410c;">KO</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e; margin-bottom:2px;">KO <span style="font-size:12px; font-weight:500; color:#6b6b7b;">Coca-Cola</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">현재 0주 → 목표 7주</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <span class="chip-buy"><iconify-icon icon="solar:arrow-up-bold" style="font-size:12px;"></iconify-icon>매수 +7주</span>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:4px; font-weight:600;">≈ 602,000원</div>
+            </div>
+          </div>
+
+          <!-- BUY: OXY -->
+          <div class="result-row buy-row">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:11px; font-weight:800; color:#15803d;">OXY</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e; margin-bottom:2px;">OXY <span style="font-size:12px; font-weight:500; color:#6b6b7b;">Occidental</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">현재 0주 → 목표 3.8주</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <span class="chip-buy"><iconify-icon icon="solar:arrow-up-bold" style="font-size:12px;"></iconify-icon>매수 +3주</span>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:4px; font-weight:600;">≈ 198,000원</div>
+            </div>
+          </div>
+
+          <!-- HOLD: BRK.B -->
+          <div class="result-row hold-row">
+            <div style="width:36px; height:36px; border-radius:10px; background:#f4f4f5; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <span style="font-size:10px; font-weight:800; color:#71717a;">BRK</span>
+            </div>
+            <div class="flex-1">
+              <div style="font-size:14px; font-weight:800; color:#1c1c1e; margin-bottom:2px;">BRK.B <span style="font-size:12px; font-weight:500; color:#6b6b7b;">Berkshire</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">현재 5주 → 목표 5.1주 (차이 미미)</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <span class="chip-hold">유지</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total summary -->
+        <div style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:12px; padding:16px; margin-top:16px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+            <span style="color:#6b6b7b; font-weight:600;">이번 달 매수 금액</span>
+            <span style="font-weight:800; color:#1c1c1e;">+1,062,000원</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+            <span style="color:#6b6b7b; font-weight:600;">매도 수령 예상</span>
+            <span style="font-weight:800; color:#16a34a;">-153,000원</span>
+          </div>
+          <div style="height:1px; background:#ebebef; margin:10px 0;"></div>
+          <div style="display:flex; justify-content:space-between; font-size:15px;">
+            <span style="font-weight:800; color:#1c1c1e;">실제 필요 투자금</span>
+            <span style="font-weight:800; color:#355df9; font-size:16px;">909,000원</span>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <p style="font-size:11px; color:#9ca3af; line-height:1.65; margin-top:14px;">제공되는 정보는 참고용이며 투자 조언이 아닙니다. 투자 결정의 책임은 투자자 본인에게 있습니다. 실제 주문 시 현재가를 다시 확인하세요.</p>
+
+        <div class="flex gap-3 mt-4">
+          <button class="btn-ghost" onclick="goStep(2)">
+            <iconify-icon icon="solar:alt-arrow-left-linear" style="font-size:15px;"></iconify-icon>
+            이전
+          </button>
+          <a href="05-home.html" class="btn-primary flex-1 justify-center" style="padding:14px;">
+            저장하기
+            <iconify-icon icon="solar:diskette-bold" style="font-size:16px;"></iconify-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+
+    function goStep(n) {
+      [1, 2, 3].forEach(i => {
+        document.getElementById('panel-'+i).classList.toggle('active', i === n);
+        const tab = document.getElementById('tab-'+i);
+        tab.classList.remove('active', 'done');
+        if (i === n) tab.classList.add('active');
+        else if (i < n) tab.classList.add('done');
+      });
+      currentStep = n;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setBudget(amount) {
+      document.getElementById('s2-budget').value = amount;
+    }
+
+    const US_TICKERS = ['AAPL', 'BRKB', 'BAC', 'KO', 'OXY'];
+
+    function recalcKrw() {
+      const rate = parseFloat(document.getElementById('s2-rate').value) || 0;
+      document.getElementById('rate-display').textContent = rate.toLocaleString('ko-KR');
+
+      US_TICKERS.forEach(ticker => {
+        const priceInput = document.getElementById('price-' + ticker);
+        const krwEl = document.getElementById('krw-' + ticker);
+        if (!priceInput || !krwEl) return;
+        const usd = parseFloat(priceInput.value) || 0;
+        const krw = Math.round(usd * rate);
+        krwEl.textContent = krw.toLocaleString('ko-KR') + '원';
+      });
+    }
+
+    // Initialize on load
+    recalcKrw();
+  </script>
+</body>
+</html>
