@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 포트폴리오 — Portraq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Pretendard','system-ui','sans-serif'] } } } }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Pretendard', system-ui, sans-serif; background: #f8f9fe; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+    * { word-break: keep-all; }
+    .reveal { opacity:0; transform:translateY(.7rem); transition: opacity .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1); }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .nav-glass { background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,0,0,.06); }
+    .btn-primary { display:inline-flex; align-items:center; gap:8px; background:#355df9; color:#fff; padding:11px 22px; border-radius:8px; font-weight:700; font-size:14px; transition:all .4s cubic-bezier(.16,1,.3,1); text-decoration:none; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#1a35c7; transform:translateY(-1px); box-shadow:0 6px 20px rgba(53,93,249,.35); }
+    .btn-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#4b4b6a; padding:11px 18px; border-radius:8px; font-weight:600; font-size:14px; border:1.5px solid #e4e4e7; transition:all .3s; text-decoration:none; cursor:pointer; }
+    .btn-ghost:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+    .btn-danger-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#dc2626; padding:11px 18px; border-radius:8px; font-weight:600; font-size:14px; border:1.5px solid #fecaca; transition:all .3s; text-decoration:none; cursor:pointer; }
+    .btn-danger-ghost:hover { background:#fef2f2; border-color:#dc2626; }
+    .card { background:#fff; border:1.5px solid #ebebef; border-radius:16px; overflow:hidden; transition:all .4s cubic-bezier(.16,1,.3,1); }
+    .card:hover { border-color:#c7d5fd; box-shadow:0 8px 30px rgba(53,93,249,.07); }
+    .ratio-bar { display:flex; height:7px; border-radius:4px; overflow:hidden; gap:2px; }
+    .ratio-seg { border-radius:4px; height:100%; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-value { background:#fff7ed; color:#c2410c; }
+    .badge-alloc { background:#fdf4ff; color:#7e22ce; }
+    .badge-quant { background:#f0fdf4; color:#15803d; }
+    .badge-passive { background:#f0f4ff; color:#355df9; }
+    .badge-us { background:#eff6ff; color:#1d4ed8; }
+    .badge-kr { background:#fff1f2; color:#be123c; }
+    .chip-buy { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; }
+    .chip-hold { background:#f4f4f5; color:#71717a; border:1px solid #e4e4e7; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; }
+    .tab-btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:700; color:#71717a; background:transparent; border:none; cursor:pointer; transition:all .2s ease; white-space:nowrap; }
+    .tab-btn.active { background:#355df9; color:#fff; }
+    .tab-btn:hover:not(.active) { background:#f4f4f5; color:#1c1c1e; }
+
+    /* 사이드바 */
+    .sidebar { position:fixed; top:0; left:0; bottom:0; width:240px; background:#fff; border-right:1.5px solid #ebebef; display:flex; flex-direction:column; z-index:30; }
+    .sidebar-nav-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; font-size:14px; font-weight:600; color:#6b6b7b; text-decoration:none; cursor:pointer; border:none; background:transparent; font-family:inherit; width:100%; transition:all .25s cubic-bezier(.16,1,.3,1); }
+    .sidebar-nav-item:hover { background:#f4f4f5; color:#1c1c1e; }
+    .sidebar-nav-item.active { background:#eef2ff; color:#355df9; font-weight:700; }
+    .sidebar-nav-item.active iconify-icon { color:#355df9; }
+
+    /* 모바일 메뉴 */
+    .menu-item { transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1); }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); backdrop-filter:blur(4px); z-index:50; display:none; align-items:center; justify-content:center; padding:16px; overflow-y:auto; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:24px; max-width:560px; width:100%; overflow:hidden; animation:modalIn .35s cubic-bezier(.16,1,.3,1); max-height:88vh; display:flex; flex-direction:column; }
+    @keyframes modalIn { from { opacity:0; transform:translateY(2rem) scale(.97); } to { opacity:1; transform:none; } }
+
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1c1c1e; color:#fff; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; z-index:60; transition:transform .4s cubic-bezier(.16,1,.3,1), opacity .4s; opacity:0; white-space:nowrap; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+  </style>
+</head>
+<body>
+
+  <!-- ── PC 사이드바 ── -->
+  <aside class="sidebar hidden md:flex flex-col">
+    <div style="padding:20px 20px 16px; border-bottom:1.5px solid #f4f4f5;">
+      <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+        <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+        <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+      </a>
+    </div>
+
+    <nav style="padding:16px 12px; flex:1;" class="flex flex-col gap-1">
+      <a href="05-home.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:home-2-bold" style="font-size:18px;"></iconify-icon>
+        홈
+      </a>
+      <a href="07-portfolio-list.html" class="sidebar-nav-item active">
+        <iconify-icon icon="solar:pie-chart-2-linear" style="font-size:18px;"></iconify-icon>
+        내 포트폴리오
+      </a>
+      <a href="#" class="sidebar-nav-item">
+        <iconify-icon icon="solar:history-linear" style="font-size:18px;"></iconify-icon>
+        리밸런싱 기록
+      </a>
+      <a href="08-tradelog.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:notebook-linear" style="font-size:18px;"></iconify-icon>
+        매매 일지
+      </a>
+      <a href="02-templates.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:medal-star-linear" style="font-size:18px;"></iconify-icon>
+        대가 포트폴리오
+      </a>
+    </nav>
+
+    <div style="padding:12px; border-top:1.5px solid #f4f4f5;">
+      <div class="flex items-center gap-3" style="padding:10px 14px;">
+        <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <span style="font-size:11px; font-weight:800; color:#fff;">김</span>
+        </div>
+        <div style="min-width:0; flex:1;">
+          <div style="font-size:13px; font-weight:700; color:#1c1c1e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">김민준</div>
+          <div style="font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">kim@example.com</div>
+        </div>
+        <button onclick="handleLogout()" title="로그아웃" style="width:30px; height:30px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; flex-shrink:0; transition:all .25s cubic-bezier(.16,1,.3,1);" onmouseover="this.style.background='#f4f4f5'; this.style.color='#6b6b7b'" onmouseout="this.style.background='transparent'; this.style.color='#9ca3af'">
+          <iconify-icon icon="solar:logout-2-linear" style="font-size:17px;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── 모바일 GNB ── -->
+  <header class="nav-glass sticky top-0 z-40 md:hidden">
+    <div class="px-4">
+      <div class="flex items-center justify-between h-16">
+        <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+          <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+          <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+        </a>
+        <button onclick="openMobileMenu()" style="width:36px; height:36px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#1c1c1e;">
+          <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 모바일 메뉴 오버레이 ── -->
+  <div id="mobile-menu" style="display:none; position:fixed; inset:0; z-index:50;">
+    <div id="menu-backdrop" onclick="closeMobileMenu()" style="position:absolute; inset:0; background:rgba(0,0,0,0); transition:background .4s cubic-bezier(.16,1,.3,1);"></div>
+    <div id="menu-panel" style="position:absolute; top:0; right:0; bottom:0; width:100%; max-width:260px; background:#fff; display:flex; flex-direction:column; box-shadow:-20px 0 60px rgba(0,0,0,.08); transform:translateX(100%); transition:transform .45s cubic-bezier(.16,1,.3,1);">
+      <div style="padding:16px 16px 8px; display:flex; justify-content:flex-end;">
+        <button onclick="closeMobileMenu()" style="background:transparent; border:none; cursor:pointer; padding:4px; color:#9ca3af; font-size:22px; line-height:1; transition:color .2s;" onmouseover="this.style.color='#1c1c1e'" onmouseout="this.style.color='#9ca3af'">×</button>
+      </div>
+      <nav style="padding:16px 12px; flex:1;" class="flex flex-col gap-1">
+        <a href="05-home.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:home-2-bold" style="font-size:18px;"></iconify-icon>
+          홈
+        </a>
+        <a href="07-portfolio-list.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item active" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:pie-chart-2-linear" style="font-size:18px;"></iconify-icon>
+          내 포트폴리오
+        </a>
+        <a href="#" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:history-linear" style="font-size:18px;"></iconify-icon>
+          리밸런싱 기록
+        </a>
+        <a href="08-tradelog.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:notebook-linear" style="font-size:18px;"></iconify-icon>
+          매매 일지
+        </a>
+        <a href="02-templates.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:medal-star-linear" style="font-size:18px;"></iconify-icon>
+          대가 포트폴리오
+        </a>
+      </nav>
+      <div style="padding:12px; border-top:1.5px solid #f4f4f5;">
+        <div class="menu-item flex items-center gap-3" style="padding:10px 14px; opacity:0; transform:translateX(12px);">
+          <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span style="font-size:11px; font-weight:800; color:#fff;">김</span>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:13px; font-weight:700; color:#1c1c1e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">김민준</div>
+            <div style="font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">kim@example.com</div>
+          </div>
+          <button onclick="handleLogout()" title="로그아웃" style="width:30px; height:30px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; flex-shrink:0; transition:all .25s cubic-bezier(.16,1,.3,1);" onmouseover="this.style.background='#f4f4f5'; this.style.color='#6b6b7b'" onmouseout="this.style.background='transparent'; this.style.color='#9ca3af'">
+            <iconify-icon icon="solar:logout-2-linear" style="font-size:17px;"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 메인 콘텐츠 ── -->
+  <main class="md:ml-60 max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-12">
+
+    <!-- Page header -->
+    <section class="mb-5 reveal visible">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <h1 style="font-size:20px; font-weight:800; color:#1c1c1e; letter-spacing:-.03em; margin-bottom:4px;">내 포트폴리오</h1>
+          <p style="font-size:14px; color:#6b6b7b;">보유 중인 포트폴리오 3개 · 리밸런싱 필요 1개</p>
+        </div>
+        <a href="02-templates.html" class="btn-primary" style="padding:9px 16px; font-size:13px; white-space:nowrap;">
+          <iconify-icon icon="solar:add-circle-linear" style="font-size:15px;"></iconify-icon>
+          새로 만들기
+        </a>
+      </div>
+
+      <!-- Filter tabs -->
+      <div style="background:#f4f4f5; border-radius:10px; padding:4px; display:inline-flex; gap:2px; max-width:100%; overflow-x:auto;">
+        <button class="tab-btn active" onclick="filterList('all',this)">전체 3</button>
+        <button class="tab-btn" onclick="filterList('needs',this)">리밸런싱 필요 1</button>
+        <button class="tab-btn" onclick="filterList('ok',this)">균형 유지 2</button>
+      </div>
+    </section>
+
+    <!-- Portfolio list -->
+    <section class="flex flex-col gap-3" id="portfolio-list">
+
+      <!-- 워런 버핏 전략 -->
+      <div class="card reveal" data-status="needs" style="cursor:pointer;" onclick="openModal('detail-buffett')">
+        <div style="padding:20px;">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:#fff; flex-shrink:0;">W</div>
+              <div>
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e; letter-spacing:-.01em;">워런 버핏 전략</div>
+                <div style="font-size:12px; color:#6b6b7b; margin-top:1px;">마지막 수정: 2025. 1. 15</div>
+              </div>
+            </div>
+            <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; color:#c2410c; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+              <iconify-icon icon="solar:danger-triangle-bold" style="font-size:12px;"></iconify-icon>
+              리밸런싱 필요
+            </div>
+          </div>
+          <div class="ratio-bar mb-2">
+            <div class="ratio-seg" style="flex:42; background:#355df9;"></div>
+            <div class="ratio-seg" style="flex:28; background:#6b8ffb;"></div>
+            <div class="ratio-seg" style="flex:12; background:#93c5fd;"></div>
+            <div class="ratio-seg" style="flex:10; background:#f59e0b;"></div>
+            <div class="ratio-seg" style="flex:8; background:#22c55e;"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex flex-wrap gap-1">
+              <span class="badge badge-value">가치투자</span>
+              <span class="badge badge-us">US</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#6b6b7b; font-weight:600;">평가금액</div>
+                <div style="font-size:14px; font-weight:800; color:#1c1c1e;">₩8.3M</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#6b6b7b; font-weight:600;">수익률</div>
+                <div style="font-size:14px; font-weight:800; color:#16a34a;">+6.4%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#f8f9fe; border-top:1.5px solid #ebebef; padding:12px 20px; display:flex; align-items:center; justify-content:space-between;">
+          <div class="flex gap-1">
+            <span class="chip-buy">매수 3종</span>
+            <span class="chip-hold">유지 1종</span>
+          </div>
+          <a href="04-guide.html" onclick="event.stopPropagation()" style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#355df9; text-decoration:none;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+            리밸런싱
+            <iconify-icon icon="solar:arrow-right-linear" style="font-size:12px;"></iconify-icon>
+          </a>
+        </div>
+      </div>
+
+      <!-- 레이 달리오 올웨더 -->
+      <div class="card reveal" data-status="ok" style="cursor:pointer;" onclick="openModal('detail-dalio')">
+        <div style="padding:20px;">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#7c3aed,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:#fff; flex-shrink:0;">R</div>
+              <div>
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e; letter-spacing:-.01em;">레이 달리오 올웨더</div>
+                <div style="font-size:12px; color:#6b6b7b; margin-top:1px;">마지막 수정: 2025. 1. 3</div>
+              </div>
+            </div>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; color:#15803d; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+              <iconify-icon icon="solar:check-circle-bold" style="font-size:12px;"></iconify-icon>
+              균형 유지 중
+            </div>
+          </div>
+          <div class="ratio-bar mb-2">
+            <div class="ratio-seg" style="flex:30; background:#7c3aed;"></div>
+            <div class="ratio-seg" style="flex:40; background:#a78bfa;"></div>
+            <div class="ratio-seg" style="flex:15; background:#f59e0b;"></div>
+            <div class="ratio-seg" style="flex:7.5; background:#22c55e;"></div>
+            <div class="ratio-seg" style="flex:7.5; background:#eab308;"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex flex-wrap gap-1">
+              <span class="badge badge-alloc">자산배분</span>
+              <span class="badge badge-us">US</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#6b6b7b; font-weight:600;">평가금액</div>
+                <div style="font-size:14px; font-weight:800; color:#1c1c1e;">₩4.1M</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#6b6b7b; font-weight:600;">수익률</div>
+                <div style="font-size:14px; font-weight:800; color:#16a34a;">+2.1%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#f8f9fe; border-top:1.5px solid #ebebef; padding:12px 20px; display:flex; align-items:center; justify-content:space-between;">
+          <div class="flex gap-1">
+            <span class="chip-hold">전 종목 유지</span>
+          </div>
+          <a href="04-guide.html" onclick="event.stopPropagation()" style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#355df9; text-decoration:none;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+            리밸런싱
+            <iconify-icon icon="solar:arrow-right-linear" style="font-size:12px;"></iconify-icon>
+          </a>
+        </div>
+      </div>
+
+      <!-- 존 보글 인덱스 -->
+      <div class="card reveal" data-status="ok" style="cursor:pointer;" onclick="openModal('detail-bogle')">
+        <div style="padding:20px;">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#f59e0b,#fcd34d); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:#fff; flex-shrink:0;">J</div>
+              <div>
+                <div style="font-size:15px; font-weight:800; color:#1c1c1e; letter-spacing:-.01em;">존 보글 인덱스</div>
+                <div style="font-size:12px; color:#6b6b7b; margin-top:1px;">마지막 수정: 2024. 12. 20</div>
+              </div>
+            </div>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; color:#15803d; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+              <iconify-icon icon="solar:check-circle-bold" style="font-size:12px;"></iconify-icon>
+              균형 유지 중
+            </div>
+          </div>
+          <div class="ratio-bar mb-2">
+            <div class="ratio-seg" style="flex:70; background:#f59e0b;"></div>
+            <div class="ratio-seg" style="flex:30; background:#fcd34d;"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex flex-wrap gap-1">
+              <span class="badge badge-passive">패시브</span>
+              <span class="badge badge-us">US</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#6b6b7b; font-weight:600;">평가금액</div>
+                <div style="font-size:14px; font-weight:800; color:#1c1c1e;">₩2.0M</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:10px; color:#6b6b7b; font-weight:600;">수익률</div>
+                <div style="font-size:14px; font-weight:800; color:#16a34a;">+3.5%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#f8f9fe; border-top:1.5px solid #ebebef; padding:12px 20px; display:flex; align-items:center; justify-content:space-between;">
+          <div class="flex gap-1">
+            <span class="chip-hold">전 종목 유지</span>
+          </div>
+          <a href="04-guide.html" onclick="event.stopPropagation()" style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#355df9; text-decoration:none;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+            리밸런싱
+            <iconify-icon icon="solar:arrow-right-linear" style="font-size:12px;"></iconify-icon>
+          </a>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ══════════ 상세 모달: 워런 버핏 전략 ══════════ -->
+  <div class="modal-overlay" id="modal-detail-buffett" onclick="if(event.target===this)closeModal('detail-buffett')">
+    <div class="modal">
+      <div style="padding:24px; border-bottom:1.5px solid #f4f4f5; flex-shrink:0;">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0;">W</div>
+            <div>
+              <div style="font-size:17px; font-weight:800; color:#1c1c1e; letter-spacing:-.02em;">워런 버핏 전략</div>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:2px;">버핏 스타일 가치투자 집중 포트폴리오</div>
+            </div>
+          </div>
+          <button onclick="closeModal('detail-buffett')" style="border:none; background:transparent; cursor:pointer; padding:6px; color:#6b6b7b; flex-shrink:0;">
+            <iconify-icon icon="solar:close-circle-linear" style="font-size:22px;"></iconify-icon>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-1 mt-3">
+          <span class="badge badge-value">가치투자</span>
+          <span class="badge badge-us">US</span>
+          <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; color:#c2410c; display:inline-flex; align-items:center; gap:4px;">
+            <iconify-icon icon="solar:danger-triangle-bold" style="font-size:11px;"></iconify-icon>
+            리밸런싱 필요
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:24px; overflow-y:auto;">
+        <!-- Stats -->
+        <div style="background:#f8f9fe; border-radius:12px; padding:14px;" class="flex justify-between mb-5">
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">평가금액</div>
+            <div style="font-size:15px; font-weight:800; color:#1c1c1e;">₩8.3M</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">수익률</div>
+            <div style="font-size:15px; font-weight:800; color:#16a34a;">+6.4%</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">CAGR</div>
+            <div style="font-size:15px; font-weight:800; color:#1c1c1e;">+10.4%</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">MDD</div>
+            <div style="font-size:15px; font-weight:800; color:#dc2626;">-32.7%</div>
+          </div>
+        </div>
+
+        <!-- Assets -->
+        <h4 style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:10px;">종목 구성 · 5종목</h4>
+        <div class="ratio-bar mb-3">
+          <div class="ratio-seg" style="flex:42; background:#355df9;"></div>
+          <div class="ratio-seg" style="flex:28; background:#6b8ffb;"></div>
+          <div class="ratio-seg" style="flex:12; background:#93c5fd;"></div>
+          <div class="ratio-seg" style="flex:10; background:#f59e0b;"></div>
+          <div class="ratio-seg" style="flex:8; background:#22c55e;"></div>
+        </div>
+        <div class="flex flex-col gap-2 mb-5">
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#355df9; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">AAPL</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Apple Inc.</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩3,486,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">42%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#6b8ffb; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">BRK.B</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Berkshire Hathaway</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩2,324,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">28%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#93c5fd; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">BAC</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Bank of America</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩996,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">12%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">KO</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Coca-Cola</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩830,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">10%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">OXY</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Occidental Petroleum</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩664,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">8%</span>
+          </div>
+        </div>
+
+        <!-- Recent history -->
+        <h4 style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:10px;">최근 리밸런싱 기록</h4>
+        <div class="flex flex-col gap-2 mb-6">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fe; border-radius:10px; padding:10px 14px;">
+            <span style="font-size:12px; font-weight:700; color:#1c1c1e;">2024년 12월 리밸런싱</span>
+            <span style="font-size:11px; color:#16a34a; font-weight:700;">2024. 12. 2 · 완료</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fe; border-radius:10px; padding:10px 14px;">
+            <span style="font-size:12px; font-weight:700; color:#1c1c1e;">2024년 11월 리밸런싱</span>
+            <span style="font-size:11px; color:#16a34a; font-weight:700;">2024. 11. 4 · 완료</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col gap-2">
+          <a href="04-guide.html" class="btn-primary justify-center" style="padding:13px;">
+            <iconify-icon icon="solar:refresh-circle-bold" style="font-size:16px;"></iconify-icon>
+            리밸런싱 시작
+          </a>
+          <a href="03-edit.html" class="btn-ghost justify-center" style="padding:12px;">
+            <iconify-icon icon="solar:pen-2-linear" style="font-size:15px;"></iconify-icon>
+            편집하기
+          </a>
+          <button class="btn-danger-ghost justify-center" style="padding:12px;" onclick="handleDelete('워런 버핏 전략')">
+            <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:15px;"></iconify-icon>
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 상세 모달: 레이 달리오 올웨더 ══════════ -->
+  <div class="modal-overlay" id="modal-detail-dalio" onclick="if(event.target===this)closeModal('detail-dalio')">
+    <div class="modal">
+      <div style="padding:24px; border-bottom:1.5px solid #f4f4f5; flex-shrink:0;">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#7c3aed,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0;">R</div>
+            <div>
+              <div style="font-size:17px; font-weight:800; color:#1c1c1e; letter-spacing:-.02em;">레이 달리오 올웨더</div>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:2px;">전천후 자산배분 포트폴리오</div>
+            </div>
+          </div>
+          <button onclick="closeModal('detail-dalio')" style="border:none; background:transparent; cursor:pointer; padding:6px; color:#6b6b7b; flex-shrink:0;">
+            <iconify-icon icon="solar:close-circle-linear" style="font-size:22px;"></iconify-icon>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-1 mt-3">
+          <span class="badge badge-alloc">자산배분</span>
+          <span class="badge badge-us">US</span>
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; color:#15803d; display:inline-flex; align-items:center; gap:4px;">
+            <iconify-icon icon="solar:check-circle-bold" style="font-size:11px;"></iconify-icon>
+            균형 유지 중
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:24px; overflow-y:auto;">
+        <div style="background:#f8f9fe; border-radius:12px; padding:14px;" class="flex justify-between mb-5">
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">평가금액</div>
+            <div style="font-size:15px; font-weight:800; color:#1c1c1e;">₩4.1M</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">수익률</div>
+            <div style="font-size:15px; font-weight:800; color:#16a34a;">+2.1%</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">CAGR</div>
+            <div style="font-size:15px; font-weight:800; color:#1c1c1e;">+7.2%</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">MDD</div>
+            <div style="font-size:15px; font-weight:800; color:#dc2626;">-13.4%</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:10px;">종목 구성 · 5종목</h4>
+        <div class="ratio-bar mb-3">
+          <div class="ratio-seg" style="flex:30; background:#7c3aed;"></div>
+          <div class="ratio-seg" style="flex:40; background:#a78bfa;"></div>
+          <div class="ratio-seg" style="flex:15; background:#f59e0b;"></div>
+          <div class="ratio-seg" style="flex:7.5; background:#22c55e;"></div>
+          <div class="ratio-seg" style="flex:7.5; background:#eab308;"></div>
+        </div>
+        <div class="flex flex-col gap-2 mb-5">
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#7c3aed; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">VTI</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Vanguard Total Stock</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩1,230,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">30%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#a78bfa; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">TLT</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">iShares 20+ Treasury</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩1,640,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">40%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">GLD</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">SPDR Gold Shares</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩615,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">15%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">DBC</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Invesco DB Commodity</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩307,500</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">7.5%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#eab308; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">IEF</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">iShares 7-10Y Treasury</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩307,500</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">7.5%</span>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:10px;">최근 리밸런싱 기록</h4>
+        <div class="flex flex-col gap-2 mb-6">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fe; border-radius:10px; padding:10px 14px;">
+            <span style="font-size:12px; font-weight:700; color:#1c1c1e;">2024년 12월 리밸런싱</span>
+            <span style="font-size:11px; color:#16a34a; font-weight:700;">2024. 12. 2 · 완료</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <a href="04-guide.html" class="btn-primary justify-center" style="padding:13px;">
+            <iconify-icon icon="solar:refresh-circle-bold" style="font-size:16px;"></iconify-icon>
+            리밸런싱 시작
+          </a>
+          <a href="03-edit.html" class="btn-ghost justify-center" style="padding:12px;">
+            <iconify-icon icon="solar:pen-2-linear" style="font-size:15px;"></iconify-icon>
+            편집하기
+          </a>
+          <button class="btn-danger-ghost justify-center" style="padding:12px;" onclick="handleDelete('레이 달리오 올웨더')">
+            <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:15px;"></iconify-icon>
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 상세 모달: 존 보글 인덱스 ══════════ -->
+  <div class="modal-overlay" id="modal-detail-bogle" onclick="if(event.target===this)closeModal('detail-bogle')">
+    <div class="modal">
+      <div style="padding:24px; border-bottom:1.5px solid #f4f4f5; flex-shrink:0;">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#f59e0b,#fcd34d); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0;">J</div>
+            <div>
+              <div style="font-size:17px; font-weight:800; color:#1c1c1e; letter-spacing:-.02em;">존 보글 인덱스</div>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:2px;">저비용 인덱스 패시브 포트폴리오</div>
+            </div>
+          </div>
+          <button onclick="closeModal('detail-bogle')" style="border:none; background:transparent; cursor:pointer; padding:6px; color:#6b6b7b; flex-shrink:0;">
+            <iconify-icon icon="solar:close-circle-linear" style="font-size:22px;"></iconify-icon>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-1 mt-3">
+          <span class="badge badge-passive">패시브</span>
+          <span class="badge badge-us">US</span>
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; color:#15803d; display:inline-flex; align-items:center; gap:4px;">
+            <iconify-icon icon="solar:check-circle-bold" style="font-size:11px;"></iconify-icon>
+            균형 유지 중
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:24px; overflow-y:auto;">
+        <div style="background:#f8f9fe; border-radius:12px; padding:14px;" class="flex justify-between mb-5">
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">평가금액</div>
+            <div style="font-size:15px; font-weight:800; color:#1c1c1e;">₩2.0M</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">수익률</div>
+            <div style="font-size:15px; font-weight:800; color:#16a34a;">+3.5%</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">CAGR</div>
+            <div style="font-size:15px; font-weight:800; color:#1c1c1e;">+9.8%</div>
+          </div>
+          <div style="width:1px; background:#ebebef;"></div>
+          <div class="text-center flex-1">
+            <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">MDD</div>
+            <div style="font-size:15px; font-weight:800; color:#dc2626;">-37.1%</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:10px;">종목 구성 · 2종목</h4>
+        <div class="ratio-bar mb-3">
+          <div class="ratio-seg" style="flex:70; background:#f59e0b;"></div>
+          <div class="ratio-seg" style="flex:30; background:#fcd34d;"></div>
+        </div>
+        <div class="flex flex-col gap-2 mb-5">
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">VTI</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Vanguard Total Stock ETF</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩1,400,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">70%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#fcd34d; flex-shrink:0;"></div>
+            <div class="flex-1 min-w-0"><span style="font-weight:800; font-size:13px;">BND</span> <span style="font-size:12px; color:#6b6b7b; margin-left:6px;">Vanguard Total Bond ETF</span></div>
+            <span style="font-size:12px; color:#6b6b7b; margin-right:8px;">₩600,000</span>
+            <span style="font-size:13px; font-weight:800; color:#355df9;">30%</span>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:10px;">최근 리밸런싱 기록</h4>
+        <div class="flex flex-col gap-2 mb-6">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fe; border-radius:10px; padding:10px 14px;">
+            <span style="font-size:12px; font-weight:700; color:#1c1c1e;">2024년 12월 리밸런싱</span>
+            <span style="font-size:11px; color:#16a34a; font-weight:700;">2024. 12. 20 · 완료</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <a href="04-guide.html" class="btn-primary justify-center" style="padding:13px;">
+            <iconify-icon icon="solar:refresh-circle-bold" style="font-size:16px;"></iconify-icon>
+            리밸런싱 시작
+          </a>
+          <a href="03-edit.html" class="btn-ghost justify-center" style="padding:12px;">
+            <iconify-icon icon="solar:pen-2-linear" style="font-size:15px;"></iconify-icon>
+            편집하기
+          </a>
+          <button class="btn-danger-ghost justify-center" style="padding:12px;" onclick="handleDelete('존 보글 인덱스')">
+            <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:15px;"></iconify-icon>
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
+
+    function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+    function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+    function filterList(status, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#portfolio-list > [data-status]').forEach(card => {
+        card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
+      });
+    }
+
+    function handleDelete(name) {
+      document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+      showToast(`'${name}' 포트폴리오가 삭제되었습니다.`);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function openMobileMenu() {
+      const overlay = document.getElementById('mobile-menu');
+      const panel = document.getElementById('menu-panel');
+      const backdrop = document.getElementById('menu-backdrop');
+      overlay.style.display = 'block';
+      requestAnimationFrame(() => {
+        panel.style.transform = 'translateX(0)';
+        backdrop.style.background = 'rgba(0,0,0,.4)';
+        document.querySelectorAll('.menu-item').forEach((el, i) => {
+          setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(0)';
+          }, 120 + i * 60);
+        });
+      });
+    }
+
+    function closeMobileMenu() {
+      const overlay = document.getElementById('mobile-menu');
+      const panel = document.getElementById('menu-panel');
+      const backdrop = document.getElementById('menu-backdrop');
+      panel.style.transform = 'translateX(100%)';
+      backdrop.style.background = 'rgba(0,0,0,0)';
+      document.querySelectorAll('.menu-item').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(12px)';
+      });
+      setTimeout(() => { overlay.style.display = 'none'; }, 450);
+    }
+
+    function handleLogout() {
+      window.location.href = '06-auth.html';
+    }
+  </script>
+</body>
+</html>

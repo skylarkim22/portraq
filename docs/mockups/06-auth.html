@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 — Portraq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Pretendard','system-ui','sans-serif'] } } } }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Pretendard', system-ui, sans-serif; background: #f8f9fe; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+    * { word-break: keep-all; }
+
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(1.2rem); filter:blur(4px); } to { opacity:1; transform:translateY(0); filter:blur(0); } }
+
+    .nav-glass { background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,0,0,.06); }
+
+    .btn-primary { display:inline-flex; align-items:center; gap:10px; background:#355df9; color:#fff; padding:14px 28px; border-radius:8px; font-weight:700; font-size:15px; transition:all .4s cubic-bezier(.16,1,.3,1); box-shadow:0 1px 3px rgba(53,93,249,.25); text-decoration:none; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#1a35c7; transform:translateY(-2px); box-shadow:0 8px 24px rgba(53,93,249,.35); }
+    .btn-primary:active { transform:scale(.97); }
+
+    .btn-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#4b4b6a; padding:14px 24px; border-radius:8px; font-weight:600; font-size:15px; border:1.5px solid #e4e4e7; transition:all .3s cubic-bezier(.16,1,.3,1); text-decoration:none; cursor:pointer; }
+    .btn-ghost:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+
+    .mobile-menu { position:fixed; inset:0; z-index:50; background:rgba(255,255,255,.97); backdrop-filter:blur(24px); display:flex; flex-direction:column; padding:24px; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+    .mobile-menu.open { opacity:1; pointer-events:all; }
+
+    .card-form { background:#fff; border:1.5px solid #ebebef; border-radius:24px; padding:40px 32px; box-shadow:0 8px 40px rgba(0,0,0,.04); animation:fadeInUp .5s cubic-bezier(.16,1,.3,1) forwards; }
+
+    .btn-social { display:flex; align-items:center; justify-content:center; gap:10px; background:#fff; color:#1c1c1e; padding:14px; border-radius:10px; font-weight:700; font-size:15px; border:1.5px solid #e4e4e7; cursor:pointer; width:100%; transition:all .3s cubic-bezier(.16,1,.3,1); text-decoration:none; }
+    .btn-social:hover { border-color:#d1d5db; background:#f9fafb; transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,.07); }
+    .btn-social:active { transform:scale(.98); }
+  </style>
+</head>
+<body style="min-height:100dvh; display:flex; flex-direction:column;">
+
+  <!-- GNB -->
+  <header class="nav-glass sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+          <img src="../../public/logo-symbol.svg" width="32" height="32" alt="Portraq">
+          <span style="font-family:'Carter One',serif; font-size:18px; color:#1c1c1e;">Portraq</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-1">
+          <a href="01-landing.html#features" class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all" style="font-weight:600; text-decoration:none;">기능</a>
+          <a href="02-templates.html" class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all" style="font-weight:600; text-decoration:none;">대가 포트폴리오</a>
+          <a href="01-landing.html#howto" class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all" style="font-weight:600; text-decoration:none;">사용법</a>
+        </nav>
+        <div class="hidden md:flex items-center gap-3">
+          <a href="06-auth.html" class="btn-ghost" style="padding:10px 20px; font-size:14px;">로그인</a>
+          <a href="06-auth.html" class="btn-primary" style="padding:10px 22px; font-size:14px;">
+            시작하기
+            <iconify-icon icon="solar:arrow-right-linear" style="font-size:16px;"></iconify-icon>
+          </a>
+        </div>
+        <button id="menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100" style="border:none; background:transparent; cursor:pointer;">
+          <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:24px; color:#1c1c1e;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="mobile-menu">
+    <div class="flex items-center justify-between mb-12">
+      <div class="flex items-center gap-2">
+        <img src="../../public/logo-symbol.svg" width="32" height="32" alt="Portraq">
+        <span style="font-family:'Carter One',serif; font-size:18px; color:#1c1c1e;">Portraq</span>
+      </div>
+      <button id="menu-close" style="border:none; background:transparent; cursor:pointer; padding:8px;">
+        <iconify-icon icon="solar:close-circle-linear" style="font-size:28px; color:#6b7280;"></iconify-icon>
+      </button>
+    </div>
+    <nav class="flex flex-col gap-2 flex-1">
+      <a href="01-landing.html#features" class="text-2xl font-bold py-3" style="font-weight:700; text-decoration:none; color:#1c1c1e;" onclick="closeMobileMenu()">기능</a>
+      <a href="02-templates.html" class="text-2xl font-bold py-3" style="font-weight:700; text-decoration:none; color:#1c1c1e;" onclick="closeMobileMenu()">대가 포트폴리오</a>
+      <a href="01-landing.html#howto" class="text-2xl font-bold py-3" style="font-weight:700; text-decoration:none; color:#1c1c1e;" onclick="closeMobileMenu()">사용법</a>
+    </nav>
+    <div class="flex flex-col gap-3 pb-8">
+      <a href="06-auth.html" class="btn-ghost w-full justify-center" style="padding:16px;">로그인</a>
+      <a href="06-auth.html" class="btn-primary w-full justify-center" style="padding:16px;">
+        시작하기
+        <iconify-icon icon="solar:arrow-right-linear" style="font-size:16px;"></iconify-icon>
+      </a>
+    </div>
+  </div>
+
+  <!-- Background decoration -->
+  <div style="position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;">
+    <div style="position:absolute; top:-20%; left:-10%; width:50%; height:70%; background:radial-gradient(ellipse,rgba(53,93,249,.04) 0%,transparent 70%); border-radius:50%;"></div>
+    <div style="position:absolute; bottom:-10%; right:-10%; width:40%; height:60%; background:radial-gradient(ellipse,rgba(53,93,249,.03) 0%,transparent 70%); border-radius:50%;"></div>
+  </div>
+
+  <main class="flex flex-col items-center justify-center flex-1 px-4 py-16" style="position:relative; z-index:1;">
+    <div style="width:100%; max-width:400px;">
+      <div class="card-form">
+        <!-- Title -->
+        <div style="text-align:center; margin-bottom:32px;">
+          <div style="font-size:22px; font-weight:800; color:#1c1c1e; letter-spacing:-.03em; margin-bottom:8px;">시작하기</div>
+          <p style="font-size:14px; color:#6b6b7b; line-height:1.6;">계정이 없으면 자동으로 가입됩니다</p>
+        </div>
+
+        <!-- Social buttons -->
+        <div class="flex flex-col gap-3">
+          <button class="btn-social" onclick="handleSocial('Google')">
+            <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M47.532 24.552a28.79 28.79 0 0 0-.457-5.127H24.48v9.697h13.002c-.56 3.02-2.26 5.58-4.82 7.293v6.065h7.8c4.562-4.2 7.07-10.38 7.07-17.928z" fill="#4285f4"/>
+              <path d="M24.48 48.001c6.528 0 12.005-2.163 16.006-5.86l-7.8-6.065c-2.163 1.448-4.928 2.301-8.206 2.301-6.312 0-11.658-4.263-13.57-9.993H2.826v6.263C6.813 42.72 15.099 48 24.48 48z" fill="#34a853"/>
+              <path d="M10.91 28.384a14.4 14.4 0 0 1-.749-4.607c0-1.6.274-3.152.749-4.607v-6.263H2.826A24.047 24.047 0 0 0 .48 24c0 3.877.928 7.55 2.57 10.647l8.04-6.263z" fill="#fbbc04"/>
+              <path d="M24.48 9.498c3.556 0 6.748 1.223 9.263 3.624l6.946-6.946C36.482 2.358 31.008 0 24.48 0 15.1 0 6.813 5.28 2.826 13.117l8.084 6.262c1.912-5.73 7.258-9.881 13.57-9.881z" fill="#ea4335"/>
+            </svg>
+            Google로 계속하기
+          </button>
+          <button class="btn-social" style="background:#FEE500; border-color:#FEE500; color:#191919;" onclick="handleSocial('Kakao')">
+            <svg width="20" height="20" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M30 4C14.536 4 2 13.818 2 26c0 7.9 5.215 14.804 13.064 18.762L12.25 56.25a1 1 0 0 0 1.476 1.14L26.48 49.72C27.636 49.906 28.808 50 30 50c15.464 0 28-9.818 28-22S45.464 4 30 4z" fill="#191919"/>
+            </svg>
+            카카오로 계속하기
+          </button>
+        </div>
+
+        <!-- Legal notice -->
+        <p style="text-align:center; font-size:12px; color:#9ca3af; margin-top:24px; line-height:1.7;">
+          계속하면 Portraq의
+          <a href="#" style="color:#6b6b7b; text-decoration:underline; text-underline-offset:2px;">이용약관</a> 및
+          <a href="#" style="color:#6b6b7b; text-decoration:underline; text-underline-offset:2px;">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer style="border-top:1.5px solid #ebebef; padding:40px 0 32px; background:#fff;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
+        <!-- 로고 + 설명 -->
+        <div style="max-width:280px;">
+          <div class="flex items-center gap-2 mb-3">
+            <img src="../../public/logo-symbol.svg" width="24" height="24" alt="Portraq">
+            <span style="font-family:'Carter One',serif; font-size:15px; color:#1c1c1e;">Portraq</span>
+          </div>
+          <p style="font-size:13px; color:#6b6b7b; line-height:1.65;">대가의 전략으로 매달 적립식 투자를 실천하는 포트폴리오 관리 서비스입니다.</p>
+        </div>
+        <!-- 링크 -->
+        <div class="flex gap-12 flex-wrap">
+          <div>
+            <p style="font-size:12px; font-weight:700; color:#1c1c1e; letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px;">서비스</p>
+            <div class="flex flex-col gap-2">
+              <a href="01-landing.html#features" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">기능 소개</a>
+              <a href="01-landing.html#howto" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">사용법</a>
+              <a href="02-templates.html" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">대가 포트폴리오</a>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:12px; font-weight:700; color:#1c1c1e; letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px;">계정</p>
+            <div class="flex flex-col gap-2">
+              <a href="06-auth.html" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">로그인</a>
+              <a href="06-auth.html" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">회원가입</a>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:12px; font-weight:700; color:#1c1c1e; letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px;">법적 고지</p>
+            <div class="flex flex-col gap-2">
+              <a href="#" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">이용약관</a>
+              <a href="#" style="font-size:13px; color:#6b6b7b; text-decoration:none; font-weight:600;" onmouseover="this.style.color='#355df9'" onmouseout="this.style.color='#6b6b7b'">개인정보처리방침</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #ebebef; padding-top:20px; display:flex; flex-direction:column; gap:6px; align-items:center; text-align:center;">
+        <p style="font-size:11px; color:#9ca3af;">제공되는 정보는 참고용이며 투자 조언이 아닙니다. 투자 결정의 책임은 투자자 본인에게 있습니다.</p>
+        <p style="font-size:11px; color:#c4c4cc;">© 2026 Portraq. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function handleSocial(provider) {
+      window.location.href = '05-home.html';
+    }
+
+    document.getElementById('menu-toggle').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.add('open');
+    });
+    document.getElementById('menu-close').addEventListener('click', closeMobileMenu);
+    function closeMobileMenu() {
+      document.getElementById('mobile-menu').classList.remove('open');
+    }
+  </script>
+</body>
+</html>
