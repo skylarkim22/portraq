@@ -2,34 +2,16 @@
   "name": "portraq",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
   "packageManager": "pnpm@11.1.1",
-  "dependencies": {
-    "@hookform/resolvers": "^5.4.0",
-    "@supabase/ssr": "^0.12.0",
-    "@supabase/supabase-js": "^2.108.2",
-    "lucide-react": "^1.18.0",
-    "next": "16.2.7",
-    "pretendard": "^1.3.9",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "^7.77.0",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.14"
+  "scripts": {
+    "dev": "turbo run dev --filter=@portraq/web",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "storybook": "turbo run storybook --filter=@portraq/ui",
+    "build-storybook": "turbo run build-storybook --filter=@portraq/ui"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.7",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "turbo": "^2"
   }
 }
