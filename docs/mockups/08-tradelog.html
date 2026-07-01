@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>매매 일지 — Portraq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Pretendard','system-ui','sans-serif'] } } } }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Pretendard', system-ui, sans-serif; background: #f8f9fe; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+    * { word-break: keep-all; }
+    .reveal { opacity:0; transform:translateY(.7rem); transition: opacity .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1); }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .nav-glass { background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,0,0,.06); }
+    .btn-primary { display:inline-flex; align-items:center; gap:8px; background:#355df9; color:#fff; padding:11px 22px; border-radius:8px; font-weight:700; font-size:14px; transition:all .4s cubic-bezier(.16,1,.3,1); text-decoration:none; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#1a35c7; transform:translateY(-1px); box-shadow:0 6px 20px rgba(53,93,249,.35); }
+    .btn-sell { display:inline-flex; align-items:center; gap:8px; background:#dc2626; color:#fff; padding:11px 22px; border-radius:8px; font-weight:700; font-size:14px; transition:all .4s cubic-bezier(.16,1,.3,1); text-decoration:none; border:none; cursor:pointer; }
+    .btn-sell:hover { background:#b91c1c; transform:translateY(-1px); box-shadow:0 6px 20px rgba(220,38,38,.3); }
+    .btn-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#4b4b6a; padding:11px 18px; border-radius:8px; font-weight:600; font-size:14px; border:1.5px solid #e4e4e7; transition:all .3s; text-decoration:none; cursor:pointer; }
+    .btn-ghost:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+    .btn-icon { width:34px; height:34px; border-radius:8px; background:#fff; border:1.5px solid #ebebef; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#6b6b7b; transition:all .2s; }
+    .btn-icon:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+    .card { background:#fff; border:1.5px solid #ebebef; border-radius:16px; overflow:hidden; }
+    .ratio-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; }
+    .ratio-seg { border-radius:4px; height:100%; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-us { background:#eff6ff; color:#1d4ed8; }
+    .badge-kr { background:#fff1f2; color:#be123c; }
+    .chip-buy { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+    .chip-sell { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+    .input-field { background:#f8f9fe; border:1.5px solid #ebebef; border-radius:10px; padding:10px 13px; font-size:14px; color:#1c1c1e; font-family:inherit; font-weight:600; outline:none; transition:border-color .2s; width:100%; }
+    .input-field:focus { border-color:#355df9; background:#fff; }
+
+    /* 사이드바 */
+    .sidebar { position:fixed; top:0; left:0; bottom:0; width:240px; background:#fff; border-right:1.5px solid #ebebef; display:flex; flex-direction:column; z-index:30; }
+    .sidebar-nav-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; font-size:14px; font-weight:600; color:#6b6b7b; text-decoration:none; cursor:pointer; border:none; background:transparent; font-family:inherit; width:100%; transition:all .25s cubic-bezier(.16,1,.3,1); }
+    .sidebar-nav-item:hover { background:#f4f4f5; color:#1c1c1e; }
+    .sidebar-nav-item.active { background:#eef2ff; color:#355df9; font-weight:700; }
+    .sidebar-nav-item.active iconify-icon { color:#355df9; }
+
+    /* 모바일 메뉴 */
+    .menu-item { transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1); }
+
+    /* 달력 */
+    .cal-weekday { text-align:center; font-size:11px; font-weight:700; color:#9ca3af; padding:6px 0; }
+    .cal-weekday.sun { color:#dc2626; }
+    .cal-weekday.sat { color:#355df9; }
+    .cal-day { aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:10px; cursor:pointer; font-size:13px; font-weight:600; color:#1c1c1e; transition:background .2s; border:1.5px solid transparent; }
+    .cal-day:hover:not(.empty) { background:#f4f4f5; }
+    .cal-day.selected { background:#eef2ff; color:#355df9; font-weight:800; }
+    .cal-day.today { border-color:#355df9; }
+    .cal-day.empty { visibility:hidden; cursor:default; }
+    .cal-dots { display:flex; gap:3px; height:5px; }
+    .dot { width:5px; height:5px; border-radius:50%; display:inline-block; }
+    .dot-buy { background:#16a34a; }
+    .dot-sell { background:#dc2626; }
+
+    /* Stat tile */
+    .stat-tile { background:#f8f9fe; border-radius:12px; padding:12px 14px; }
+
+    /* Trade feed card */
+    .trade-card { display:flex; align-items:flex-start; gap:12px; background:#fff; border:1.5px solid #ebebef; border-radius:12px; padding:14px 16px; }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); backdrop-filter:blur(4px); z-index:50; display:none; align-items:center; justify-content:center; padding:16px; overflow-y:auto; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:24px; max-width:560px; width:100%; overflow:hidden; animation:modalIn .35s cubic-bezier(.16,1,.3,1); max-height:88vh; display:flex; flex-direction:column; }
+    @keyframes modalIn { from { opacity:0; transform:translateY(2rem) scale(.97); } to { opacity:1; transform:none; } }
+
+    .holding-pill { display:flex; align-items:center; justify-content:space-between; gap:10px; background:#f8f9fe; border:1.5px solid #ebebef; border-radius:10px; padding:10px 14px; }
+
+    /* 종목 검색 자동완성 */
+    .search-result { border:1.5px solid #ebebef; border-radius:10px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+    .search-result-item { padding:11px 14px; font-size:14px; cursor:pointer; transition:background .15s; display:flex; justify-content:space-between; align-items:center; }
+    .search-result-item:hover { background:#f8f9fe; }
+    .search-result-item:not(:last-child) { border-bottom:1px solid #f4f4f5; }
+
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1c1c1e; color:#fff; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; z-index:60; transition:transform .4s cubic-bezier(.16,1,.3,1), opacity .4s; opacity:0; white-space:nowrap; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+  </style>
+</head>
+<body>
+
+  <!-- ── PC 사이드바 ── -->
+  <aside class="sidebar hidden md:flex flex-col">
+    <div style="padding:20px 20px 16px; border-bottom:1.5px solid #f4f4f5;">
+      <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+        <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+        <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+      </a>
+    </div>
+
+    <nav style="padding:16px 12px; flex:1;" class="flex flex-col gap-1">
+      <a href="05-home.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:home-2-bold" style="font-size:18px;"></iconify-icon>
+        홈
+      </a>
+      <a href="07-portfolio-list.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:pie-chart-2-linear" style="font-size:18px;"></iconify-icon>
+        내 포트폴리오
+      </a>
+      <a href="#" class="sidebar-nav-item">
+        <iconify-icon icon="solar:history-linear" style="font-size:18px;"></iconify-icon>
+        리밸런싱 기록
+      </a>
+      <a href="08-tradelog.html" class="sidebar-nav-item active">
+        <iconify-icon icon="solar:notebook-linear" style="font-size:18px;"></iconify-icon>
+        매매 일지
+      </a>
+      <a href="02-templates.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:medal-star-linear" style="font-size:18px;"></iconify-icon>
+        대가 포트폴리오
+      </a>
+    </nav>
+
+    <div style="padding:12px; border-top:1.5px solid #f4f4f5;">
+      <div class="flex items-center gap-3" style="padding:10px 14px;">
+        <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <span style="font-size:11px; font-weight:800; color:#fff;">김</span>
+        </div>
+        <div style="min-width:0; flex:1;">
+          <div style="font-size:13px; font-weight:700; color:#1c1c1e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">김민준</div>
+          <div style="font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">kim@example.com</div>
+        </div>
+        <button onclick="handleLogout()" title="로그아웃" style="width:30px; height:30px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; flex-shrink:0; transition:all .25s cubic-bezier(.16,1,.3,1);" onmouseover="this.style.background='#f4f4f5'; this.style.color='#6b6b7b'" onmouseout="this.style.background='transparent'; this.style.color='#9ca3af'">
+          <iconify-icon icon="solar:logout-2-linear" style="font-size:17px;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── 모바일 GNB ── -->
+  <header class="nav-glass sticky top-0 z-40 md:hidden">
+    <div class="px-4">
+      <div class="flex items-center justify-between h-16">
+        <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+          <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+          <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+        </a>
+        <button onclick="openMobileMenu()" style="width:36px; height:36px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#1c1c1e;">
+          <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 모바일 메뉴 오버레이 ── -->
+  <div id="mobile-menu" style="display:none; position:fixed; inset:0; z-index:50;">
+    <div id="menu-backdrop" onclick="closeMobileMenu()" style="position:absolute; inset:0; background:rgba(0,0,0,0); transition:background .4s cubic-bezier(.16,1,.3,1);"></div>
+    <div id="menu-panel" style="position:absolute; top:0; right:0; bottom:0; width:100%; max-width:260px; background:#fff; display:flex; flex-direction:column; box-shadow:-20px 0 60px rgba(0,0,0,.08); transform:translateX(100%); transition:transform .45s cubic-bezier(.16,1,.3,1);">
+      <div style="padding:16px 16px 8px; display:flex; justify-content:flex-end;">
+        <button onclick="closeMobileMenu()" style="background:transparent; border:none; cursor:pointer; padding:4px; color:#9ca3af; font-size:22px; line-height:1; transition:color .2s;" onmouseover="this.style.color='#1c1c1e'" onmouseout="this.style.color='#9ca3af'">×</button>
+      </div>
+      <nav style="padding:16px 12px; flex:1;" class="flex flex-col gap-1">
+        <a href="05-home.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:home-2-bold" style="font-size:18px;"></iconify-icon>
+          홈
+        </a>
+        <a href="07-portfolio-list.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:pie-chart-2-linear" style="font-size:18px;"></iconify-icon>
+          내 포트폴리오
+        </a>
+        <a href="#" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:history-linear" style="font-size:18px;"></iconify-icon>
+          리밸런싱 기록
+        </a>
+        <a href="08-tradelog.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item active" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:notebook-linear" style="font-size:18px;"></iconify-icon>
+          매매 일지
+        </a>
+        <a href="02-templates.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:medal-star-linear" style="font-size:18px;"></iconify-icon>
+          대가 포트폴리오
+        </a>
+      </nav>
+      <div style="padding:12px; border-top:1.5px solid #f4f4f5;">
+        <div class="menu-item flex items-center gap-3" style="padding:10px 14px; opacity:0; transform:translateX(12px);">
+          <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span style="font-size:11px; font-weight:800; color:#fff;">김</span>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:13px; font-weight:700; color:#1c1c1e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">김민준</div>
+            <div style="font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">kim@example.com</div>
+          </div>
+          <button onclick="handleLogout()" title="로그아웃" style="width:30px; height:30px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; flex-shrink:0; transition:all .25s cubic-bezier(.16,1,.3,1);" onmouseover="this.style.background='#f4f4f5'; this.style.color='#6b6b7b'" onmouseout="this.style.background='transparent'; this.style.color='#9ca3af'">
+            <iconify-icon icon="solar:logout-2-linear" style="font-size:17px;"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 메인 콘텐츠 ── -->
+  <main class="md:ml-60 max-w-5xl mx-auto px-4 sm:px-6 py-6" style="padding-bottom:100px;">
+
+    <!-- Page header -->
+    <section class="mb-5 reveal visible">
+      <h1 style="font-size:20px; font-weight:800; color:#1c1c1e; letter-spacing:-.03em; margin-bottom:4px;">매매 일지</h1>
+      <p style="font-size:14px; color:#6b6b7b;">실제 매수·매도를 실행한 날짜와 이유를 기록하세요. 포트폴리오 서비스와는 독립적으로 동작합니다.</p>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
+    <!-- LEFT: 달력 + 통계 -->
+    <div class="flex flex-col gap-4">
+
+    <!-- Calendar -->
+    <section class="card reveal" style="padding:20px;">
+      <div class="flex items-center justify-between mb-4">
+        <button class="btn-icon" onclick="showToast('이전 달로 이동합니다.')">
+          <iconify-icon icon="solar:alt-arrow-left-linear" style="font-size:17px;"></iconify-icon>
+        </button>
+        <div style="font-size:16px; font-weight:800; color:#1c1c1e;">2025년 1월</div>
+        <button class="btn-icon" onclick="showToast('다음 달로 이동합니다.')">
+          <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:17px;"></iconify-icon>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-7 mb-1">
+        <div class="cal-weekday sun">일</div>
+        <div class="cal-weekday">월</div>
+        <div class="cal-weekday">화</div>
+        <div class="cal-weekday">수</div>
+        <div class="cal-weekday">목</div>
+        <div class="cal-weekday">금</div>
+        <div class="cal-weekday sat">토</div>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1" id="cal-grid">
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day" onclick="selectDay(1,this)"><span>1</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(2,this)"><span>2</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(3,this)"><span>3</span><span class="cal-dots"><span class="dot dot-buy"></span></span></div>
+        <div class="cal-day" onclick="selectDay(4,this)"><span>4</span><span class="cal-dots"></span></div>
+
+        <div class="cal-day" onclick="selectDay(5,this)"><span>5</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(6,this)"><span>6</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(7,this)"><span>7</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(8,this)"><span>8</span><span class="cal-dots"><span class="dot dot-sell"></span></span></div>
+        <div class="cal-day" onclick="selectDay(9,this)"><span>9</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(10,this)"><span>10</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(11,this)"><span>11</span><span class="cal-dots"></span></div>
+
+        <div class="cal-day" onclick="selectDay(12,this)"><span>12</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(13,this)"><span>13</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(14,this)"><span>14</span><span class="cal-dots"></span></div>
+        <div class="cal-day today selected" id="cal-day-15" onclick="selectDay(15,this)"><span>15</span><span class="cal-dots"><span class="dot dot-buy"></span><span class="dot dot-sell"></span></span></div>
+        <div class="cal-day" onclick="selectDay(16,this)"><span>16</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(17,this)"><span>17</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(18,this)"><span>18</span><span class="cal-dots"></span></div>
+
+        <div class="cal-day" onclick="selectDay(19,this)"><span>19</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(20,this)"><span>20</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(21,this)"><span>21</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(22,this)"><span>22</span><span class="cal-dots"><span class="dot dot-buy"></span></span></div>
+        <div class="cal-day" onclick="selectDay(23,this)"><span>23</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(24,this)"><span>24</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(25,this)"><span>25</span><span class="cal-dots"></span></div>
+
+        <div class="cal-day" onclick="selectDay(26,this)"><span>26</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(27,this)"><span>27</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(28,this)"><span>28</span><span class="cal-dots"><span class="dot dot-sell"></span></span></div>
+        <div class="cal-day" onclick="selectDay(29,this)"><span>29</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(30,this)"><span>30</span><span class="cal-dots"></span></div>
+        <div class="cal-day" onclick="selectDay(31,this)"><span>31</span><span class="cal-dots"></span></div>
+        <div class="cal-day empty"></div>
+      </div>
+
+      <div class="flex items-center gap-4 mt-4" style="padding-top:14px; border-top:1.5px solid #f4f4f5;">
+        <div class="flex items-center gap-2"><span class="dot dot-buy"></span><span style="font-size:12px; color:#6b6b7b; font-weight:600;">매수</span></div>
+        <div class="flex items-center gap-2"><span class="dot dot-sell"></span><span style="font-size:12px; color:#6b6b7b; font-weight:600;">매도</span></div>
+      </div>
+    </section>
+
+    <!-- Monthly stats -->
+    <section class="card reveal" style="padding:20px;">
+      <div style="font-size:13px; font-weight:800; color:#1c1c1e; margin-bottom:12px;">1월 통계</div>
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <div class="stat-tile">
+          <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">총 매수금액</div>
+          <div style="font-size:14px; font-weight:800; color:#1c1c1e;">₩2,150,000</div>
+        </div>
+        <div class="stat-tile">
+          <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">총 매도금액</div>
+          <div style="font-size:14px; font-weight:800; color:#1c1c1e;">₩1,380,000</div>
+        </div>
+        <div class="stat-tile">
+          <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">세금 합계</div>
+          <div style="font-size:14px; font-weight:800; color:#1c1c1e;">₩4,200</div>
+        </div>
+        <div class="stat-tile">
+          <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">순손익</div>
+          <div style="font-size:14px; font-weight:800; color:#16a34a;">+₩186,800</div>
+        </div>
+        <div class="stat-tile">
+          <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">순수익률</div>
+          <div style="font-size:14px; font-weight:800; color:#16a34a;">+15.6%</div>
+        </div>
+        <div class="stat-tile">
+          <div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:4px;">거래 횟수</div>
+          <div style="font-size:14px; font-weight:800; color:#1c1c1e;">5건</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px; font-weight:700; color:#6b6b7b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">시장별 비중 (매수금액 기준)</div>
+      <div class="ratio-bar mb-2">
+        <div class="ratio-seg" style="flex:82; background:#1d4ed8;"></div>
+        <div class="ratio-seg" style="flex:18; background:#be123c;"></div>
+      </div>
+      <div class="flex gap-4 mb-5">
+        <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#1d4ed8;"></div><span style="font-size:12px;color:#6b6b7b;font-weight:600;">US 82%</span></div>
+        <div class="flex items-center gap-1"><div style="width:8px;height:8px;border-radius:50%;background:#be123c;"></div><span style="font-size:12px;color:#6b6b7b;font-weight:600;">KR 18%</span></div>
+      </div>
+
+      <div style="font-size:11px; font-weight:700; color:#6b6b7b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">많이 거래한 종목 TOP 3</div>
+      <div class="flex flex-wrap gap-2">
+        <div style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700; color:#1c1c1e; display:flex; align-items:center; gap:6px;">AAPL <span style="color:#16a34a;">매수 2</span></div>
+        <div style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700; color:#1c1c1e; display:flex; align-items:center; gap:6px;">BRK.B <span style="color:#dc2626;">매도 1</span></div>
+        <div style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700; color:#1c1c1e; display:flex; align-items:center; gap:6px;">KO <span style="color:#16a34a;">매수 1</span></div>
+      </div>
+    </section>
+
+    </div>
+    <!-- /LEFT -->
+
+    <!-- RIGHT: 선택한 날짜의 거래 피드 -->
+    <section class="reveal lg:sticky" style="top:24px;">
+      <div class="flex items-center justify-between mb-3">
+        <h2 id="feed-date-label" style="font-size:15px; font-weight:800; color:#1c1c1e;">1월 15일 거래 내역</h2>
+      </div>
+
+      <div class="flex flex-col gap-2" id="feed-container">
+
+        <!-- Day 3 feed -->
+        <div class="day-feed flex flex-col gap-2" id="feed-3" style="display:none;">
+          <div class="trade-card">
+            <span class="chip-buy" style="flex-shrink:0;"><iconify-icon icon="solar:arrow-down-linear" style="font-size:12px;"></iconify-icon>매수</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span style="font-size:14px; font-weight:800; color:#1c1c1e;">AAPL</span><span style="font-size:12px; color:#6b6b7b;">Apple Inc.</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">5주 × ₩260,000 = <span style="font-weight:700; color:#1c1c1e;">₩1,300,000</span></div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:4px;">신년 첫 적립 매수, 목표 비중 42% 도달 전 분할 매수</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day 8 feed -->
+        <div class="day-feed flex flex-col gap-2" id="feed-8" style="display:none;">
+          <div class="trade-card">
+            <span class="chip-sell" style="flex-shrink:0;"><iconify-icon icon="solar:arrow-up-linear" style="font-size:12px;"></iconify-icon>매도</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span style="font-size:14px; font-weight:800; color:#1c1c1e;">BRK.B</span><span style="font-size:12px; color:#6b6b7b;">Berkshire Hathaway</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">2주 × ₩620,000 = <span style="font-weight:700; color:#1c1c1e;">₩1,240,000</span> · 세금 ₩1,800</div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:4px;">비중 초과분 일부 정리</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day 15 feed (default selected) -->
+        <div class="day-feed flex flex-col gap-2" id="feed-15">
+          <div class="trade-card">
+            <span class="chip-buy" style="flex-shrink:0;"><iconify-icon icon="solar:arrow-down-linear" style="font-size:12px;"></iconify-icon>매수</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span style="font-size:14px; font-weight:800; color:#1c1c1e;">KO</span><span style="font-size:12px; color:#6b6b7b;">Coca-Cola</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">10주 × ₩83,000 = <span style="font-weight:700; color:#1c1c1e;">₩830,000</span></div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:4px;">배당주 비중 확대 목적 정기 매수</div>
+            </div>
+          </div>
+          <div class="trade-card">
+            <span class="chip-sell" style="flex-shrink:0;"><iconify-icon icon="solar:arrow-up-linear" style="font-size:12px;"></iconify-icon>매도</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span style="font-size:14px; font-weight:800; color:#1c1c1e;">OXY</span><span style="font-size:12px; color:#6b6b7b;">Occidental Petroleum</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">3주 × ₩60,000 = <span style="font-weight:700; color:#1c1c1e;">₩180,000</span> · 세금 ₩400</div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:4px;">유가 반등 구간 일부 차익 실현</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day 22 feed -->
+        <div class="day-feed flex flex-col gap-2" id="feed-22" style="display:none;">
+          <div class="trade-card">
+            <span class="chip-buy" style="flex-shrink:0;"><iconify-icon icon="solar:arrow-down-linear" style="font-size:12px;"></iconify-icon>매수</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span style="font-size:14px; font-weight:800; color:#1c1c1e;">VTI</span><span style="font-size:12px; color:#6b6b7b;">Vanguard Total Stock</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">4주 × ₩150,000 = <span style="font-weight:700; color:#1c1c1e;">₩600,000</span></div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:4px;">이번 달 정기 적립</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day 28 feed -->
+        <div class="day-feed flex flex-col gap-2" id="feed-28" style="display:none;">
+          <div class="trade-card">
+            <span class="chip-sell" style="flex-shrink:0;"><iconify-icon icon="solar:arrow-up-linear" style="font-size:12px;"></iconify-icon>매도</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span style="font-size:14px; font-weight:800; color:#1c1c1e;">BAC</span><span style="font-size:12px; color:#6b6b7b;">Bank of America</span></div>
+              <div style="font-size:12px; color:#6b6b7b;">4주 × ₩40,000 = <span style="font-weight:700; color:#1c1c1e;">₩160,000</span> · 세금 ₩0</div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:4px;">월말 리밸런싱 매도분</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="feed-empty" style="display:none; text-align:center; padding:32px 16px; color:#9ca3af; font-size:13px; background:#fff; border:1.5px dashed #ebebef; border-radius:14px;">
+          해당 날짜에 등록된 거래가 없습니다.
+        </div>
+      </div>
+    </section>
+    <!-- /RIGHT -->
+    </div>
+
+  </main>
+
+  <!-- ── 하단 고정 액션바 ── -->
+  <div class="md:ml-60" style="position:fixed; bottom:0; left:0; right:0; background:rgba(255,255,255,.92); backdrop-filter:blur(16px); border-top:1.5px solid #ebebef; padding:12px 16px; z-index:40;">
+    <div class="max-w-3xl mx-auto flex gap-3">
+      <button class="btn-primary flex-1 justify-center" style="padding:13px;" onclick="openModal('buy')">
+        <iconify-icon icon="solar:add-circle-bold" style="font-size:17px;"></iconify-icon>
+        매수 기록
+      </button>
+      <button class="btn-sell flex-1 justify-center" style="padding:13px;" onclick="openModal('sell')">
+        <iconify-icon icon="solar:minus-circle-bold" style="font-size:17px;"></iconify-icon>
+        매도 기록
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════ 매수 기록 작성 모달 ══════════ -->
+  <div class="modal-overlay" id="modal-buy" onclick="if(event.target===this)closeModal('buy')">
+    <div class="modal">
+      <div style="padding:24px; border-bottom:1.5px solid #f4f4f5; flex-shrink:0;">
+        <div class="flex items-center justify-between">
+          <h3 style="font-size:17px; font-weight:800; color:#1c1c1e;">매수 기록</h3>
+          <button onclick="closeModal('buy')" style="border:none; background:transparent; cursor:pointer; padding:6px; color:#6b6b7b;">
+            <iconify-icon icon="solar:close-circle-linear" style="font-size:22px;"></iconify-icon>
+          </button>
+        </div>
+      </div>
+      <div style="padding:24px; overflow-y:auto;">
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:6px;">날짜</label>
+        <input type="date" class="input-field mb-5" value="2025-01-15">
+
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:6px;">종목 검색</label>
+        <div style="position:relative;" class="mb-5">
+          <iconify-icon icon="solar:magnifer-linear" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:#9ca3af; z-index:1;"></iconify-icon>
+          <input type="text" id="buy-search-input" class="input-field" style="padding-left:42px;"
+            placeholder="티커 또는 종목명 검색 (예: AAPL, 삼성전자)"
+            oninput="filterBuySearch(this.value)"
+            onfocus="filterBuySearch(this.value)"
+            onblur="setTimeout(()=>{document.getElementById('buy-search-results').style.display='none'},150)">
+          <div id="buy-search-results" class="search-result" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20; background:#fff; max-height:220px; overflow-y:auto;"></div>
+        </div>
+
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:8px;">추가된 종목</label>
+        <div id="buy-rows" class="flex flex-col gap-3 mb-5">
+          <div class="buy-row" data-ticker="AAPL" style="background:#f8f9fe; border:1.5px solid #ebebef; border-radius:12px; padding:14px;">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span style="font-size:14px; font-weight:800; color:#1c1c1e;">AAPL</span>
+                <span style="font-size:12px; color:#6b6b7b;">Apple Inc.</span>
+                <span class="badge badge-us">US</span>
+              </div>
+              <button onclick="this.closest('.buy-row').remove(); checkBuyRowsEmpty();" style="border:none; background:transparent; cursor:pointer; color:#d1d5db; padding:2px;">
+                <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">수량</label>
+                <input type="number" class="input-field buy-qty" value="5" min="0" oninput="updateBuyRowTotal(this.closest('.buy-row'))">
+              </div>
+              <div>
+                <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">가격</label>
+                <input type="number" class="input-field buy-price" value="260000" min="0" oninput="updateBuyRowTotal(this.closest('.buy-row'))">
+              </div>
+            </div>
+            <div class="flex items-center justify-between" style="padding-top:8px; border-top:1px solid #ebebef;">
+              <span style="font-size:12px; color:#6b6b7b;">합계</span>
+              <span class="buy-total" style="font-size:14px; font-weight:800; color:#355df9;">₩1,300,000</span>
+            </div>
+          </div>
+        </div>
+        <div id="buy-rows-empty" style="display:none; text-align:center; padding:20px; color:#9ca3af; font-size:13px; border:1.5px dashed #ebebef; border-radius:12px; margin-bottom:20px;">
+          검색해서 종목을 추가하세요.
+        </div>
+
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:6px;">메모 (선택, 최대 1,000자)</label>
+        <textarea class="input-field" rows="3" placeholder="매수 이유를 남겨보세요" style="resize:none; font-weight:500;"></textarea>
+
+        <button class="btn-primary justify-center w-full mt-6" style="padding:13px;" onclick="submitTrade('buy')">
+          <iconify-icon icon="solar:check-circle-bold" style="font-size:16px;"></iconify-icon>
+          매수 기록 저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 매도 기록 작성 모달 ══════════ -->
+  <div class="modal-overlay" id="modal-sell" onclick="if(event.target===this)closeModal('sell')">
+    <div class="modal">
+      <div style="padding:24px; border-bottom:1.5px solid #f4f4f5; flex-shrink:0;">
+        <div class="flex items-center justify-between">
+          <h3 style="font-size:17px; font-weight:800; color:#1c1c1e;">매도 기록</h3>
+          <button onclick="closeModal('sell')" style="border:none; background:transparent; cursor:pointer; padding:6px; color:#6b6b7b;">
+            <iconify-icon icon="solar:close-circle-linear" style="font-size:22px;"></iconify-icon>
+          </button>
+        </div>
+      </div>
+      <div style="padding:24px; overflow-y:auto;">
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:6px;">날짜</label>
+        <input type="date" class="input-field mb-5" value="2025-01-15">
+
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:8px;">보유 종목 (매수 기록 기반)</label>
+        <div class="flex flex-col gap-2 mb-5">
+          <div class="holding-pill">
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#1c1c1e;">AAPL <span style="font-size:11px; font-weight:600; color:#9ca3af;">Apple Inc.</span></div>
+              <div style="font-size:11px; color:#6b6b7b; margin-top:1px;">평균단가 ₩192,000 · 보유 12주</div>
+            </div>
+            <button class="btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="addSellRow('AAPL','Apple Inc.',192000,12,'US')">
+              <iconify-icon icon="solar:add-circle-linear" style="font-size:14px;"></iconify-icon>
+              추가
+            </button>
+          </div>
+          <div class="holding-pill">
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#1c1c1e;">005930 <span style="font-size:11px; font-weight:600; color:#9ca3af;">삼성전자</span></div>
+              <div style="font-size:11px; color:#6b6b7b; margin-top:1px;">평균단가 ₩71,000 · 보유 20주</div>
+            </div>
+            <button class="btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="addSellRow('005930','삼성전자',71000,20,'KR')">
+              <iconify-icon icon="solar:add-circle-linear" style="font-size:14px;"></iconify-icon>
+              추가
+            </button>
+          </div>
+        </div>
+
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:8px;">매도 종목</label>
+        <div id="sell-rows" class="flex flex-col gap-3 mb-5">
+          <div style="text-align:center; padding:20px; color:#9ca3af; font-size:13px; border:1.5px dashed #ebebef; border-radius:12px;" id="sell-rows-empty">
+            위 보유 종목에서 [추가]를 눌러 매도할 종목을 선택하세요.
+          </div>
+        </div>
+
+        <label style="font-size:12px; font-weight:700; color:#6b6b7b; display:block; margin-bottom:6px;">메모 (선택, 최대 1,000자)</label>
+        <textarea class="input-field" rows="3" placeholder="매도 이유를 남겨보세요" style="resize:none; font-weight:500;"></textarea>
+
+        <button class="btn-sell justify-center w-full mt-6" style="padding:13px;" onclick="submitTrade('sell')">
+          <iconify-icon icon="solar:check-circle-bold" style="font-size:16px;"></iconify-icon>
+          매도 기록 저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
+
+    // ─────────────────────────────────────────────
+    // Calendar day selection
+    // ─────────────────────────────────────────────
+    function selectDay(day, el) {
+      document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+      if (el) el.classList.add('selected');
+      document.getElementById('feed-date-label').textContent = `1월 ${day}일 거래 내역`;
+      document.querySelectorAll('.day-feed').forEach(f => f.style.display = 'none');
+      const feed = document.getElementById('feed-' + day);
+      const empty = document.getElementById('feed-empty');
+      if (feed) {
+        feed.style.display = 'flex';
+        empty.style.display = 'none';
+      } else {
+        empty.style.display = 'block';
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // Buy modal: ticker search → auto add
+    // ─────────────────────────────────────────────
+    const BUY_SEARCH_POOL = [
+      { ticker: 'AAPL', name: 'Apple Inc.', market: 'US', price: 260000 },
+      { ticker: 'MSFT', name: 'Microsoft', market: 'US', price: 410000 },
+      { ticker: 'NVDA', name: 'NVIDIA', market: 'US', price: 620000 },
+      { ticker: 'TSLA', name: 'Tesla', market: 'US', price: 340000 },
+      { ticker: 'VTI', name: 'Vanguard Total Stock', market: 'US', price: 150000 },
+      { ticker: 'KO', name: 'Coca-Cola', market: 'US', price: 83000 },
+      { ticker: '005930', name: '삼성전자', market: 'KR', price: 71000 },
+      { ticker: '000660', name: 'SK하이닉스', market: 'KR', price: 185000 },
+    ];
+
+    function filterBuySearch(query) {
+      const results = document.getElementById('buy-search-results');
+      const q = query.trim().toLowerCase();
+      if (!q) { results.style.display = 'none'; results.innerHTML = ''; return; }
+
+      const matches = BUY_SEARCH_POOL.filter(s =>
+        s.ticker.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+
+      if (!matches.length) {
+        results.innerHTML = `<div style="padding:14px; font-size:13px; color:#9ca3af; text-align:center;">검색 결과가 없습니다.</div>`;
+        results.style.display = 'block';
+        return;
+      }
+
+      results.innerHTML = matches.map(s => `
+        <div class="search-result-item" onmousedown="selectBuyTicker('${s.ticker}')">
+          <div><span style="font-weight:800; font-size:14px; color:#1c1c1e;">${s.ticker}</span> <span style="font-size:13px; color:#6b6b7b; margin-left:8px;">${s.name}</span></div>
+          <span class="badge ${s.market === 'US' ? 'badge-us' : 'badge-kr'}">${s.market}</span>
+        </div>
+      `).join('');
+      results.style.display = 'block';
+    }
+
+    function selectBuyTicker(ticker) {
+      const stock = BUY_SEARCH_POOL.find(s => s.ticker === ticker);
+      if (!stock) return;
+      addBuyRow(stock);
+      const input = document.getElementById('buy-search-input');
+      input.value = '';
+      document.getElementById('buy-search-results').style.display = 'none';
+      input.focus();
+    }
+
+    function addBuyRow(stock) {
+      if (document.querySelector(`.buy-row[data-ticker="${stock.ticker}"]`)) {
+        showToast(`${stock.ticker}은(는) 이미 추가되었습니다.`);
+        return;
+      }
+      document.getElementById('buy-rows-empty').style.display = 'none';
+
+      const row = document.createElement('div');
+      row.className = 'buy-row';
+      row.dataset.ticker = stock.ticker;
+      row.style.cssText = 'background:#f8f9fe; border:1.5px solid #ebebef; border-radius:12px; padding:14px;';
+      row.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span style="font-size:14px; font-weight:800; color:#1c1c1e;">${stock.ticker}</span>
+            <span style="font-size:12px; color:#6b6b7b;">${stock.name}</span>
+            <span class="badge ${stock.market === 'US' ? 'badge-us' : 'badge-kr'}">${stock.market}</span>
+          </div>
+          <button onclick="this.closest('.buy-row').remove(); checkBuyRowsEmpty();" style="border:none; background:transparent; cursor:pointer; color:#d1d5db; padding:2px;">
+            <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <div>
+            <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">수량</label>
+            <input type="number" class="input-field buy-qty" value="1" min="0" oninput="updateBuyRowTotal(this.closest('.buy-row'))">
+          </div>
+          <div>
+            <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">가격</label>
+            <input type="number" class="input-field buy-price" value="${stock.price}" min="0" oninput="updateBuyRowTotal(this.closest('.buy-row'))">
+          </div>
+        </div>
+        <div class="flex items-center justify-between" style="padding-top:8px; border-top:1px solid #ebebef;">
+          <span style="font-size:12px; color:#6b6b7b;">합계</span>
+          <span class="buy-total" style="font-size:14px; font-weight:800; color:#355df9;">₩${stock.price.toLocaleString()}</span>
+        </div>
+      `;
+      document.getElementById('buy-rows').appendChild(row);
+    }
+
+    function updateBuyRowTotal(row) {
+      const qty = parseFloat(row.querySelector('.buy-qty').value) || 0;
+      const price = parseFloat(row.querySelector('.buy-price').value) || 0;
+      row.querySelector('.buy-total').textContent = '₩' + Math.round(qty * price).toLocaleString();
+    }
+
+    function checkBuyRowsEmpty() {
+      const rows = document.getElementById('buy-rows');
+      document.getElementById('buy-rows-empty').style.display = rows.children.length ? 'none' : 'block';
+    }
+
+    // ─────────────────────────────────────────────
+    // Sell modal row helpers
+    // ─────────────────────────────────────────────
+    function addSellRow(ticker, name, avgPrice, maxQty, market) {
+      const rows = document.getElementById('sell-rows');
+      document.getElementById('sell-rows-empty').style.display = 'none';
+      const defaultFx = 1380;
+      // 평균단가는 항상 원화 환산 기준(PRD 5.7.2). 미국 종목의 매도가 입력은 달러이므로
+      // 기본값은 평균단가를 환율로 역산해 손익 0에서 시작하도록 맞춘다.
+      const defaultPrice = market === 'US' ? Math.round(avgPrice / defaultFx) : avgPrice;
+
+      const row = document.createElement('div');
+      row.className = 'sell-row';
+      row.dataset.avg = avgPrice;
+      row.dataset.market = market;
+      row.style.cssText = 'background:#fff8f8; border:1.5px solid #fecaca; border-radius:12px; padding:14px;';
+
+      row.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div style="font-size:13px; font-weight:800; color:#1c1c1e;">${ticker} <span style="font-size:11px; font-weight:600; color:#9ca3af;">${name}</span></div>
+            <div style="font-size:11px; color:#9ca3af; margin-top:1px;">평균단가 ₩${avgPrice.toLocaleString()} (원화 환산) 기준으로 손익이 계산됩니다</div>
+          </div>
+          <button onclick="this.closest('.sell-row').remove()" style="border:none; background:transparent; cursor:pointer; color:#d1d5db; padding:2px; flex-shrink:0;">
+            <iconify-icon icon="solar:trash-bin-2-linear" style="font-size:16px;"></iconify-icon>
+          </button>
+        </div>
+        <div class="grid ${market === 'US' ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mb-2">
+          <div>
+            <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">수량 (최대 ${maxQty}주)</label>
+            <input type="number" class="input-field sell-qty" value="1" min="0" max="${maxQty}" oninput="updateSellRow(this.closest('.sell-row'))">
+          </div>
+          <div>
+            <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">매도가 (${market === 'US' ? '$' : '원'})</label>
+            <input type="number" class="input-field sell-price" value="${defaultPrice}" min="0" step="${market === 'US' ? '0.01' : '100'}" oninput="updateSellRow(this.closest('.sell-row'))">
+          </div>
+          ${market === 'US' ? `<div>
+            <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">환율 (원/$)</label>
+            <input type="number" class="input-field sell-fx" value="${defaultFx}" min="0" oninput="updateSellRow(this.closest('.sell-row'))">
+          </div>` : ''}
+        </div>
+        <label style="font-size:11px; color:#9ca3af; font-weight:600; display:block; margin-bottom:3px;">세금 (원, 증권사 지급명세서 기준 직접 입력)</label>
+        <input type="number" class="input-field sell-tax mb-2" value="0" min="0" oninput="updateSellRow(this.closest('.sell-row'))">
+        <div class="flex flex-col gap-1" style="font-size:12px; padding-top:8px; border-top:1px solid #fecaca;">
+          <div class="flex items-center justify-between"><span style="color:#6b6b7b;">매도금액</span><span class="sell-amount" style="font-weight:700; color:#1c1c1e;">₩0</span></div>
+          <div class="flex items-center justify-between"><span style="color:#6b6b7b;">손익</span><span class="sell-pnl" style="font-weight:700;">₩0</span></div>
+          <div class="flex items-center justify-between"><span style="color:#6b6b7b;">세후 손익</span><span class="sell-pnl-after" style="font-weight:800;">₩0</span></div>
+        </div>
+      `;
+      rows.appendChild(row);
+      updateSellRow(row);
+    }
+
+    function updateSellRow(row) {
+      const qty = parseFloat(row.querySelector('.sell-qty').value) || 0;
+      const price = parseFloat(row.querySelector('.sell-price').value) || 0;
+      const tax = parseFloat(row.querySelector('.sell-tax').value) || 0;
+      const avg = parseFloat(row.dataset.avg) || 0;
+      const market = row.dataset.market;
+      const fxEl = row.querySelector('.sell-fx');
+      const fx = fxEl ? (parseFloat(fxEl.value) || 0) : 1;
+
+      // 평균단가(avg)는 항상 원화 환산 기준. 미국 종목은 매도가($)를 환율로 원화 환산한 뒤 비교한다.
+      const amount = market === 'US' ? qty * price * fx : qty * price;
+      const pnl = market === 'US' ? (price * fx - avg) * qty : (price - avg) * qty;
+      const pnlAfter = pnl - tax;
+
+      row.querySelector('.sell-amount').textContent = '₩' + Math.round(amount).toLocaleString();
+      const pnlEl = row.querySelector('.sell-pnl');
+      pnlEl.textContent = (pnl >= 0 ? '+' : '') + '₩' + Math.round(pnl).toLocaleString();
+      pnlEl.style.color = pnl >= 0 ? '#16a34a' : '#dc2626';
+      const pnlAfterEl = row.querySelector('.sell-pnl-after');
+      pnlAfterEl.textContent = (pnlAfter >= 0 ? '+' : '') + '₩' + Math.round(pnlAfter).toLocaleString();
+      pnlAfterEl.style.color = pnlAfter >= 0 ? '#16a34a' : '#dc2626';
+    }
+
+    // ─────────────────────────────────────────────
+    // Modal + toast helpers
+    // ─────────────────────────────────────────────
+    function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+    function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+    function submitTrade(type) {
+      closeModal(type);
+      showToast(type === 'buy' ? '매수 기록이 저장되었습니다.' : '매도 기록이 저장되었습니다.');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function openMobileMenu() {
+      const overlay = document.getElementById('mobile-menu');
+      const panel = document.getElementById('menu-panel');
+      const backdrop = document.getElementById('menu-backdrop');
+      overlay.style.display = 'block';
+      requestAnimationFrame(() => {
+        panel.style.transform = 'translateX(0)';
+        backdrop.style.background = 'rgba(0,0,0,.4)';
+        document.querySelectorAll('.menu-item').forEach((el, i) => {
+          setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(0)';
+          }, 120 + i * 60);
+        });
+      });
+    }
+
+    function closeMobileMenu() {
+      const overlay = document.getElementById('mobile-menu');
+      const panel = document.getElementById('menu-panel');
+      const backdrop = document.getElementById('menu-backdrop');
+      panel.style.transform = 'translateX(100%)';
+      backdrop.style.background = 'rgba(0,0,0,0)';
+      document.querySelectorAll('.menu-item').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(12px)';
+      });
+      setTimeout(() => { overlay.style.display = 'none'; }, 450);
+    }
+
+    function handleLogout() {
+      window.location.href = '06-auth.html';
+    }
+  </script>
+</body>
+</html>
