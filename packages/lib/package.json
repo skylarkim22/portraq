@@ -1,0 +1,22 @@
+{
+  "name": "@portraq/lib",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./types": "./src/types/index.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5",
+    "vitest": "^3"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}
