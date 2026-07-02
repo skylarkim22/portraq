@@ -359,7 +359,7 @@ Portraq는 두 가지 핵심 서비스를 제공합니다.
 - `ticker`: string — 종목 코드 (FK → Asset)
 - `ratio`: number — 목표 비중 (%)
 - `shares`: number — 현재 보유 주수
-- `order`: number — 포트폴리오 내 표시 순서
+- `sort_order`: number — 포트폴리오 내 표시 순서
 
 ### 5.2 Asset (종목 마스터)
 

@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## 주식 데이터 현황
+
+| 시장 | 종목 수 |
+|------|---------|
+| KR (KOSPI + KOSDAQ) | 2,768개 |
+| ETF (국내) | 1,145개 |
+| US (미국) | 4,246개 |
+| **합계** | **8,159개** |
+
+> 출처: KRX 정보데이터시스템 (한국), Nasdaq Stock Screener (미국) — 2026년 6월 24일 기준
