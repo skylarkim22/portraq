@@ -88,6 +88,9 @@ src/components/[ComponentName]/
 
 작성 후 `src/components/index.ts`에 re-export를 추가한다.
 
+**예외**: `src/components/ui/`의 shadcn/ui 유래 프리미티브(Button, Badge, Card, Input, Slider 등)는
+위 test + story 규칙 대상이 아니다. 버그 수정·스타일링 변경 시에도 story를 새로 작성하지 않는다.
+
 ## Tanstack Query 코드 작성 가이드
 
 - `useQuery` 사용할 때는 `queryOptions`을 사용하여 데이터를 받아온다.
