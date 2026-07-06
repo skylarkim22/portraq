@@ -39,6 +39,14 @@ export function useSignOut() {
       const { error } = await createClient().auth.signOut();
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.all }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: authKeys.all });
+      const previousUser = queryClient.getQueryData(authKeys.user());
+      queryClient.setQueryData(authKeys.user(), null);
+      return { previousUser };
+    },
+    onError: (_error, _variables, context) => {
+      queryClient.setQueryData(authKeys.user(), context?.previousUser);
+    },
   });
 }
