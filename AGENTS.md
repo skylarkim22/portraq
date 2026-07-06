@@ -75,6 +75,24 @@ import type { MarketFilter } from "@/features/stocks/queries";
 같은 디렉토리 내 파일(`./index`, 컴포넌트 옆 `.test.tsx` 등)도 동일하게 `@/` 경로를 사용한다.
 `packages/ui`, `packages/lib` 등 워크스페이스 패키지 import는 패키지명(`@portraq/ui`, `@portraq/lib/types`)을 그대로 사용한다.
 
+## Props 타입 컨벤션
+
+컴포넌트 내부에서만 쓰고 다른 파일이 import하지 않는 Props 타입은 `interface`가 아닌 `type`으로 선언하고 export하지 않는다.
+
+```ts
+// ❌ 지양 — 내부 전용인데 interface + export
+export interface StockSearchProps {
+  onSelect: (asset: Asset) => void;
+}
+
+// ✅ 지향
+type StockSearchProps = {
+  onSelect: (asset: Asset) => void;
+};
+```
+
+다른 파일에서 재사용해야 하는 Props(예: `packages/ui`의 디자인 시스템 컴포넌트)는 기존대로 `interface` + export를 유지한다.
+
 ## packages/ui 컴포넌트 작성 규칙
 
 새 컴포넌트는 반드시 디렉토리 단위로 만들고, test + story를 함께 작성한다.

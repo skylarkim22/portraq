@@ -8,9 +8,9 @@ import { useDebouncedValue, useStockSearch } from "@/features/stocks/hooks";
 import { MARKET_TABS } from "@/features/stocks/constants";
 import type { MarketFilter } from "@/features/stocks/queries";
 
-interface StockSearchProps {
+type StockSearchProps = {
   onSelect: (asset: Asset) => void;
-}
+};
 
 export function StockSearch({ onSelect }: StockSearchProps) {
   const [query, setQuery] = useState("");
