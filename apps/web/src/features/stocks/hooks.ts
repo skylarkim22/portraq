@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { stockSearchQueryOptions, type MarketFilter } from "./queries";
+import { stockSearchQueryOptions, type MarketFilter } from "@/features/stocks/queries";
 
 export function useDebouncedValue<T>(value: T, delayMs: number) {
   const [debounced, setDebounced] = useState(value);

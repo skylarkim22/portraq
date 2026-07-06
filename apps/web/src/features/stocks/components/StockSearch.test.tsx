@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { StockSearch } from "./StockSearch";
+import { StockSearch } from "@/features/stocks/components/StockSearch";
 
 const ASSET_ROWS = [
   { ticker: "005930", name: "삼성전자", market: "KR", color: "#355df9", is_active: true },

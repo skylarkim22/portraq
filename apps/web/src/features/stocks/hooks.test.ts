@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { useDebouncedValue } from "./hooks";
+import { useDebouncedValue } from "@/features/stocks/hooks";
 
 describe("useDebouncedValue", () => {
   it("지연 시간이 지나기 전에는 이전 값을 유지한다", () => {

@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { Button, Card, Input } from "@portraq/ui";
 import type { Asset } from "@portraq/lib/types";
-import { useDebouncedValue, useStockSearch } from "../hooks";
-import type { MarketFilter } from "../queries";
+import { useDebouncedValue, useStockSearch } from "@/features/stocks/hooks";
+import type { MarketFilter } from "@/features/stocks/queries";
 
 const MARKET_TABS: { label: string; value: MarketFilter }[] = [
   { label: "전체", value: "ALL" },
