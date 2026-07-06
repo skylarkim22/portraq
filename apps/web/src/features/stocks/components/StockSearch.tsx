@@ -5,15 +5,10 @@ import { Search, X } from "lucide-react";
 import { Button, Card, Input } from "@portraq/ui";
 import type { Asset } from "@portraq/lib/types";
 import { useDebouncedValue, useStockSearch } from "@/features/stocks/hooks";
+import { MARKET_TABS } from "@/features/stocks/constants";
 import type { MarketFilter } from "@/features/stocks/queries";
 
-const MARKET_TABS: { label: string; value: MarketFilter }[] = [
-  { label: "전체", value: "ALL" },
-  { label: "한국", value: "KR" },
-  { label: "미국", value: "US" },
-];
-
-export interface StockSearchProps {
+interface StockSearchProps {
   onSelect: (asset: Asset) => void;
 }
 
