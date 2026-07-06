@@ -10,15 +10,31 @@ export const stockKeys = {
     [...stockKeys.all, "search", query, market] as const,
 };
 
+// assets.name/ticker의 GIN(to_tsvector('simple', ...)) 인덱스를 타도록 접두어
+// tsquery로 변환한다. 영숫자·한글 외 문자는 제거해 tsquery/PostgREST 구문을
+// 깨뜨릴 수 있는 입력(쉼표, 괄호 등)을 함께 차단한다.
+function toPrefixTsQuery(input: string) {
+  return input
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter(Boolean)
+    .map((word) => `${word}:*`)
+    .join(" & ");
+}
+
 export const stockSearchQueryOptions = (query: string, market: MarketFilter) =>
   queryOptions({
     queryKey: stockKeys.search(query, market),
     queryFn: async (): Promise<Asset[]> => {
+      const tsQuery = toPrefixTsQuery(query);
+      if (!tsQuery) return [];
+
       let request = createClient()
         .from("assets")
         .select("ticker, name, market, color, is_active")
         .eq("is_active", true)
-        .or(`ticker.ilike.%${query}%,name.ilike.%${query}%`)
+        .or(`ticker.fts(simple).${tsQuery},name.fts(simple).${tsQuery}`)
         .order("ticker")
         .limit(20);
 
