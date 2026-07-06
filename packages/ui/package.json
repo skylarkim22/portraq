@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
-    ".": "./src/components/index.ts"
+    ".": "./src/components/index.ts",
+    "./tokens.css": "./src/tokens.css"
   },
   "scripts": {
     "storybook": "storybook dev -p 6006",
