@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
+import { useUser, useSignOut } from "@/features/auth/hooks";
 import {
   ArrowRight,
   Award,
@@ -184,6 +185,8 @@ export default function Home() {
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [stickyVisible, setStickyVisible] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
+  const { data: user } = useUser();
+  const signOut = useSignOut();
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
@@ -257,9 +260,20 @@ export default function Home() {
               ))}
             </nav>
             <div className="hidden md:flex items-center gap-3">
-              <a href="#" className="btn-primary" style={{ padding: "10px 22px", fontSize: 14 }}>
-                무료로 시작하기 <ArrowRight size={16} />
-              </a>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => signOut.mutate()}
+                  className="btn-ghost"
+                  style={{ padding: "10px 22px", fontSize: 14 }}
+                >
+                  로그아웃
+                </button>
+              ) : (
+                <a href="/login" className="btn-primary" style={{ padding: "10px 22px", fontSize: 14 }}>
+                  무료로 시작하기 <ArrowRight size={16} />
+                </a>
+              )}
             </div>
             <button onClick={() => setMobileMenuOpen(true)} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 8, borderRadius: 8 }} className="md:hidden">
               <Menu size={24} color="#1c1c1e" />
@@ -284,9 +298,28 @@ export default function Home() {
           ))}
         </nav>
         <div className="flex flex-col gap-3" style={{ paddingBottom: 32 }}>
-          <a href="#" className="btn-primary" style={{ padding: 16, justifyContent: "center" }}>
-            무료로 시작하기 <ArrowRight size={16} />
-          </a>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                signOut.mutate();
+              }}
+              className="btn-ghost"
+              style={{ padding: 16, justifyContent: "center" }}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <a
+              href="/login"
+              className="btn-primary"
+              style={{ padding: 16, justifyContent: "center" }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              무료로 시작하기 <ArrowRight size={16} />
+            </a>
+          )}
         </div>
       </div>
 
