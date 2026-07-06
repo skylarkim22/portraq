@@ -58,6 +58,23 @@ src/
 
 피처 예시: `portfolio`, `stocks`, `trade-log`
 
+## Import 컨벤션
+
+`apps/web` 내부에서는 상대 경로(`./`, `../`) 대신 `@/` 절대 경로로 import한다.
+
+```ts
+// ❌ 지양
+import { useStockSearch } from "../hooks";
+import type { MarketFilter } from "../queries";
+
+// ✅ 지향
+import { useStockSearch } from "@/features/stocks/hooks";
+import type { MarketFilter } from "@/features/stocks/queries";
+```
+
+같은 디렉토리 내 파일(`./index`, 컴포넌트 옆 `.test.tsx` 등)도 동일하게 `@/` 경로를 사용한다.
+`packages/ui`, `packages/lib` 등 워크스페이스 패키지 import는 패키지명(`@portraq/ui`, `@portraq/lib/types`)을 그대로 사용한다.
+
 ## packages/ui 컴포넌트 작성 규칙
 
 새 컴포넌트는 반드시 디렉토리 단위로 만들고, test + story를 함께 작성한다.
@@ -126,7 +143,7 @@ export const portfolioQueryOptions = (id: string) =>
 ```ts
 // features/portfolio/hooks.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { portfolioListQueryOptions, portfolioQueryOptions, portfolioKeys } from './queries'
+import { portfolioListQueryOptions, portfolioQueryOptions, portfolioKeys } from '@/features/portfolio/queries'
 
 export function usePortfolioList() {
   return useQuery(portfolioListQueryOptions)
