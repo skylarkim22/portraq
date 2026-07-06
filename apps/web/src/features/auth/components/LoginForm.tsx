@@ -1,15 +1,10 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-
-async function signInWith(provider: "google" | "kakao") {
-  await createClient().auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}/auth/callback` },
-  });
-}
+import { useSignInWithOAuth } from "@/features/auth/hooks";
 
 export function LoginForm() {
+  const signIn = useSignInWithOAuth();
+
   return (
     <div className="card-form fade-in w-full max-w-[400px]">
       <div className="mb-8 text-center">
@@ -25,7 +20,8 @@ export function LoginForm() {
         <button
           type="button"
           className="btn-social"
-          onClick={() => signInWith("google")}
+          disabled={signIn.isPending}
+          onClick={() => signIn.mutate("google")}
         >
           <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M47.532 24.552a28.79 28.79 0 0 0-.457-5.127H24.48v9.697h13.002c-.56 3.02-2.26 5.58-4.82 7.293v6.065h7.8c4.562-4.2 7.07-10.38 7.07-17.928z" fill="#4285f4" />
@@ -40,7 +36,8 @@ export function LoginForm() {
           type="button"
           className="btn-social"
           style={{ background: "#FEE500", borderColor: "#FEE500", color: "#191919" }}
-          onClick={() => signInWith("kakao")}
+          disabled={signIn.isPending}
+          onClick={() => signIn.mutate("kakao")}
         >
           <svg width="20" height="20" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -53,6 +50,12 @@ export function LoginForm() {
           카카오로 계속하기
         </button>
       </div>
+
+      {signIn.isError && (
+        <p className="mt-4 text-center text-xs text-destructive">
+          로그인 중 문제가 발생했습니다. 다시 시도해주세요.
+        </p>
+      )}
 
       <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
         계속하면 Portraq의{" "}
