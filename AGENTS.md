@@ -58,6 +58,41 @@ src/
 
 피처 예시: `portfolio`, `stocks`, `trade-log`
 
+## Import 컨벤션
+
+`apps/web` 내부에서는 상대 경로(`./`, `../`) 대신 `@/` 절대 경로로 import한다.
+
+```ts
+// ❌ 지양
+import { useStockSearch } from "../hooks";
+import type { MarketFilter } from "../queries";
+
+// ✅ 지향
+import { useStockSearch } from "@/features/stocks/hooks";
+import type { MarketFilter } from "@/features/stocks/queries";
+```
+
+같은 디렉토리 내 파일(`./index`, 컴포넌트 옆 `.test.tsx` 등)도 동일하게 `@/` 경로를 사용한다.
+`packages/ui`, `packages/lib` 등 워크스페이스 패키지 import는 패키지명(`@portraq/ui`, `@portraq/lib/types`)을 그대로 사용한다.
+
+## Props 타입 컨벤션
+
+컴포넌트 내부에서만 쓰고 다른 파일이 import하지 않는 Props 타입은 `interface`가 아닌 `type`으로 선언하고 export하지 않는다.
+
+```ts
+// ❌ 지양 — 내부 전용인데 interface + export
+export interface StockSearchProps {
+  onSelect: (asset: Asset) => void;
+}
+
+// ✅ 지향
+type StockSearchProps = {
+  onSelect: (asset: Asset) => void;
+};
+```
+
+다른 파일에서 재사용해야 하는 Props(예: `packages/ui`의 디자인 시스템 컴포넌트)는 기존대로 `interface` + export를 유지한다.
+
 ## packages/ui 컴포넌트 작성 규칙
 
 새 컴포넌트는 반드시 디렉토리 단위로 만들고, test + story를 함께 작성한다.
@@ -70,6 +105,9 @@ src/components/[ComponentName]/
 ```
 
 작성 후 `src/components/index.ts`에 re-export를 추가한다.
+
+**예외**: `src/components/ui/`의 shadcn/ui 유래 프리미티브(Button, Badge, Card, Input, Slider 등)는
+위 test + story 규칙 대상이 아니다. 버그 수정·스타일링 변경 시에도 story를 새로 작성하지 않는다.
 
 ## Tanstack Query 코드 작성 가이드
 
@@ -126,7 +164,7 @@ export const portfolioQueryOptions = (id: string) =>
 ```ts
 // features/portfolio/hooks.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { portfolioListQueryOptions, portfolioQueryOptions, portfolioKeys } from './queries'
+import { portfolioListQueryOptions, portfolioQueryOptions, portfolioKeys } from '@/features/portfolio/queries'
 
 export function usePortfolioList() {
   return useQuery(portfolioListQueryOptions)

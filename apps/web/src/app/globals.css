@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "../../node_modules/@portraq/ui/src";
+@import "@portraq/ui/tokens.css";
 
 :root {
   --background: #ffffff;

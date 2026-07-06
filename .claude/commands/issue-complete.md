@@ -48,6 +48,8 @@ pnpm build --filter=@portraq/web 2>&1 | head -50
 
 ## 6. 브라우저 검증
 
+`/issue-start`에서 참고한 `docs/mockups/` 화면과 실제 구현을 비교해 색상·간격·컴포넌트 스타일이 일치하는지 확인한다.
+
 사용자에게 다음을 요청한다:
 
 ```
