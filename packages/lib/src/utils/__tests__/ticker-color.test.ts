@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getTickerColor, resolveColor } from "../ticker-color.js";
+import { getTickerColor, resolveColor } from "../ticker-color";
 
 describe("getTickerColor", () => {
   it("동일 티커는 항상 같은 색상을 반환한다", () => {
