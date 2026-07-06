@@ -1,12 +1,13 @@
 "use client";
 
+import { Button, Card } from "@portraq/ui";
 import { useSignInWithOAuth } from "@/features/auth/hooks";
 
 export function LoginForm() {
   const signIn = useSignInWithOAuth();
 
   return (
-    <div className="card-form fade-in w-full max-w-[400px]">
+    <Card className="fade-in w-full max-w-[400px] rounded-3xl px-8 py-10 shadow-[0_8px_40px_rgba(0,0,0,0.04)]">
       <div className="mb-8 text-center">
         <div className="mb-2 text-[22px] font-extrabold tracking-tight text-foreground">
           시작하기
@@ -17,9 +18,10 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <button
+        <Button
           type="button"
-          className="btn-social"
+          variant="outline"
+          className="h-auto w-full justify-center gap-2.5 rounded-[10px] py-3.5 text-[15px] font-bold"
           disabled={signIn.isPending}
           onClick={() => signIn.mutate("google")}
         >
@@ -30,12 +32,12 @@ export function LoginForm() {
             <path d="M24.48 9.498c3.556 0 6.748 1.223 9.263 3.624l6.946-6.946C36.482 2.358 31.008 0 24.48 0 15.1 0 6.813 5.28 2.826 13.117l8.084 6.262c1.912-5.73 7.258-9.881 13.57-9.881z" fill="#ea4335" />
           </svg>
           Google로 계속하기
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
-          className="btn-social"
-          style={{ background: "#FEE500", borderColor: "#FEE500", color: "#191919" }}
+          variant="outline"
+          className="h-auto w-full justify-center gap-2.5 rounded-[10px] border-[#FEE500] bg-[#FEE500] py-3.5 text-[15px] font-bold text-[#191919] hover:text-[#191919]"
           disabled={signIn.isPending}
           onClick={() => signIn.mutate("kakao")}
         >
@@ -48,7 +50,7 @@ export function LoginForm() {
             />
           </svg>
           카카오로 계속하기
-        </button>
+        </Button>
       </div>
 
       {signIn.isError && (
@@ -68,6 +70,6 @@ export function LoginForm() {
         </a>
         에 동의하는 것으로 간주됩니다.
       </p>
-    </div>
+    </Card>
   );
 }
