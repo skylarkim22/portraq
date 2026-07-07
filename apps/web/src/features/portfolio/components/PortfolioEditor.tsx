@@ -2,26 +2,40 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, RefreshCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@portraq/ui";
 import type { Asset, PortfolioAsset } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
-import { usePortfolio, useSavePortfolio } from "@/features/portfolio/hooks";
+import { useUser } from "@/features/auth/hooks";
+import {
+  useCreatePortfolio,
+  useDeletePortfolio,
+  usePortfolio,
+  useSavePortfolio,
+} from "@/features/portfolio/hooks";
 import { AssetList } from "@/features/portfolio/components/AssetList";
 import { AllocationSummary } from "@/features/portfolio/components/AllocationSummary";
 import { PortfolioHeader } from "@/features/portfolio/components/PortfolioHeader";
 import { AddAssetModal } from "@/features/portfolio/components/AddAssetModal";
 
+const DEFAULT_PORTFOLIO_NAME = "내 포트폴리오";
+
 type PortfolioEditorProps = {
-  portfolioId: string;
+  portfolioId: string | null;
 };
 
 export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
+  const isNew = portfolioId === null;
+  const router = useRouter();
+  const { data: user } = useUser();
   const { data: portfolio, isLoading, isError } = usePortfolio(portfolioId);
-  const savePortfolio = useSavePortfolio(portfolioId);
+  const createPortfolio = useCreatePortfolio();
+  const savePortfolio = useSavePortfolio();
+  const deletePortfolio = useDeletePortfolio();
 
-  const [hydrated, setHydrated] = useState(false);
+  const [hydrated, setHydrated] = useState(isNew);
   const [name, setName] = useState("");
   const [memo, setMemo] = useState("");
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
@@ -74,24 +88,62 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
     ]);
   };
 
-  const handleSave = () => {
+  const handleSaveSuccess = () => {
+    if (showSlot) {
+      toast.warning(
+        "미확정 슬롯이 남아 있습니다. 저장은 완료됐지만 리밸런싱 결과가 정확하지 않을 수 있습니다."
+      );
+    } else {
+      toast.success("포트폴리오가 저장되었습니다.");
+    }
+  };
+
+  const handleSave = async () => {
+    if (isNew) {
+      if (!user) return;
+      try {
+        const newId = await createPortfolio.mutateAsync({
+          userId: user.id,
+          name: name || DEFAULT_PORTFOLIO_NAME,
+        });
+        await savePortfolio.mutateAsync({
+          portfolioId: newId,
+          name: name || DEFAULT_PORTFOLIO_NAME,
+          memo: memo || null,
+          assets,
+        });
+        handleSaveSuccess();
+        router.replace(`/portfolio/${newId}`);
+      } catch {
+        toast.error("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
+      return;
+    }
+
     savePortfolio.mutate(
-      { name, memo: memo || null, assets },
+      { portfolioId, name, memo: memo || null, assets },
       {
-        onSuccess: () => {
-          if (showSlot) {
-            toast.warning(
-              "미확정 슬롯이 남아 있습니다. 저장은 완료됐지만 리밸런싱 결과가 정확하지 않을 수 있습니다."
-            );
-          } else {
-            toast.success("포트폴리오가 저장되었습니다.");
-          }
-        },
+        onSuccess: handleSaveSuccess,
         onError: () => {
           toast.error("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
         },
       }
     );
+  };
+
+  const handleDelete = () => {
+    if (!portfolioId) return;
+    if (!window.confirm("정말 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
+
+    deletePortfolio.mutate(portfolioId, {
+      onSuccess: () => {
+        toast.success("포트폴리오가 삭제되었습니다.");
+        router.replace("/portfolio");
+      },
+      onError: () => {
+        toast.error("삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      },
+    });
   };
 
   if (isError) {
@@ -155,18 +207,31 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
         <Button
           type="button"
           className="w-full"
-          disabled={savePortfolio.isPending}
+          disabled={savePortfolio.isPending || createPortfolio.isPending}
           onClick={handleSave}
         >
           저장
         </Button>
 
-        {assets.length > 0 && !showSlot && (
+        {portfolioId && assets.length > 0 && !showSlot && (
           <Button asChild type="button" variant="outline" className="w-full gap-2">
             <Link href={`/portfolio/${portfolioId}/guide`}>
               <RefreshCcw size={15} />
               이달의 매수 가이드
             </Link>
+          </Button>
+        )}
+
+        {portfolioId && (
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={deletePortfolio.isPending}
+            onClick={handleDelete}
+            className="w-full gap-2 border border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 size={15} />
+            포트폴리오 삭제
           </Button>
         )}
       </div>

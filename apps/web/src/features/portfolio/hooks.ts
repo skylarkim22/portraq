@@ -10,11 +10,16 @@ import { createClient } from "@/lib/supabase/client";
 import {
   latestSnapshotQueryOptions,
   portfolioKeys,
+  portfolioListQueryOptions,
   portfolioQueryOptions,
 } from "@/features/portfolio/queries";
 
-export function usePortfolio(id: string) {
-  return useQuery(portfolioQueryOptions(id));
+export function usePortfolio(id: string | null) {
+  return useQuery({ ...portfolioQueryOptions(id ?? ""), enabled: id !== null });
+}
+
+export function usePortfolioList() {
+  return useQuery(portfolioListQueryOptions());
 }
 
 export function useLatestSnapshot(portfolioId: string) {
@@ -22,6 +27,8 @@ export function useLatestSnapshot(portfolioId: string) {
 }
 
 export function useCreatePortfolio() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (input: { userId: string; name: string }) => {
       const { data, error } = await createClient()
@@ -32,16 +39,20 @@ export function useCreatePortfolio() {
       if (error) throw error;
       return data.id as string;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.lists() });
+    },
   });
 }
 
 type SavePortfolioInput = {
+  portfolioId: string;
   name: string;
   memo: string | null;
   assets: PortfolioAsset[];
 };
 
-export function useSavePortfolio(portfolioId: string) {
+export function useSavePortfolio() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -60,7 +71,7 @@ export function useSavePortfolio(portfolioId: string) {
         }));
 
       const { error } = await createClient().rpc("save_portfolio", {
-        p_portfolio_id: portfolioId,
+        p_portfolio_id: input.portfolioId,
         p_name: input.name,
         p_memo: input.memo,
         p_assets: assets,
@@ -69,13 +80,13 @@ export function useSavePortfolio(portfolioId: string) {
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({
-        queryKey: portfolioKeys.detail(portfolioId),
+        queryKey: portfolioKeys.detail(input.portfolioId),
       });
       const previous = queryClient.getQueryData<Portfolio>(
-        portfolioKeys.detail(portfolioId)
+        portfolioKeys.detail(input.portfolioId)
       );
       if (previous) {
-        queryClient.setQueryData(portfolioKeys.detail(portfolioId), {
+        queryClient.setQueryData(portfolioKeys.detail(input.portfolioId), {
           ...previous,
           name: input.name,
           memo: input.memo,
@@ -84,18 +95,38 @@ export function useSavePortfolio(portfolioId: string) {
       }
       return { previous };
     },
-    onError: (_error, _variables, context) => {
+    onError: (_error, variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
-          portfolioKeys.detail(portfolioId),
+          portfolioKeys.detail(variables.portfolioId),
           context.previous
         );
       }
     },
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({
+        queryKey: portfolioKeys.detail(variables.portfolioId),
+      });
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.lists() });
+    },
+  });
+}
+
+export function useDeletePortfolio() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (portfolioId: string) => {
+      const { error } = await createClient().rpc("delete_portfolio", {
+        p_portfolio_id: portfolioId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, portfolioId) => {
+      queryClient.removeQueries({
         queryKey: portfolioKeys.detail(portfolioId),
       });
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.lists() });
     },
   });
 }

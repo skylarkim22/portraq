@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PortfolioEditor } from "@/features/portfolio/components/PortfolioEditor";
 import { usePortfolio } from "@/features/portfolio/hooks";
+import { useUser } from "@/features/auth/hooks";
 import type { Portfolio } from "@portraq/lib/types";
 
 const mockPortfolio: Portfolio = {
@@ -17,7 +18,19 @@ const mockPortfolio: Portfolio = {
   updatedAt: "2026-01-01",
 };
 
-const mutateMock = vi.fn();
+const saveMutateMock = vi.fn();
+const saveMutateAsyncMock = vi.fn();
+const createMutateAsyncMock = vi.fn();
+const deleteMutateMock = vi.fn();
+const routerReplaceMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: routerReplaceMock, push: routerReplaceMock }),
+}));
+
+vi.mock("@/features/auth/hooks", () => ({
+  useUser: vi.fn(() => ({ data: { id: "u1", email: "u1@test.com" } })),
+}));
 
 vi.mock("@/features/portfolio/hooks", () => ({
   usePortfolio: vi.fn(() => ({
@@ -25,8 +38,17 @@ vi.mock("@/features/portfolio/hooks", () => ({
     isLoading: false,
     isError: false,
   })),
+  useCreatePortfolio: vi.fn(() => ({
+    mutateAsync: createMutateAsyncMock,
+    isPending: false,
+  })),
   useSavePortfolio: vi.fn(() => ({
-    mutate: mutateMock,
+    mutate: saveMutateMock,
+    mutateAsync: saveMutateAsyncMock,
+    isPending: false,
+  })),
+  useDeletePortfolio: vi.fn(() => ({
+    mutate: deleteMutateMock,
     isPending: false,
   })),
 }));
@@ -50,7 +72,12 @@ vi.mock("@/features/stocks/components/StockSearch", () => ({
 
 describe("PortfolioEditor", () => {
   beforeEach(() => {
-    mutateMock.mockReset();
+    saveMutateMock.mockReset();
+    saveMutateAsyncMock.mockReset();
+    createMutateAsyncMock.mockReset();
+    deleteMutateMock.mockReset();
+    routerReplaceMock.mockReset();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
   it("불러온 포트폴리오의 이름과 종목을 렌더링한다", () => {
@@ -98,8 +125,9 @@ describe("PortfolioEditor", () => {
 
     await user.click(screen.getByRole("button", { name: "저장" }));
 
-    expect(mutateMock).toHaveBeenCalledWith(
+    expect(saveMutateMock).toHaveBeenCalledWith(
       {
+        portfolioId: "p1",
         name: "테스트 포트폴리오",
         memo: null,
         assets: expect.arrayContaining([
@@ -154,5 +182,86 @@ describe("PortfolioEditor", () => {
     expect(
       screen.getByText(/포트폴리오를 불러오지 못했습니다/)
     ).toBeInTheDocument();
+  });
+
+  it("삭제 버튼을 누르면 확인 후 삭제를 요청하고, 성공 시 /portfolio로 이동한다", async () => {
+    const user = userEvent.setup();
+    render(<PortfolioEditor portfolioId="p1" />);
+
+    await user.click(screen.getByRole("button", { name: /포트폴리오 삭제/ }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(deleteMutateMock).toHaveBeenCalledWith(
+      "p1",
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+        onError: expect.any(Function),
+      })
+    );
+
+    const { onSuccess } = deleteMutateMock.mock.calls[0][1];
+    onSuccess();
+    expect(routerReplaceMock).toHaveBeenCalledWith("/portfolio");
+  });
+
+  it("확인 대화상자에서 취소하면 삭제를 요청하지 않는다", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<PortfolioEditor portfolioId="p1" />);
+
+    await user.click(screen.getByRole("button", { name: /포트폴리오 삭제/ }));
+
+    expect(deleteMutateMock).not.toHaveBeenCalled();
+  });
+
+  it("신규 생성 모드에서는 삭제 버튼을 보여주지 않는다", () => {
+    render(<PortfolioEditor portfolioId={null} />);
+
+    expect(
+      screen.queryByRole("button", { name: /포트폴리오 삭제/ })
+    ).not.toBeInTheDocument();
+  });
+
+  describe("신규 생성 모드 (portfolioId가 null)", () => {
+    it("불러오는 중 화면 없이 곧바로 빈 편집 화면을 보여준다", () => {
+      render(<PortfolioEditor portfolioId={null} />);
+
+      expect(screen.queryByText("불러오는 중...")).not.toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("포트폴리오 이름을 입력하세요")
+      ).toHaveValue("");
+    });
+
+    it("이달의 매수 가이드 버튼을 보여주지 않는다", () => {
+      render(<PortfolioEditor portfolioId={null} />);
+
+      expect(
+        screen.queryByRole("link", { name: /이달의 매수 가이드/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it("저장 버튼을 누르면 포트폴리오를 생성한 뒤 저장하고 새 id로 이동한다", async () => {
+      createMutateAsyncMock.mockResolvedValue("new-id");
+      saveMutateAsyncMock.mockResolvedValue(undefined);
+
+      const user = userEvent.setup();
+      render(<PortfolioEditor portfolioId={null} />);
+
+      await user.click(screen.getByRole("button", { name: "저장" }));
+
+      await waitFor(() => {
+        expect(createMutateAsyncMock).toHaveBeenCalledWith({
+          userId: "u1",
+          name: "내 포트폴리오",
+        });
+      });
+      expect(saveMutateAsyncMock).toHaveBeenCalledWith({
+        portfolioId: "new-id",
+        name: "내 포트폴리오",
+        memo: null,
+        assets: [],
+      });
+      expect(routerReplaceMock).toHaveBeenCalledWith("/portfolio/new-id");
+    });
   });
 });

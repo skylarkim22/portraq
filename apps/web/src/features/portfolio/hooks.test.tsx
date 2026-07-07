@@ -5,6 +5,7 @@ import {
   usePortfolio,
   useSavePortfolio,
   useCreatePortfolio,
+  useDeletePortfolio,
   useLatestSnapshot,
   useRecordRebalancingExecution,
 } from "@/features/portfolio/hooks";
@@ -99,7 +100,7 @@ describe("useSavePortfolio", () => {
   });
 
   it("save_portfolio RPC를 이름/메모와 isSlot 제외한 종목으로 호출한다", async () => {
-    const { result } = renderWithClient(() => useSavePortfolio("p1"));
+    const { result } = renderWithClient(() => useSavePortfolio());
 
     const assets: PortfolioAsset[] = [
       { ticker: "AAPL", ratio: 70, shares: 0, order: 0 },
@@ -108,6 +109,7 @@ describe("useSavePortfolio", () => {
 
     await act(async () => {
       await result.current.mutateAsync({
+        portfolioId: "p1",
         name: "테스트",
         memo: null,
         assets,
@@ -213,5 +215,24 @@ describe("useCreatePortfolio", () => {
     });
 
     expect(id).toBe("new-id");
+  });
+});
+
+describe("useDeletePortfolio", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("delete_portfolio RPC를 해당 id로 호출한다", async () => {
+    const { result } = renderWithClient(() => useDeletePortfolio());
+
+    await act(async () => {
+      await result.current.mutateAsync("p1");
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("delete_portfolio", {
+      p_portfolio_id: "p1",
+    });
   });
 });
