@@ -6,9 +6,14 @@ import { StockSearch } from "@/features/stocks/components/StockSearch";
 type AddAssetModalProps = {
   onClose: () => void;
   onSelect: (asset: Asset) => void;
+  existingTickers?: string[];
 };
 
-export const AddAssetModal = ({ onClose, onSelect }: AddAssetModalProps) => {
+export const AddAssetModal = ({
+  onClose,
+  onSelect,
+  existingTickers,
+}: AddAssetModalProps) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
@@ -32,7 +37,7 @@ export const AddAssetModal = ({ onClose, onSelect }: AddAssetModalProps) => {
             <X size={22} />
           </Button>
         </div>
-        <StockSearch onSelect={onSelect} />
+        <StockSearch onSelect={onSelect} existingTickers={existingTickers} />
       </div>
     </div>
   );

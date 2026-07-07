@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcRebalancingActions, toActionItems } from "../rebalancing";
+import { calcRebalancingActions, toActionItems, toKrwPrice } from "../rebalancing";
 import type { PortfolioAsset } from "../../types/index";
 
 const assets: PortfolioAsset[] = [
@@ -32,6 +32,34 @@ describe("calcRebalancingActions", () => {
       assets: [{ ticker: "AAPL", ratio: 100, shares: 5, order: 0 }],
       holdings: [{ ticker: "AAPL", shares: 5, pricePerShare: 200 }],
       additionalBudget: 0,
+    });
+
+    expect(result[0].action).toBe("hold");
+  });
+
+  it("market이 KR이면 0.5주 차이는 유지, US면 매수로 처리한다", () => {
+    const holdings = [{ ticker: "X", shares: 0, pricePerShare: 100 }];
+
+    const krResult = calcRebalancingActions({
+      assets: [{ ticker: "X", ratio: 100, shares: 0, order: 0, market: "KR" }],
+      holdings,
+      additionalBudget: 50,
+    });
+    expect(krResult[0].action).toBe("hold");
+
+    const usResult = calcRebalancingActions({
+      assets: [{ ticker: "X", ratio: 100, shares: 0, order: 0, market: "US" }],
+      holdings,
+      additionalBudget: 50,
+    });
+    expect(usResult[0].action).toBe("buy");
+  });
+
+  it("market 필드가 없으면 KR 기준(1주)으로 처리한다", () => {
+    const result = calcRebalancingActions({
+      assets: [{ ticker: "X", ratio: 100, shares: 0, order: 0 }],
+      holdings: [{ ticker: "X", shares: 0, pricePerShare: 100 }],
+      additionalBudget: 50,
     });
 
     expect(result[0].action).toBe("hold");
@@ -77,5 +105,15 @@ describe("toActionItems", () => {
 
     expect(item.action).toBe("buy");
     expect(item.totalAmount).toBe(item.quantity * item.pricePerShare);
+  });
+});
+
+describe("toKrwPrice", () => {
+  it("US 종목은 환율을 곱해 원화로 환산한다", () => {
+    expect(toKrwPrice(100, "US", 1300)).toBe(130000);
+  });
+
+  it("KR 종목은 환율과 무관하게 그대로 반환한다", () => {
+    expect(toKrwPrice(50000, "KR", 1300)).toBe(50000);
   });
 });

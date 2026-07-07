@@ -9,7 +9,7 @@ const ASSET_ROWS = [
   { ticker: "AAPL", name: "Apple Inc.", market: "US", color: "#e85d4a", is_active: true },
 ];
 
-function createQueryBuilder() {
+function createQueryBuilder(data: unknown[] = ASSET_ROWS) {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
@@ -17,7 +17,7 @@ function createQueryBuilder() {
   builder.order = vi.fn(() => builder);
   builder.limit = vi.fn(() => builder);
   builder.then = (resolve: (result: unknown) => unknown) =>
-    resolve({ data: ASSET_ROWS, error: null });
+    resolve({ data, error: null });
   return builder;
 }
 
@@ -104,5 +104,78 @@ describe("StockSearch", () => {
 
     expect(input).toHaveValue("");
     expect(screen.queryByText("삼성전자")).not.toBeInTheDocument();
+  });
+
+  it("검색 결과가 없으면 직접 추가하기 버튼을 보여준다", async () => {
+    fromMock.mockImplementation(() => createQueryBuilder([]));
+    const user = userEvent.setup();
+    renderWithClient(<StockSearch onSelect={vi.fn()} />);
+
+    await user.type(
+      screen.getByPlaceholderText(/티커 또는 종목명/),
+      "없는종목"
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /직접 추가하기/ })
+      ).toBeInTheDocument()
+    );
+  });
+
+  it("직접 추가하기를 누르면 종목명·시장으로 자동 부여된 티커와 함께 onSelect를 호출한다", async () => {
+    fromMock.mockImplementation(() => createQueryBuilder([]));
+    const user = userEvent.setup();
+    const handleSelect = vi.fn();
+    renderWithClient(<StockSearch onSelect={handleSelect} />);
+
+    await user.type(
+      screen.getByPlaceholderText(/티커 또는 종목명/),
+      "나만의펀드"
+    );
+    await waitFor(() =>
+      screen.getByRole("button", { name: /직접 추가하기/ })
+    );
+    await user.click(screen.getByRole("button", { name: /직접 추가하기/ }));
+
+    expect(screen.getByText("CUSTOM_1")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "직접 추가 시장 미국" }));
+    await user.click(screen.getByRole("button", { name: "추가" }));
+
+    expect(handleSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticker: "CUSTOM_1",
+        name: "나만의펀드",
+        market: "US",
+        isActive: true,
+      })
+    );
+  });
+
+  it("이미 커스텀 티커가 있으면 다음 번호를 이어서 부여한다", async () => {
+    fromMock.mockImplementation(() => createQueryBuilder([]));
+    const user = userEvent.setup();
+    const handleSelect = vi.fn();
+    renderWithClient(
+      <StockSearch
+        onSelect={handleSelect}
+        existingTickers={["CUSTOM_1", "CUSTOM_2"]}
+      />
+    );
+
+    await user.type(
+      screen.getByPlaceholderText(/티커 또는 종목명/),
+      "나만의펀드 2호"
+    );
+    await waitFor(() =>
+      screen.getByRole("button", { name: /직접 추가하기/ })
+    );
+    await user.click(screen.getByRole("button", { name: /직접 추가하기/ }));
+    await user.click(screen.getByRole("button", { name: "추가" }));
+
+    expect(handleSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ ticker: "CUSTOM_3" })
+    );
   });
 });

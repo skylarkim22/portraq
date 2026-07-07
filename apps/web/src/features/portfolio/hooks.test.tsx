@@ -5,6 +5,8 @@ import {
   usePortfolio,
   useSavePortfolio,
   useCreatePortfolio,
+  useLatestSnapshot,
+  useRecordRebalancingExecution,
 } from "@/features/portfolio/hooks";
 import type { PortfolioAsset } from "@portraq/lib/types";
 
@@ -14,7 +16,10 @@ function makeBuilder(result: { data: unknown; error: unknown }) {
   builder.eq = vi.fn(() => builder);
   builder.delete = vi.fn(() => builder);
   builder.insert = vi.fn(() => builder);
+  builder.order = vi.fn(() => builder);
+  builder.limit = vi.fn(() => builder);
   builder.single = vi.fn(() => Promise.resolve(result));
+  builder.maybeSingle = vi.fn(() => Promise.resolve(result));
   builder.then = (resolve: (value: unknown) => unknown) => resolve(result);
   return builder;
 }
@@ -114,6 +119,75 @@ describe("useSavePortfolio", () => {
       p_name: "테스트",
       p_memo: null,
       p_assets: [expect.objectContaining({ ticker: "AAPL", ratio: 70 })],
+    });
+  });
+});
+
+describe("useLatestSnapshot", () => {
+  beforeEach(() => {
+    fromMock.mockReset();
+  });
+
+  it("가장 최근 스냅샷의 assets를 반환한다", async () => {
+    fromMock.mockReturnValue(
+      makeBuilder({
+        data: {
+          assets: [
+            { ticker: "AAPL", name: "Apple", ratio: 60, shares: 5, pricePerShare: 200, color: "#000" },
+          ],
+        },
+        error: null,
+      })
+    );
+
+    const { result } = renderWithClient(() => useLatestSnapshot("p1"));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([
+      { ticker: "AAPL", name: "Apple", ratio: 60, shares: 5, pricePerShare: 200, color: "#000" },
+    ]);
+  });
+
+  it("스냅샷이 없으면 빈 배열을 반환한다", async () => {
+    fromMock.mockReturnValue(makeBuilder({ data: null, error: null }));
+
+    const { result } = renderWithClient(() => useLatestSnapshot("p1"));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([]);
+  });
+});
+
+describe("useRecordRebalancingExecution", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("record_rebalancing_execution RPC를 확정된 값으로 호출한다", async () => {
+    const { result } = renderWithClient(() =>
+      useRecordRebalancingExecution("p1")
+    );
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        totalBudget: 500000,
+        actions: [
+          { ticker: "AAPL", action: "buy", quantity: 2, pricePerShare: 200, totalAmount: 400 },
+        ],
+        updatedAssets: [{ ticker: "AAPL", shares: 7, currentPrice: 200 }],
+        snapshotAssets: [
+          { ticker: "AAPL", name: "Apple", ratio: 100, shares: 7, pricePerShare: 200, color: "#000" },
+        ],
+      });
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("record_rebalancing_execution", {
+      p_portfolio_id: "p1",
+      p_total_budget: 500000,
+      p_actions: [expect.objectContaining({ ticker: "AAPL", action: "buy" })],
+      p_updated_assets: [expect.objectContaining({ ticker: "AAPL", shares: 7 })],
+      p_snapshot_assets: [expect.objectContaining({ ticker: "AAPL", shares: 7 })],
     });
   });
 });
