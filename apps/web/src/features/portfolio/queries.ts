@@ -44,4 +44,5 @@ export const portfolioQueryOptions = (id: string) =>
         updatedAt: data.updated_at,
       };
     },
+    staleTime: 1000 * 30,
   });

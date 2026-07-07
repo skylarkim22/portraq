@@ -1,4 +1,4 @@
-export { getTickerColor, resolveColor } from "./ticker-color";
+export { getTickerColor, resolveColor, DEFAULT_ASSET_COLOR } from "./ticker-color";
 export {
   calcRebalancingActions,
   toActionItems,

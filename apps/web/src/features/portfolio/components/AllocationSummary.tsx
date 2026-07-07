@@ -1,6 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 import { Card } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
+import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
 
 type AllocationSummaryProps = {
   assets: PortfolioAsset[];
@@ -22,7 +23,7 @@ export function AllocationSummary({ assets }: AllocationSummaryProps) {
           <div
             key={asset.ticker}
             className="h-full rounded transition-[flex]"
-            style={{ flex: asset.ratio, backgroundColor: asset.color ?? "#355df9" }}
+            style={{ flex: asset.ratio, backgroundColor: asset.color ?? DEFAULT_ASSET_COLOR }}
           />
         ))}
         <div
@@ -36,7 +37,7 @@ export function AllocationSummary({ assets }: AllocationSummaryProps) {
           <div key={asset.ticker} className="flex items-center gap-1">
             <div
               className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: asset.color ?? "#355df9" }}
+              style={{ backgroundColor: asset.color ?? DEFAULT_ASSET_COLOR }}
             />
             <span className="text-xs font-bold text-foreground">
               {asset.ticker}
@@ -64,7 +65,7 @@ export function AllocationSummary({ assets }: AllocationSummaryProps) {
             isOver
               ? "text-destructive"
               : total === 100
-                ? "text-[#16a34a]"
+                ? "text-[var(--portraq-success)]"
                 : "text-foreground"
           }
         >

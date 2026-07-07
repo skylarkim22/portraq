@@ -1,10 +1,12 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
 import { Card, Input, Slider } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
+import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
 
 type AssetRowProps = {
   asset: PortfolioAsset;
@@ -13,7 +15,7 @@ type AssetRowProps = {
   onRemove: (ticker: string) => void;
 };
 
-export function AssetRow({
+export const AssetRow = memo(function AssetRow({
   asset,
   monthlyBudget,
   onRatioChange,
@@ -22,7 +24,7 @@ export function AssetRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: asset.ticker });
 
-  const color = asset.color ?? "#355df9";
+  const color = asset.color ?? DEFAULT_ASSET_COLOR;
   const amount = Math.round((asset.ratio / 100) * monthlyBudget);
 
   return (
@@ -95,4 +97,4 @@ export function AssetRow({
       />
     </Card>
   );
-}
+});

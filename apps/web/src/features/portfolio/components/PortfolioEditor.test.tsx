@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PortfolioEditor } from "@/features/portfolio/components/PortfolioEditor";
+import { usePortfolio } from "@/features/portfolio/hooks";
 import type { Portfolio } from "@portraq/lib/types";
 
 const mockPortfolio: Portfolio = {
@@ -17,9 +18,18 @@ const mockPortfolio: Portfolio = {
 };
 
 const mutateMock = vi.fn();
+const mutatePortfolioMock = vi.fn();
 
 vi.mock("@/features/portfolio/hooks", () => ({
-  usePortfolio: vi.fn(() => ({ data: mockPortfolio, isLoading: false })),
+  usePortfolio: vi.fn(() => ({
+    data: mockPortfolio,
+    isLoading: false,
+    isError: false,
+  })),
+  useUpdatePortfolio: vi.fn(() => ({
+    mutate: mutatePortfolioMock,
+    isPending: false,
+  })),
   useUpdatePortfolioAssets: vi.fn(() => ({
     mutate: mutateMock,
     isPending: false,
@@ -42,6 +52,7 @@ vi.mock("@/features/stocks/components/StockSearch", () => ({
 describe("PortfolioEditor", () => {
   beforeEach(() => {
     mutateMock.mockReset();
+    mutatePortfolioMock.mockReset();
   });
 
   it("불러온 포트폴리오의 이름과 종목을 렌더링한다", () => {
@@ -94,5 +105,23 @@ describe("PortfolioEditor", () => {
         expect.objectContaining({ ticker: "MSFT" }),
       ])
     );
+    expect(mutatePortfolioMock).toHaveBeenCalledWith({
+      name: "테스트 포트폴리오",
+      memo: null,
+    });
+  });
+
+  it("조회에 실패하면 에러 메시지를 보여준다", () => {
+    vi.mocked(usePortfolio).mockReturnValueOnce({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    } as ReturnType<typeof usePortfolio>);
+
+    render(<PortfolioEditor portfolioId="p1" />);
+
+    expect(
+      screen.getByText(/포트폴리오를 불러오지 못했습니다/)
+    ).toBeInTheDocument();
   });
 });
