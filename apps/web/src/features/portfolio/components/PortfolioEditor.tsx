@@ -5,11 +5,7 @@ import { Plus, Upload } from "lucide-react";
 import { Button } from "@portraq/ui";
 import type { Asset, PortfolioAsset } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
-import {
-  usePortfolio,
-  useUpdatePortfolio,
-  useUpdatePortfolioAssets,
-} from "@/features/portfolio/hooks";
+import { usePortfolio, useSavePortfolio } from "@/features/portfolio/hooks";
 import { AssetList } from "@/features/portfolio/components/AssetList";
 import { AllocationSummary } from "@/features/portfolio/components/AllocationSummary";
 import { PortfolioHeader } from "@/features/portfolio/components/PortfolioHeader";
@@ -22,8 +18,7 @@ type PortfolioEditorProps = {
 
 export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
   const { data: portfolio, isLoading, isError } = usePortfolio(portfolioId);
-  const updatePortfolio = useUpdatePortfolio(portfolioId);
-  const updateAssets = useUpdatePortfolioAssets(portfolioId);
+  const savePortfolio = useSavePortfolio(portfolioId);
 
   const [hydrated, setHydrated] = useState(false);
   const [name, setName] = useState("");
@@ -80,8 +75,7 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
   }
 
   function handleSave() {
-    updatePortfolio.mutate({ name, memo: memo || null });
-    updateAssets.mutate(assets);
+    savePortfolio.mutate({ name, memo: memo || null, assets });
   }
 
   if (isError) {
@@ -150,7 +144,7 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
         <Button
           type="button"
           className="w-full gap-2"
-          disabled={updateAssets.isPending || updatePortfolio.isPending}
+          disabled={savePortfolio.isPending}
           onClick={handleSave}
         >
           <Upload size={16} />

@@ -18,7 +18,6 @@ const mockPortfolio: Portfolio = {
 };
 
 const mutateMock = vi.fn();
-const mutatePortfolioMock = vi.fn();
 
 vi.mock("@/features/portfolio/hooks", () => ({
   usePortfolio: vi.fn(() => ({
@@ -26,11 +25,7 @@ vi.mock("@/features/portfolio/hooks", () => ({
     isLoading: false,
     isError: false,
   })),
-  useUpdatePortfolio: vi.fn(() => ({
-    mutate: mutatePortfolioMock,
-    isPending: false,
-  })),
-  useUpdatePortfolioAssets: vi.fn(() => ({
+  useSavePortfolio: vi.fn(() => ({
     mutate: mutateMock,
     isPending: false,
   })),
@@ -52,7 +47,6 @@ vi.mock("@/features/stocks/components/StockSearch", () => ({
 describe("PortfolioEditor", () => {
   beforeEach(() => {
     mutateMock.mockReset();
-    mutatePortfolioMock.mockReset();
   });
 
   it("불러온 포트폴리오의 이름과 종목을 렌더링한다", () => {
@@ -99,15 +93,13 @@ describe("PortfolioEditor", () => {
 
     await user.click(screen.getByRole("button", { name: "저장" }));
 
-    expect(mutateMock).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ ticker: "AAPL" }),
-        expect.objectContaining({ ticker: "MSFT" }),
-      ])
-    );
-    expect(mutatePortfolioMock).toHaveBeenCalledWith({
+    expect(mutateMock).toHaveBeenCalledWith({
       name: "테스트 포트폴리오",
       memo: null,
+      assets: expect.arrayContaining([
+        expect.objectContaining({ ticker: "AAPL" }),
+        expect.objectContaining({ ticker: "MSFT" }),
+      ]),
     });
   });
 

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   usePortfolio,
-  useUpdatePortfolioAssets,
+  useSavePortfolio,
   useCreatePortfolio,
 } from "@/features/portfolio/hooks";
 import type { PortfolioAsset } from "@portraq/lib/types";
@@ -20,9 +20,10 @@ function makeBuilder(result: { data: unknown; error: unknown }) {
 }
 
 const fromMock = vi.fn();
+const rpcMock = vi.fn();
 
 vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({ from: fromMock }),
+  createClient: () => ({ from: fromMock, rpc: rpcMock }),
 }));
 
 function renderWithClient<T>(callback: () => T) {
@@ -86,16 +87,14 @@ describe("usePortfolio", () => {
   });
 });
 
-describe("useUpdatePortfolioAssets", () => {
+describe("useSavePortfolio", () => {
   beforeEach(() => {
-    fromMock.mockReset();
-    fromMock.mockReturnValue(makeBuilder({ data: null, error: null }));
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: null, error: null });
   });
 
-  it("isSlot이 아닌 종목만 delete 후 insert한다", async () => {
-    const { result } = renderWithClient(() =>
-      useUpdatePortfolioAssets("p1")
-    );
+  it("save_portfolio RPC를 이름/메모와 isSlot 제외한 종목으로 호출한다", async () => {
+    const { result } = renderWithClient(() => useSavePortfolio("p1"));
 
     const assets: PortfolioAsset[] = [
       { ticker: "AAPL", ratio: 70, shares: 0, order: 0 },
@@ -103,18 +102,19 @@ describe("useUpdatePortfolioAssets", () => {
     ];
 
     await act(async () => {
-      await result.current.mutateAsync(assets);
+      await result.current.mutateAsync({
+        name: "테스트",
+        memo: null,
+        assets,
+      });
     });
 
-    expect(fromMock).toHaveBeenCalledWith("portfolio_assets");
-    const builder = fromMock.mock.results[0].value as {
-      delete: ReturnType<typeof vi.fn>;
-      insert: ReturnType<typeof vi.fn>;
-    };
-    expect(builder.delete).toHaveBeenCalled();
-    expect(builder.insert).toHaveBeenCalledWith([
-      expect.objectContaining({ ticker: "AAPL", ratio: 70 }),
-    ]);
+    expect(rpcMock).toHaveBeenCalledWith("save_portfolio", {
+      p_portfolio_id: "p1",
+      p_name: "테스트",
+      p_memo: null,
+      p_assets: [expect.objectContaining({ ticker: "AAPL", ratio: 70 })],
+    });
   });
 });
 
