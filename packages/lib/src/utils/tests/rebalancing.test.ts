@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcRebalancingActions } from "../rebalancing";
+import { calcRebalancingActions, toActionItems } from "../rebalancing";
 import type { PortfolioAsset } from "../../types/index";
 
 const assets: PortfolioAsset[] = [
@@ -48,5 +48,34 @@ describe("calcRebalancingActions", () => {
     });
 
     expect(result.find((r) => r.ticker === "SLOT")).toBeUndefined();
+  });
+});
+
+describe("toActionItems", () => {
+  it("매도 액션의 수량과 총액을 음수로 변환한다", () => {
+    const result = calcRebalancingActions({
+      assets: [{ ticker: "AAPL", ratio: 0, shares: 10, order: 0 }],
+      holdings: [{ ticker: "AAPL", shares: 10, pricePerShare: 200 }],
+      additionalBudget: 0,
+    });
+
+    const [item] = toActionItems(result);
+
+    expect(item.action).toBe("sell");
+    expect(item.quantity).toBeLessThan(0);
+    expect(item.totalAmount).toBe(item.quantity * item.pricePerShare);
+  });
+
+  it("매수 액션의 총액은 수량 × 현재가로 계산한다", () => {
+    const result = calcRebalancingActions({
+      assets: [{ ticker: "AAPL", ratio: 100, shares: 0, order: 0 }],
+      holdings: [{ ticker: "AAPL", shares: 0, pricePerShare: 200 }],
+      additionalBudget: 1000,
+    });
+
+    const [item] = toActionItems(result);
+
+    expect(item.action).toBe("buy");
+    expect(item.totalAmount).toBe(item.quantity * item.pricePerShare);
   });
 });
