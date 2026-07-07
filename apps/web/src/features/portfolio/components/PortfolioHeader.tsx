@@ -25,7 +25,7 @@ export const PortfolioHeader = ({
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
           placeholder="포트폴리오 이름을 입력하세요"
-          className="mb-1 h-auto border-none bg-transparent px-0 text-2xl font-extrabold text-foreground shadow-none focus-visible:ring-0"
+          className="mb-1 h-auto border-none bg-transparent px-0 text-2xl font-extrabold text-foreground shadow-none focus-visible:ring-0 md:text-2xl"
         />
         <Textarea
           id="portfolio-memo"
