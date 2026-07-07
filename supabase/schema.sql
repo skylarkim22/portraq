@@ -154,6 +154,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION save_portfolio(UUID, TEXT, TEXT, JSONB) FROM PUBLIC;
+REVOKE ALL ON FUNCTION save_portfolio(UUID, TEXT, TEXT, JSONB) FROM anon;
 GRANT EXECUTE ON FUNCTION save_portfolio(UUID, TEXT, TEXT, JSONB) TO authenticated;
 
 -- ============================================================
@@ -271,6 +273,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION record_rebalancing_execution(UUID, NUMERIC, JSONB, JSONB, JSONB) FROM PUBLIC;
+REVOKE ALL ON FUNCTION record_rebalancing_execution(UUID, NUMERIC, JSONB, JSONB, JSONB) FROM anon;
 GRANT EXECUTE ON FUNCTION record_rebalancing_execution(UUID, NUMERIC, JSONB, JSONB, JSONB) TO authenticated;
 
 -- ============================================================
@@ -301,6 +305,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION delete_portfolio(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION delete_portfolio(UUID) FROM anon;
 GRANT EXECUTE ON FUNCTION delete_portfolio(UUID) TO authenticated;
 
 -- ============================================================
