@@ -14,6 +14,26 @@ export const portfolioKeys = {
   snapshots: (id: string) => [...portfolioKeys.all, "snapshots", id] as const,
 };
 
+export type PortfolioListItem = {
+  id: string;
+  name: string;
+};
+
+export const portfolioListQueryOptions = () =>
+  queryOptions({
+    queryKey: portfolioKeys.lists(),
+    queryFn: async (): Promise<PortfolioListItem[]> => {
+      const { data, error } = await createClient()
+        .from("portfolios")
+        .select("id, name")
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 30,
+  });
+
 export const portfolioQueryOptions = (id: string) =>
   queryOptions({
     queryKey: portfolioKeys.detail(id),
