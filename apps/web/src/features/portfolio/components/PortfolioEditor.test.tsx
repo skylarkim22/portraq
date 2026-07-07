@@ -53,8 +53,10 @@ describe("PortfolioEditor", () => {
     render(<PortfolioEditor portfolioId="p1" />);
 
     expect(screen.getByDisplayValue("테스트 포트폴리오")).toBeInTheDocument();
-    expect(screen.getAllByText("AAPL").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("MSFT").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Apple").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Microsoft").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/AAPL/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/MSFT/).length).toBeGreaterThan(0);
   });
 
   it("비중 합계가 100% 미만이면 미확정 슬롯을 보여준다", () => {
@@ -71,8 +73,8 @@ describe("PortfolioEditor", () => {
     const removeButtons = screen.getAllByLabelText("종목 삭제");
     await user.click(removeButtons[0]);
 
-    expect(screen.queryByText("AAPL")).not.toBeInTheDocument();
-    expect(screen.getAllByText("MSFT").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/AAPL/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/MSFT/).length).toBeGreaterThan(0);
   });
 
   it("검색에서 종목을 선택하면 목록에 추가된다", async () => {
@@ -83,7 +85,7 @@ describe("PortfolioEditor", () => {
     await user.click(screen.getByRole("button", { name: "TSLA 선택" }));
 
     await waitFor(() =>
-      expect(screen.getAllByText("TSLA").length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/TSLA/).length).toBeGreaterThan(0)
     );
   });
 

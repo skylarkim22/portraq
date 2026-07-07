@@ -7,7 +7,7 @@ import { useCreatePortfolio } from "@/features/portfolio/hooks";
 
 const DEFAULT_PORTFOLIO_NAME = "내 포트폴리오";
 
-export function CreatePortfolioRedirect() {
+export const CreatePortfolioRedirect = () => {
   const router = useRouter();
   const { data: user } = useUser();
   const createPortfolio = useCreatePortfolio();
@@ -26,4 +26,4 @@ export function CreatePortfolioRedirect() {
       포트폴리오를 생성하는 중...
     </div>
   );
-}
+};

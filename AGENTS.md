@@ -75,6 +75,28 @@ import type { MarketFilter } from "@/features/stocks/queries";
 같은 디렉토리 내 파일(`./index`, 컴포넌트 옆 `.test.tsx` 등)도 동일하게 `@/` 경로를 사용한다.
 `packages/ui`, `packages/lib` 등 워크스페이스 패키지 import는 패키지명(`@portraq/ui`, `@portraq/lib/types`)을 그대로 사용한다.
 
+`packages/ui` 내부(`src/components/ui/*` 등)는 예외다. 이 패키지는 자체 `tsconfig.json`/`vite.config.ts`에 `src/*` 절대경로 alias가 정의돼 있지만, 이 alias는 패키지 자신의 Vitest 실행 환경에서만 유효하고 `apps/web`처럼 소스를 직접 가져다 쓰는 소비 측 번들러/Vitest 설정에서는 해석되지 않는다. 따라서 `packages/ui` 내부 파일 간 import(예: `cn` 유틸)는 기존 관례대로 상대 경로(`../../lib/utils`)를 유지한다.
+
+## 함수 선언 컨벤션
+
+컴포넌트, 훅, 이벤트 핸들러 등 로컬/모듈 함수는 `function` 선언문 대신 화살표 함수(`const fn = () => {}`)로 작성한다.
+
+```ts
+// ❌ 지양
+export function PortfolioHeader({ name }: PortfolioHeaderProps) {
+  function handleClick() { ... }
+  return ...;
+}
+
+// ✅ 지향
+export const PortfolioHeader = ({ name }: PortfolioHeaderProps) => {
+  const handleClick = () => { ... };
+  return ...;
+};
+```
+
+Next.js가 특정 형태를 요구하는 파일(`app/**/page.tsx`, `layout.tsx`의 `export default` 등)은 기존 코드와의 일관성이 더 중요하면 예외로 둘 수 있다.
+
 ## Props 타입 컨벤션
 
 컴포넌트 내부에서만 쓰고 다른 파일이 import하지 않는 Props 타입은 `interface`가 아닌 `type`으로 선언하고 export하지 않는다.

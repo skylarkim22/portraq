@@ -1,19 +1,21 @@
 import { Plus } from "lucide-react";
+import { Button } from "@portraq/ui";
 
 type UndeterminedSlotCardProps = {
   remaining: number;
   onClick: () => void;
 };
 
-export function UndeterminedSlotCard({
+export const UndeterminedSlotCard = ({
   remaining,
   onClick,
-}: UndeterminedSlotCardProps) {
+}: UndeterminedSlotCardProps) => {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
-      className="flex items-center gap-3 rounded-xl border border-dashed border-[#c7d5fd] bg-[#fafbff] p-3.5 text-left transition-colors hover:bg-[#f0f4ff]"
+      className="h-auto justify-start gap-3 rounded-xl border border-dashed border-[#c7d5fd] bg-[#fafbff] p-3.5 text-left font-normal hover:bg-[#f0f4ff]"
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-dashed border-[#c7d5fd] bg-[#eef2ff]">
         <Plus size={18} className="text-primary" />
@@ -26,6 +28,6 @@ export function UndeterminedSlotCard({
           미확정 슬롯 · 비중 {remaining}% 남음
         </span>
       </span>
-    </button>
+    </Button>
   );
-}
+};

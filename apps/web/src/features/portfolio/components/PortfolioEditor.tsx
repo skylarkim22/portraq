@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@portraq/ui";
 import type { Asset, PortfolioAsset } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
@@ -16,7 +16,7 @@ type PortfolioEditorProps = {
   portfolioId: string;
 };
 
-export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
+export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
   const { data: portfolio, isLoading, isError } = usePortfolio(portfolioId);
   const savePortfolio = useSavePortfolio(portfolioId);
 
@@ -24,7 +24,6 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
   const [name, setName] = useState("");
   const [memo, setMemo] = useState("");
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
-  const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -54,7 +53,7 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
     );
   }, []);
 
-  function handleAddAsset(picked: Asset) {
+  const handleAddAsset = (picked: Asset) => {
     setSearchOpen(false);
     if (assets.some((asset) => asset.ticker === picked.ticker)) return;
 
@@ -72,11 +71,11 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
         order: prev.length,
       },
     ]);
-  }
+  };
 
-  function handleSave() {
+  const handleSave = () => {
     savePortfolio.mutate({ name, memo: memo || null, assets });
-  }
+  };
 
   if (isError) {
     return (
@@ -100,10 +99,8 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
         <PortfolioHeader
           name={name}
           memo={memo}
-          monthlyBudget={monthlyBudget}
           onNameChange={setName}
           onMemoChange={setMemo}
-          onMonthlyBudgetChange={setMonthlyBudget}
           onAddAssetClick={() => setSearchOpen(true)}
         />
 
@@ -116,7 +113,6 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
 
         <AssetList
           assets={assets}
-          monthlyBudget={monthlyBudget}
           onRatioChange={handleRatioChange}
           onRemove={handleRemove}
           onReorder={setAssets}
@@ -129,25 +125,25 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
           />
         )}
 
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => setSearchOpen(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-input py-3.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          className="h-auto w-full justify-center gap-2 rounded-lg border-dashed border-input bg-transparent px-0 py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary hover:bg-transparent hover:text-primary"
         >
           <Plus size={18} />
           종목 추가하기
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-col gap-4">
         <AllocationSummary assets={assets} />
         <Button
           type="button"
-          className="w-full gap-2"
+          className="w-full"
           disabled={savePortfolio.isPending}
           onClick={handleSave}
         >
-          <Upload size={16} />
           저장
         </Button>
       </div>
@@ -160,4 +156,4 @@ export function PortfolioEditor({ portfolioId }: PortfolioEditorProps) {
       )}
     </div>
   );
-}
+};

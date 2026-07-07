@@ -1,31 +1,50 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
-import { Card, Input, Slider } from "@portraq/ui";
+import { Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
 import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
 
+const RATIO_TEXT_PATTERN = /^\d{0,3}(\.\d{0,2})?$/;
+
 type AssetRowProps = {
   asset: PortfolioAsset;
-  monthlyBudget: number;
   onRatioChange: (ticker: string, ratio: number) => void;
   onRemove: (ticker: string) => void;
 };
 
-export const AssetRow = memo(function AssetRow({
-  asset,
-  monthlyBudget,
-  onRatioChange,
-  onRemove,
-}: AssetRowProps) {
+export const AssetRow = memo(({ asset, onRatioChange, onRemove }: AssetRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: asset.ticker });
 
   const color = asset.color ?? DEFAULT_ASSET_COLOR;
-  const amount = Math.round((asset.ratio / 100) * monthlyBudget);
+
+  const [ratioText, setRatioText] = useState(() => String(asset.ratio));
+  const isRatioFocused = useRef(false);
+
+  useEffect(() => {
+    if (!isRatioFocused.current) {
+      setRatioText(String(asset.ratio));
+    }
+  }, [asset.ratio]);
+
+  const handleRatioTextChange = (value: string) => {
+    if (value !== "" && !RATIO_TEXT_PATTERN.test(value)) return;
+    if (value !== "" && !value.endsWith(".") && Number(value) > 100) return;
+    setRatioText(value);
+
+    const parsed = Number(value);
+    if (value === "" || value.endsWith(".") || Number.isNaN(parsed)) return;
+    onRatioChange(asset.ticker, Math.max(0, parsed));
+  };
+
+  const handleRatioBlur = () => {
+    isRatioFocused.current = false;
+    setRatioText(String(asset.ratio));
+  };
 
   return (
     <Card
@@ -33,7 +52,7 @@ export const AssetRow = memo(function AssetRow({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`p-3.5 ${isDragging ? "opacity-40 border-primary" : ""}`}
     >
-      <div className="mb-3 flex items-center gap-3">
+      <div className="flex items-center gap-3">
         <button
           type="button"
           aria-label="순서 변경"
@@ -48,32 +67,29 @@ export const AssetRow = memo(function AssetRow({
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-extrabold"
           style={{ backgroundColor: `${color}1a`, color }}
         >
-          {asset.ticker.slice(0, 4)}
+          {(asset.name ?? asset.ticker).split(" ")[0].slice(0, 1)}
         </span>
 
         <div className="min-w-0 flex-1">
-          <div className="text-[15px] font-extrabold text-foreground">
-            {asset.ticker}
+          <div className="truncate text-[15px] font-extrabold text-foreground">
+            {asset.name ?? asset.ticker}
           </div>
           <div className="truncate text-xs text-muted-foreground">
-            {asset.name ?? asset.ticker} · {asset.market ?? "KR"}
-            {monthlyBudget > 0 && ` · ₩${amount.toLocaleString()}`}
+            {asset.ticker} · {asset.market ?? "KR"}
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
           <Input
-            type="number"
-            min={0}
-            max={100}
-            value={asset.ratio}
-            onChange={(e) =>
-              onRatioChange(
-                asset.ticker,
-                Math.max(0, Math.min(100, Number(e.target.value) || 0))
-              )
-            }
-            className="h-9 w-14 border-[#c7d5fd] bg-[#f0f4ff] text-center text-[15px] font-extrabold text-primary"
+            type="text"
+            inputMode="decimal"
+            value={ratioText}
+            onFocus={() => {
+              isRatioFocused.current = true;
+            }}
+            onChange={(e) => handleRatioTextChange(e.target.value)}
+            onBlur={handleRatioBlur}
+            className="h-9 w-16 border-[#c7d5fd] bg-[#f0f4ff] text-center text-[15px] font-extrabold text-primary"
           />
           <span className="text-sm font-bold text-muted-foreground">%</span>
         </div>
@@ -87,14 +103,7 @@ export const AssetRow = memo(function AssetRow({
           <Trash2 size={16} />
         </button>
       </div>
-
-      <Slider
-        value={[asset.ratio]}
-        min={0}
-        max={100}
-        step={1}
-        onValueChange={([value]) => onRatioChange(asset.ticker, value)}
-      />
     </Card>
   );
 });
+AssetRow.displayName = "AssetRow";

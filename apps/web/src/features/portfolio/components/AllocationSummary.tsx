@@ -7,7 +7,7 @@ type AllocationSummaryProps = {
   assets: PortfolioAsset[];
 };
 
-export function AllocationSummary({ assets }: AllocationSummaryProps) {
+export const AllocationSummary = ({ assets }: AllocationSummaryProps) => {
   const total = assets.reduce((sum, asset) => sum + asset.ratio, 0);
   const isOver = total > 100;
   const remaining = Math.max(0, 100 - total);
@@ -40,7 +40,7 @@ export function AllocationSummary({ assets }: AllocationSummaryProps) {
               style={{ backgroundColor: asset.color ?? DEFAULT_ASSET_COLOR }}
             />
             <span className="text-xs font-bold text-foreground">
-              {asset.ticker}
+              {asset.name ?? asset.ticker}
             </span>
             <span className="text-xs text-muted-foreground">
               {asset.ratio}%
@@ -81,4 +81,4 @@ export function AllocationSummary({ assets }: AllocationSummaryProps) {
       )}
     </Card>
   );
-}
+};

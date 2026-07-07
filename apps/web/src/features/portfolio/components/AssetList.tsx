@@ -16,22 +16,20 @@ import { AssetRow } from "@/features/portfolio/components/AssetRow";
 
 type AssetListProps = {
   assets: PortfolioAsset[];
-  monthlyBudget: number;
   onRatioChange: (ticker: string, ratio: number) => void;
   onRemove: (ticker: string) => void;
   onReorder: (assets: PortfolioAsset[]) => void;
 };
 
-export function AssetList({
+export const AssetList = ({
   assets,
-  monthlyBudget,
   onRatioChange,
   onRemove,
   onReorder,
-}: AssetListProps) {
+}: AssetListProps) => {
   const sensors = useSensors(useSensor(PointerSensor));
 
-  function handleDragEnd(event: DragEndEvent) {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -43,7 +41,7 @@ export function AssetList({
         order: index,
       }))
     );
-  }
+  };
 
   return (
     <DndContext
@@ -61,7 +59,6 @@ export function AssetList({
             <AssetRow
               key={asset.ticker}
               asset={asset}
-              monthlyBudget={monthlyBudget}
               onRatioChange={onRatioChange}
               onRemove={onRemove}
             />
@@ -70,4 +67,4 @@ export function AssetList({
       </SortableContext>
     </DndContext>
   );
-}
+};
