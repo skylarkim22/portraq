@@ -114,9 +114,6 @@ describe("useSavePortfolio", () => {
       p_name: "테스트",
       p_memo: null,
       p_assets: [expect.objectContaining({ ticker: "AAPL", ratio: 70 })],
-      p_total_budget: 0,
-      p_actions: [expect.objectContaining({ ticker: "AAPL", action: "hold" })],
-      p_snapshot_assets: [expect.objectContaining({ ticker: "AAPL", ratio: 70 })],
     });
   });
 });

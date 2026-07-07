@@ -108,26 +108,24 @@ CREATE POLICY "users can manage own portfolio assets"
   );
 
 -- ============================================================
--- save_portfolio: 이름/메모 갱신 + portfolio_assets 전체 교체 +
--- execution_records/portfolio_snapshots 신규 생성을 하나의
--- 트랜잭션으로 원자적 처리 (PRD 5.5 "저장 시 처리 흐름")
+-- save_portfolio: 이름/메모 갱신 + portfolio_assets 전체 교체를
+-- 하나의 트랜잭션으로 원자적 처리 (delete-then-insert 비원자성 해소)
+--
+-- execution_records/portfolio_snapshots는 여기서 만들지 않는다.
+-- 이 함수는 편집 화면에서 목표 비율을 조정·저장하는 이벤트이고,
+-- 실행 기록·스냅샷은 리밸런싱 가이드에서 실제 보유 현황·투자금을
+-- 입력받아 매수·매도를 확정하는 별도 이벤트(issue #19)에서 생성한다.
 -- SECURITY INVOKER(기본값) — 호출자 권한으로 실행되어 기존 RLS 그대로 적용
 -- ============================================================
 CREATE OR REPLACE FUNCTION save_portfolio(
   p_portfolio_id UUID,
   p_name TEXT,
   p_memo TEXT,
-  p_assets JSONB,
-  p_total_budget NUMERIC,
-  p_actions JSONB,
-  p_snapshot_assets JSONB
+  p_assets JSONB
 )
 RETURNS void
 LANGUAGE plpgsql
 AS $$
-DECLARE
-  v_execution_record_id UUID;
-  v_total_value NUMERIC;
 BEGIN
   UPDATE portfolios
   SET name = p_name, memo = p_memo
@@ -153,21 +151,10 @@ BEGIN
     asset->>'color',
     (asset->>'order')::integer
   FROM jsonb_array_elements(p_assets) AS asset;
-
-  INSERT INTO execution_records (portfolio_id, total_budget, actions)
-  VALUES (p_portfolio_id, p_total_budget, p_actions)
-  RETURNING id INTO v_execution_record_id;
-
-  SELECT COALESCE(SUM((asset->>'shares')::numeric * (asset->>'pricePerShare')::numeric), 0)
-  INTO v_total_value
-  FROM jsonb_array_elements(p_snapshot_assets) AS asset;
-
-  INSERT INTO portfolio_snapshots (portfolio_id, execution_record_id, assets, total_value)
-  VALUES (p_portfolio_id, v_execution_record_id, p_snapshot_assets, v_total_value);
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION save_portfolio(UUID, TEXT, TEXT, JSONB, NUMERIC, JSONB, JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION save_portfolio(UUID, TEXT, TEXT, JSONB) TO authenticated;
 
 -- ============================================================
 -- execution_records (PRD 5.3)
