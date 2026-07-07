@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
-import { PortfolioNavItem } from "@/components/PortfolioNavItem";
+import { PortfolioNavItem } from "@/features/portfolio/components/PortfolioNavItem";
 import { usePortfolioList } from "@/features/portfolio/hooks";
 
 vi.mock("next/navigation", () => ({

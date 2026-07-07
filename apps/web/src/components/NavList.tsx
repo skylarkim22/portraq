@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { Award, History, Home, NotebookText } from "lucide-react";
-import { PortfolioNavItem } from "@/components/PortfolioNavItem";
+import { PortfolioNavItem } from "@/features/portfolio/components/PortfolioNavItem";
 
 const NAV_ITEMS_BEFORE = [{ href: "/home", label: "홈", icon: Home }];
 
