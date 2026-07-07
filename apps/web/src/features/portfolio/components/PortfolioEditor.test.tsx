@@ -67,7 +67,6 @@ describe("PortfolioEditor", () => {
     render(<PortfolioEditor portfolioId="p1" />);
 
     expect(screen.getByText(/미확정 슬롯이 남아 있습니다/)).toBeInTheDocument();
-    expect(screen.getByText("종목을 직접 추가하세요")).toBeInTheDocument();
   });
 
   it("종목 삭제 버튼을 누르면 목록에서 제거된다", async () => {
@@ -115,22 +114,32 @@ describe("PortfolioEditor", () => {
     );
   });
 
-  it("저장 성공 시 리밸런싱 가이드 진입 버튼을 보여준다", async () => {
-    mutateMock.mockImplementation((_input, options) => {
-      options?.onSuccess?.();
-    });
-    const user = userEvent.setup();
+  it("미확정 슬롯이 남아 있으면 리밸런싱 가이드 버튼을 숨긴다", () => {
     render(<PortfolioEditor portfolioId="p1" />);
 
     expect(
-      screen.queryByRole("button", { name: /이달의 매수 가이드/ })
+      screen.queryByRole("link", { name: /이달의 매수 가이드/ })
     ).not.toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole("button", { name: "저장" }));
+  it("비중 합계가 100%면 리밸런싱 가이드 진입 링크를 보여준다", () => {
+    vi.mocked(usePortfolio).mockReturnValueOnce({
+      data: {
+        ...mockPortfolio,
+        assets: [
+          { ...mockPortfolio.assets[0], ratio: 80 },
+          { ...mockPortfolio.assets[1], ratio: 20 },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePortfolio>);
 
-    expect(
-      screen.getByRole("button", { name: /이달의 매수 가이드/ })
-    ).toBeInTheDocument();
+    render(<PortfolioEditor portfolioId="p1" />);
+
+    const link = screen.getByRole("link", { name: /이달의 매수 가이드/ });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/portfolio/p1/guide");
   });
 
   it("조회에 실패하면 에러 메시지를 보여준다", () => {
