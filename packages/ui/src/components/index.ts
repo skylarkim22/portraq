@@ -15,6 +15,8 @@ export {
 
 export { Input } from "./ui/input";
 
+export { Textarea } from "./ui/textarea";
+
 export { Slider } from "./ui/slider";
 
 export { ActionChip } from "./ActionChip";

@@ -5,6 +5,8 @@ const COLOR_PALETTE = [
   "#f39c12", "#7f8c8d", "#1a5276", "#6c3483", "#1e8449",
 ];
 
+export const DEFAULT_ASSET_COLOR = COLOR_PALETTE[0];
+
 export function getTickerColor(ticker: string): string {
   const hash = ticker
     .split("")
