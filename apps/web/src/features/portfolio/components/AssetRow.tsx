@@ -1,14 +1,13 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
 import { Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
-import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
-
-const RATIO_TEXT_PATTERN = /^\d{0,3}(\.\d{0,2})?$/;
+import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
+import { AssetColorBadge } from "@/features/portfolio/components/AssetColorBadge";
 
 type AssetRowProps = {
   asset: PortfolioAsset;
@@ -20,31 +19,13 @@ export const AssetRow = memo(({ asset, onRatioChange, onRemove }: AssetRowProps)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: asset.ticker });
 
-  const color = asset.color ?? DEFAULT_ASSET_COLOR;
-
-  const [ratioText, setRatioText] = useState(() => String(asset.ratio));
-  const isRatioFocused = useRef(false);
-
-  useEffect(() => {
-    if (!isRatioFocused.current) {
-      setRatioText(String(asset.ratio));
-    }
-  }, [asset.ratio]);
-
-  const handleRatioTextChange = (value: string) => {
-    if (value !== "" && !RATIO_TEXT_PATTERN.test(value)) return;
-    if (value !== "" && !value.endsWith(".") && Number(value) > 100) return;
-    setRatioText(value);
-
-    const parsed = Number(value);
-    if (value === "" || value.endsWith(".") || Number.isNaN(parsed)) return;
-    onRatioChange(asset.ticker, Math.max(0, parsed));
-  };
-
-  const handleRatioBlur = () => {
-    isRatioFocused.current = false;
-    setRatioText(String(asset.ratio));
-  };
+  const ratioInput = useNumericTextInput({
+    value: asset.ratio,
+    onChange: (ratio) => onRatioChange(asset.ticker, ratio),
+    min: 0,
+    max: 100,
+    decimalPlaces: 2,
+  });
 
   return (
     <Card
@@ -63,12 +44,7 @@ export const AssetRow = memo(({ asset, onRatioChange, onRemove }: AssetRowProps)
           <GripVertical size={18} />
         </button>
 
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-extrabold"
-          style={{ backgroundColor: `${color}1a`, color }}
-        >
-          {(asset.name ?? asset.ticker).split(" ")[0].slice(0, 1)}
-        </span>
+        <AssetColorBadge name={asset.name} ticker={asset.ticker} color={asset.color} />
 
         <div className="min-w-0 flex-1">
           <div className="truncate text-[15px] font-extrabold text-foreground">
@@ -83,12 +59,10 @@ export const AssetRow = memo(({ asset, onRatioChange, onRemove }: AssetRowProps)
           <Input
             type="text"
             inputMode="decimal"
-            value={ratioText}
-            onFocus={() => {
-              isRatioFocused.current = true;
-            }}
-            onChange={(e) => handleRatioTextChange(e.target.value)}
-            onBlur={handleRatioBlur}
+            value={ratioInput.text}
+            onFocus={ratioInput.handleFocus}
+            onChange={(e) => ratioInput.handleChange(e.target.value)}
+            onBlur={ratioInput.handleBlur}
             className="h-9 w-16 border-[#c7d5fd] bg-[#f0f4ff] text-center text-[15px] font-extrabold text-primary"
           />
           <span className="text-sm font-bold text-muted-foreground">%</span>

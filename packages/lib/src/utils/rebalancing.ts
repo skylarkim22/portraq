@@ -1,4 +1,17 @@
-import type { ActionItem, ActionType, PortfolioAsset } from "../types/index";
+import type {
+  ActionItem,
+  ActionType,
+  Market,
+  PortfolioAsset,
+} from "../types/index";
+
+export function toKrwPrice(
+  nativePrice: number,
+  market: Market,
+  exchangeRate: number
+): number {
+  return market === "US" ? nativePrice * exchangeRate : nativePrice;
+}
 
 export interface HoldingInput {
   ticker: string;
@@ -54,9 +67,8 @@ export function calcRebalancingActions(
         totalCurrentValue > 0 ? (currentValue / totalBudget) * 100 : 0;
 
       // PRD: 차이가 1주(KR) 또는 0.5주(US) 미만이면 유지
-      const minShares = asset.ticker.length <= 6 && /^\d+$/.test(asset.ticker)
-        ? MIN_SHARES_KR
-        : MIN_SHARES_US;
+      const minShares =
+        (asset.market ?? "KR") === "KR" ? MIN_SHARES_KR : MIN_SHARES_US;
       const quantityRaw = price > 0 ? Math.abs(diff) / price : 0;
 
       let action: ActionType = "hold";

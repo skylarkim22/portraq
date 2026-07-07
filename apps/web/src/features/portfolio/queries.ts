@@ -1,11 +1,17 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { Market, Portfolio, PortfolioAsset } from "@portraq/lib/types";
+import type {
+  Market,
+  Portfolio,
+  PortfolioAsset,
+  SnapshotAsset,
+} from "@portraq/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
 export const portfolioKeys = {
   all: ["portfolios"] as const,
   lists: () => [...portfolioKeys.all, "list"] as const,
   detail: (id: string) => [...portfolioKeys.all, "detail", id] as const,
+  snapshots: (id: string) => [...portfolioKeys.all, "snapshots", id] as const,
 };
 
 export const portfolioQueryOptions = (id: string) =>
@@ -43,6 +49,24 @@ export const portfolioQueryOptions = (id: string) =>
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
+    },
+    staleTime: 1000 * 30,
+  });
+
+export const latestSnapshotQueryOptions = (portfolioId: string) =>
+  queryOptions({
+    queryKey: portfolioKeys.snapshots(portfolioId),
+    queryFn: async (): Promise<SnapshotAsset[]> => {
+      const { data, error } = await createClient()
+        .from("portfolio_snapshots")
+        .select("assets")
+        .eq("portfolio_id", portfolioId)
+        .order("saved_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return (data?.assets as SnapshotAsset[] | undefined) ?? [];
     },
     staleTime: 1000 * 30,
   });

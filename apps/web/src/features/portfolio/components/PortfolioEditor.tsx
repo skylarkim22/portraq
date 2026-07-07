@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@portraq/ui";
@@ -11,7 +12,6 @@ import { AssetList } from "@/features/portfolio/components/AssetList";
 import { AllocationSummary } from "@/features/portfolio/components/AllocationSummary";
 import { PortfolioHeader } from "@/features/portfolio/components/PortfolioHeader";
 import { AddAssetModal } from "@/features/portfolio/components/AddAssetModal";
-import { UndeterminedSlotCard } from "@/features/portfolio/components/UndeterminedSlotCard";
 
 type PortfolioEditorProps = {
   portfolioId: string;
@@ -26,7 +26,6 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
   const [memo, setMemo] = useState("");
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [showGuideEntry, setShowGuideEntry] = useState(false);
 
   useEffect(() => {
     if (portfolio && !hydrated) {
@@ -80,7 +79,6 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
       { name, memo: memo || null, assets },
       {
         onSuccess: () => {
-          setShowGuideEntry(true);
           if (showSlot) {
             toast.warning(
               "미확정 슬롯이 남아 있습니다. 저장은 완료됐지만 리밸런싱 결과가 정확하지 않을 수 있습니다."
@@ -124,9 +122,13 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
         />
 
         {showSlot && (
-          <div className="flex items-center gap-2 rounded-[10px] border border-[#fed7aa] bg-[#fff7ed] px-3.5 py-2.5 text-[13px] font-semibold text-[#c2410c]">
+          <div className="flex flex-col gap-0.5 rounded-[10px] border border-[#fed7aa] bg-[#fff7ed] px-3.5 py-2.5 text-[13px] font-semibold text-[#c2410c]">
             <span className="font-extrabold">미확정 슬롯이 남아 있습니다.</span>
-            종목을 채워야 리밸런싱 가이드 Step 3 결과가 표시됩니다. 저장은 가능하지만 결과가 정확하지 않을 수 있습니다.
+            <span>
+              종목을 채워야 &apos;이달의 매수 가이드&apos; 버튼이 나타납니다.
+              저장은 가능하지만 리밸런싱은 슬롯을 모두 채운 후 진행할 수
+              있습니다.
+            </span>
           </div>
         )}
 
@@ -136,13 +138,6 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
           onRemove={handleRemove}
           onReorder={setAssets}
         />
-
-        {showSlot && (
-          <UndeterminedSlotCard
-            remaining={remaining}
-            onClick={() => setSearchOpen(true)}
-          />
-        )}
 
         <Button
           type="button"
@@ -166,16 +161,12 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
           저장
         </Button>
 
-        {showGuideEntry && (
-          <Button
-            type="button"
-            variant="outline"
-            disabled
-            title="준비 중인 기능입니다"
-            className="w-full gap-2"
-          >
-            <RefreshCcw size={15} />
-            이달의 매수 가이드 (준비 중)
+        {assets.length > 0 && !showSlot && (
+          <Button asChild type="button" variant="outline" className="w-full gap-2">
+            <Link href={`/portfolio/${portfolioId}/guide`}>
+              <RefreshCcw size={15} />
+              이달의 매수 가이드
+            </Link>
           </Button>
         )}
       </div>
@@ -184,6 +175,7 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
         <AddAssetModal
           onClose={() => setSearchOpen(false)}
           onSelect={handleAddAsset}
+          existingTickers={assets.map((asset) => asset.ticker)}
         />
       )}
     </div>
