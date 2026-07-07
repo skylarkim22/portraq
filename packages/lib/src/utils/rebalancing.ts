@@ -81,10 +81,14 @@ export function calcRebalancingActions(
 }
 
 export function toActionItems(actions: RebalancingAction[]): ActionItem[] {
-  return actions.map((a) => ({
-    ticker: a.ticker,
-    action: a.action,
-    quantity: a.action === "sell" ? -a.quantity : a.quantity,
-    pricePerShare: a.pricePerShare,
-  }));
+  return actions.map((a) => {
+    const quantity = a.action === "sell" ? -a.quantity : a.quantity;
+    return {
+      ticker: a.ticker,
+      action: a.action,
+      quantity,
+      pricePerShare: a.pricePerShare,
+      totalAmount: quantity * a.pricePerShare,
+    };
+  });
 }

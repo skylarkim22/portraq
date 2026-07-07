@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCcw } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@portraq/ui";
 import type { Asset, PortfolioAsset } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
@@ -25,6 +26,7 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
   const [memo, setMemo] = useState("");
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [showGuideEntry, setShowGuideEntry] = useState(false);
 
   useEffect(() => {
     if (portfolio && !hydrated) {
@@ -74,7 +76,24 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
   };
 
   const handleSave = () => {
-    savePortfolio.mutate({ name, memo: memo || null, assets });
+    savePortfolio.mutate(
+      { name, memo: memo || null, assets },
+      {
+        onSuccess: () => {
+          setShowGuideEntry(true);
+          if (showSlot) {
+            toast.warning(
+              "미확정 슬롯이 남아 있습니다. 저장은 완료됐지만 리밸런싱 결과가 정확하지 않을 수 있습니다."
+            );
+          } else {
+            toast.success("포트폴리오가 저장되었습니다.");
+          }
+        },
+        onError: () => {
+          toast.error("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        },
+      }
+    );
   };
 
   if (isError) {
@@ -146,6 +165,19 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
         >
           저장
         </Button>
+
+        {showGuideEntry && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled
+            title="준비 중인 기능입니다"
+            className="w-full gap-2"
+          >
+            <RefreshCcw size={15} />
+            이달의 매수 가이드 (준비 중)
+          </Button>
+        )}
       </div>
 
       {searchOpen && (
