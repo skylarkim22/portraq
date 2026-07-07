@@ -31,6 +31,10 @@ vi.mock("@/features/portfolio/hooks", () => ({
   })),
 }));
 
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
+}));
+
 vi.mock("@/features/stocks/components/StockSearch", () => ({
   StockSearch: ({ onSelect }: { onSelect: (asset: unknown) => void }) => (
     <button
@@ -95,14 +99,38 @@ describe("PortfolioEditor", () => {
 
     await user.click(screen.getByRole("button", { name: "저장" }));
 
-    expect(mutateMock).toHaveBeenCalledWith({
-      name: "테스트 포트폴리오",
-      memo: null,
-      assets: expect.arrayContaining([
-        expect.objectContaining({ ticker: "AAPL" }),
-        expect.objectContaining({ ticker: "MSFT" }),
-      ]),
+    expect(mutateMock).toHaveBeenCalledWith(
+      {
+        name: "테스트 포트폴리오",
+        memo: null,
+        assets: expect.arrayContaining([
+          expect.objectContaining({ ticker: "AAPL" }),
+          expect.objectContaining({ ticker: "MSFT" }),
+        ]),
+      },
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+        onError: expect.any(Function),
+      })
+    );
+  });
+
+  it("저장 성공 시 리밸런싱 가이드 진입 버튼을 보여준다", async () => {
+    mutateMock.mockImplementation((_input, options) => {
+      options?.onSuccess?.();
     });
+    const user = userEvent.setup();
+    render(<PortfolioEditor portfolioId="p1" />);
+
+    expect(
+      screen.queryByRole("button", { name: /이달의 매수 가이드/ })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(
+      screen.getByRole("button", { name: /이달의 매수 가이드/ })
+    ).toBeInTheDocument();
   });
 
   it("조회에 실패하면 에러 메시지를 보여준다", () => {

@@ -36,6 +36,7 @@ export interface ActionItem {
   action: ActionType;
   quantity: number;
   pricePerShare: number;
+  totalAmount: number;
 }
 
 export interface ExecutionRecord {
@@ -48,9 +49,11 @@ export interface ExecutionRecord {
 
 export interface SnapshotAsset {
   ticker: string;
+  name: string;
   ratio: number;
   shares: number;
   pricePerShare: number;
+  color: string;
 }
 
 export interface PortfolioSnapshot {
