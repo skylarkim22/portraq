@@ -16,11 +16,16 @@ export interface PortfolioAsset {
   shares: number;
   order: number;
   isSlot?: boolean;
+  name?: string;
+  market?: Market;
+  color?: string;
+  currentPrice?: number;
 }
 
 export interface Portfolio {
   id: string;
   name: string;
+  memo: string | null;
   assets: PortfolioAsset[];
   createdAt: string;
   updatedAt: string;

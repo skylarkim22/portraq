@@ -1,4 +1,4 @@
-import type { ActionItem, ActionType, PortfolioAsset } from "../types/index.js";
+import type { ActionItem, ActionType, PortfolioAsset } from "../types/index";
 
 export interface HoldingInput {
   ticker: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { calcRebalancingActions } from "../rebalancing.js";
-import type { PortfolioAsset } from "../../types/index.js";
+import { calcRebalancingActions } from "../rebalancing";
+import type { PortfolioAsset } from "../../types/index";
 
 const assets: PortfolioAsset[] = [
   { ticker: "AAPL", ratio: 50, shares: 0, order: 0 },
