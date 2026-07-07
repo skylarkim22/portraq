@@ -22,6 +22,7 @@ const saveMutateMock = vi.fn();
 const saveMutateAsyncMock = vi.fn();
 const createMutateAsyncMock = vi.fn();
 const deleteMutateMock = vi.fn();
+const deleteMutateAsyncMock = vi.fn();
 const routerReplaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -49,6 +50,7 @@ vi.mock("@/features/portfolio/hooks", () => ({
   })),
   useDeletePortfolio: vi.fn(() => ({
     mutate: deleteMutateMock,
+    mutateAsync: deleteMutateAsyncMock,
     isPending: false,
   })),
 }));
@@ -76,6 +78,7 @@ describe("PortfolioEditor", () => {
     saveMutateAsyncMock.mockReset();
     createMutateAsyncMock.mockReset();
     deleteMutateMock.mockReset();
+    deleteMutateAsyncMock.mockReset();
     routerReplaceMock.mockReset();
     vi.spyOn(window, "confirm").mockReturnValue(true);
   });
@@ -262,6 +265,46 @@ describe("PortfolioEditor", () => {
         assets: [],
       });
       expect(routerReplaceMock).toHaveBeenCalledWith("/portfolio/new-id");
+    });
+
+    it("저장 처리 중에 다시 클릭해도 생성 요청은 한 번만 발생한다", async () => {
+      let resolveCreate: (value: string) => void = () => {};
+      createMutateAsyncMock.mockReturnValue(
+        new Promise<string>((resolve) => {
+          resolveCreate = resolve;
+        })
+      );
+      saveMutateAsyncMock.mockResolvedValue(undefined);
+
+      const user = userEvent.setup();
+      render(<PortfolioEditor portfolioId={null} />);
+
+      const saveButton = screen.getByRole("button", { name: "저장" });
+      await user.click(saveButton);
+      await user.click(saveButton);
+
+      expect(createMutateAsyncMock).toHaveBeenCalledTimes(1);
+
+      resolveCreate("new-id");
+      await waitFor(() =>
+        expect(routerReplaceMock).toHaveBeenCalledWith("/portfolio/new-id")
+      );
+    });
+
+    it("생성 후 저장이 실패하면 방금 생성한 포트폴리오를 롤백 삭제한다", async () => {
+      createMutateAsyncMock.mockResolvedValue("new-id");
+      saveMutateAsyncMock.mockRejectedValue(new Error("save failed"));
+      deleteMutateAsyncMock.mockResolvedValue(undefined);
+
+      const user = userEvent.setup();
+      render(<PortfolioEditor portfolioId={null} />);
+
+      await user.click(screen.getByRole("button", { name: "저장" }));
+
+      await waitFor(() =>
+        expect(deleteMutateAsyncMock).toHaveBeenCalledWith("new-id")
+      );
+      expect(routerReplaceMock).not.toHaveBeenCalled();
     });
   });
 });

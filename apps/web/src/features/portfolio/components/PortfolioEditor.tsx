@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, RefreshCcw, Trash2 } from "lucide-react";
@@ -40,6 +40,7 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
   const [memo, setMemo] = useState("");
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     if (portfolio && !hydrated) {
@@ -98,25 +99,40 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+
     if (isNew) {
-      if (!user) return;
-      try {
-        const newId = await createPortfolio.mutateAsync({
-          userId: user.id,
-          name: name || DEFAULT_PORTFOLIO_NAME,
-        });
-        await savePortfolio.mutateAsync({
-          portfolioId: newId,
-          name: name || DEFAULT_PORTFOLIO_NAME,
-          memo: memo || null,
-          assets,
-        });
-        handleSaveSuccess();
-        router.replace(`/portfolio/${newId}`);
-      } catch {
-        toast.error("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      if (!user) {
+        isSavingRef.current = false;
+        return;
       }
+
+      void (async () => {
+        let newId: string | undefined;
+        try {
+          newId = await createPortfolio.mutateAsync({
+            userId: user.id,
+            name: name || DEFAULT_PORTFOLIO_NAME,
+          });
+          await savePortfolio.mutateAsync({
+            portfolioId: newId,
+            name: name || DEFAULT_PORTFOLIO_NAME,
+            memo: memo || null,
+            assets,
+          });
+          handleSaveSuccess();
+          router.replace(`/portfolio/${newId}`);
+        } catch {
+          if (newId) {
+            await deletePortfolio.mutateAsync(newId).catch(() => {});
+          }
+          toast.error("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        } finally {
+          isSavingRef.current = false;
+        }
+      })();
       return;
     }
 
@@ -126,6 +142,9 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
         onSuccess: handleSaveSuccess,
         onError: () => {
           toast.error("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        },
+        onSettled: () => {
+          isSavingRef.current = false;
         },
       }
     );
