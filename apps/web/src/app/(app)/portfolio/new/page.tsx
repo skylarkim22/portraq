@@ -1,5 +1,5 @@
-import { CreatePortfolioRedirect } from "@/features/portfolio/components/CreatePortfolioRedirect";
+import { PortfolioEditor } from "@/features/portfolio/components/PortfolioEditor";
 
 export default function NewPortfolioPage() {
-  return <CreatePortfolioRedirect />;
+  return <PortfolioEditor portfolioId={null} />;
 }
