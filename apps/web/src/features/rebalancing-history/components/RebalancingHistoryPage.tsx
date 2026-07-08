@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { Button } from "@portraq/ui";
 import { useRebalancingHistory } from "@/features/rebalancing-history/hooks";
 import type {
   RebalancingHistoryFilters as Filters,
@@ -41,22 +42,6 @@ export const RebalancingHistoryPage = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useRebalancingHistory(filters);
-
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    });
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const records = data?.pages.flat() ?? [];
   const groups = groupByMonth(records);
@@ -107,12 +92,18 @@ export const RebalancingHistoryPage = () => {
         </div>
       )}
 
-      <div ref={sentinelRef} className="h-1" />
-
-      {isFetchingNextPage && (
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          더 불러오는 중...
-        </p>
+      {hasNextPage && (
+        <div className="mt-4 flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+            className="h-9 px-4 text-sm"
+          >
+            {isFetchingNextPage ? "불러오는 중..." : "더보기"}
+          </Button>
+        </div>
       )}
     </div>
   );

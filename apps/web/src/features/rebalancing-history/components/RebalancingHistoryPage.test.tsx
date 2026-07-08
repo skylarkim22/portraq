@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { RebalancingHistoryPage } from "@/features/rebalancing-history/components/RebalancingHistoryPage";
 import { useRebalancingHistory } from "@/features/rebalancing-history/hooks";
@@ -93,5 +94,42 @@ describe("RebalancingHistoryPage", () => {
     expect(
       screen.getByText("조건에 맞는 실행 기록이 없습니다.")
     ).toBeInTheDocument();
+  });
+
+  it("다음 페이지가 있으면 더보기 버튼을 누를 때만 fetchNextPage를 호출한다", async () => {
+    const user = userEvent.setup();
+    const fetchNextPage = vi.fn();
+    vi.mocked(useRebalancingHistory).mockReturnValue({
+      data: { pages: [[record("e1", "2026-01-15T00:00:00Z")]] },
+      isLoading: false,
+      isError: false,
+      fetchNextPage,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof useRebalancingHistory>);
+
+    render(<RebalancingHistoryPage />);
+
+    const loadMoreButton = screen.getByRole("button", { name: "더보기" });
+    expect(fetchNextPage).not.toHaveBeenCalled();
+
+    await user.click(loadMoreButton);
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("hasNextPage가 false면 더보기 버튼을 보여주지 않는다", () => {
+    vi.mocked(useRebalancingHistory).mockReturnValue({
+      data: { pages: [[record("e1", "2026-01-15T00:00:00Z")]] },
+      isLoading: false,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof useRebalancingHistory>);
+
+    render(<RebalancingHistoryPage />);
+
+    expect(screen.queryByRole("button", { name: "더보기" })).not.toBeInTheDocument();
   });
 });
