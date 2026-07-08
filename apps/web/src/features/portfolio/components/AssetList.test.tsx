@@ -58,6 +58,7 @@ describe("AssetList", () => {
     expect(
       screen.getByRole("button", { name: /기타 \(비공개 종목\)/ })
     ).toBeInTheDocument();
+    expect(screen.getByText("클릭해서 종목을 추가하세요")).toBeInTheDocument();
   });
 
   it("슬롯 버튼을 클릭하면 onFillSlot이 해당 슬롯의 티커와 함께 호출된다", async () => {

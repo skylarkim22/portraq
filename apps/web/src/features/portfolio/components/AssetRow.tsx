@@ -52,9 +52,16 @@ export const AssetRow = memo(({ asset, onRatioChange, onRemove, onFillSlot }: As
             className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-dashed border-input py-1.5 pl-1 pr-2 text-left text-muted-foreground transition-colors hover:border-primary hover:text-primary"
           >
             <Plus size={16} className="shrink-0" />
-            <span className="truncate text-[13px] font-semibold">
-              {asset.name ?? "종목을 직접 추가하세요"}
-            </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13px] font-semibold">
+                클릭해서 종목을 추가하세요
+              </div>
+              {asset.name && (
+                <div className="truncate text-[11px] text-muted-foreground/80">
+                  {asset.name}
+                </div>
+              )}
+            </div>
           </button>
         ) : (
           <>
