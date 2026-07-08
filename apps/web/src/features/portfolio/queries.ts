@@ -60,7 +60,9 @@ export const portfolioListQueryOptions = () =>
         .select(
           "id, name, updated_at, portfolio_assets(ticker, market, ratio, shares, current_price, color, sort_order), execution_records(executed_at, actions)"
         )
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+        .order("executed_at", { referencedTable: "execution_records", ascending: false })
+        .limit(1, { referencedTable: "execution_records" });
 
       if (error) throw error;
 
@@ -76,13 +78,8 @@ export const portfolioListQueryOptions = () =>
             color: asset.color,
           }));
 
-        const executions = [...row.execution_records].sort(
-          (a, b) =>
-            new Date(b.executed_at).getTime() - new Date(a.executed_at).getTime()
-        );
-
-        const latestExecution = executions[0]
-          ? summarizeExecution(executions[0].actions as ActionItem[])
+        const latestExecution = row.execution_records[0]
+          ? summarizeExecution(row.execution_records[0].actions as ActionItem[])
           : null;
 
         return {
