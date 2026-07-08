@@ -172,6 +172,9 @@ CREATE TABLE execution_records (
 );
 
 CREATE INDEX idx_execution_records_portfolio ON execution_records(portfolio_id);
+-- 리밸런싱 기록 조회(ORDER BY executed_at DESC)용 인덱스
+CREATE INDEX idx_execution_records_executed_at ON execution_records(executed_at DESC);
+CREATE INDEX idx_execution_records_portfolio_executed_at ON execution_records(portfolio_id, executed_at DESC);
 
 ALTER TABLE execution_records ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users can manage own execution records"
