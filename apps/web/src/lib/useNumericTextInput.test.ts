@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
+import { useNumericTextInput } from "@/lib/useNumericTextInput";
 
 describe("useNumericTextInput", () => {
   it("정수만 입력하도록 소수점을 거부한다 (decimalPlaces 미지정)", () => {

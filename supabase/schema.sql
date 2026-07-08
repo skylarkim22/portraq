@@ -336,19 +336,25 @@ CREATE POLICY "templates are publicly readable"
 
 -- ============================================================
 -- trade_logs (매매 일지, PRD 5.8)
--- TradeItem[]: { ticker, quantity, price, tax, exchange_rate }
+-- 1행 = 1종목 거래. 한 번에 여러 종목을 등록해도 종목마다 독립된 행으로
+-- 저장되어, 날짜·메모·수량·가격을 종목별로 개별 수정·삭제할 수 있다.
 -- ============================================================
 CREATE TABLE trade_logs (
-  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  type       TEXT        NOT NULL CHECK (type IN ('buy', 'sell')),
-  date       DATE        NOT NULL DEFAULT CURRENT_DATE,
-  items      JSONB       NOT NULL DEFAULT '[]',
-  memo       TEXT        CHECK (char_length(memo) <= 1000),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type          TEXT        NOT NULL CHECK (type IN ('buy', 'sell')),
+  date          DATE        NOT NULL DEFAULT CURRENT_DATE,
+  ticker        TEXT        NOT NULL,
+  quantity      NUMERIC     NOT NULL CHECK (quantity > 0),
+  price         NUMERIC     NOT NULL CHECK (price > 0),
+  tax           NUMERIC     CHECK (tax >= 0),
+  exchange_rate NUMERIC     CHECK (exchange_rate > 0),
+  memo          TEXT        CHECK (char_length(memo) <= 1000),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_trade_logs_user_date ON trade_logs(user_id, date DESC);
+CREATE INDEX idx_trade_logs_user_ticker ON trade_logs(user_id, ticker);
 
 ALTER TABLE trade_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users can manage own trade logs"
