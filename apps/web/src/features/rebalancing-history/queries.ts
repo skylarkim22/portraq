@@ -63,10 +63,13 @@ export const rebalancingHistoryInfiniteQueryOptions = (
         query = query.eq("portfolio_id", filters.portfolioId);
       }
       if (filters.dateFrom) {
-        query = query.gte("executed_at", filters.dateFrom);
+        query = query.gte("executed_at", new Date(`${filters.dateFrom}T00:00:00`).toISOString());
       }
       if (filters.dateTo) {
-        query = query.lte("executed_at", filters.dateTo);
+        query = query.lte(
+          "executed_at",
+          new Date(`${filters.dateTo}T23:59:59.999`).toISOString()
+        );
       }
 
       const { data, error } = await query;

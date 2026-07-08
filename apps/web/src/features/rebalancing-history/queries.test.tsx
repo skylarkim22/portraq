@@ -104,4 +104,35 @@ describe("useRebalancingHistory", () => {
     expect(records?.[0].portfolioName).toBe("삭제된 포트폴리오");
     expect(records?.[0].actions[0].name).toBe("AAPL");
   });
+
+  it("dateTo가 오늘이면 자정이 아닌 하루의 끝(23:59:59.999)까지 조회한다", async () => {
+    const builder = makeBuilder({ data: [baseRow], error: null });
+    fromMock.mockReturnValue(builder);
+
+    const { result } = renderWithClient(() =>
+      useRebalancingHistory({ portfolioId: null, dateFrom: null, dateTo: "2026-07-08" })
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const lteCall = (builder.lte as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(lteCall[0]).toBe("executed_at");
+    expect(lteCall[1]).toBe(new Date("2026-07-08T23:59:59.999").toISOString());
+    expect(lteCall[1]).not.toBe("2026-07-08");
+  });
+
+  it("dateFrom은 해당 날짜의 시작(00:00:00)부터 조회한다", async () => {
+    const builder = makeBuilder({ data: [baseRow], error: null });
+    fromMock.mockReturnValue(builder);
+
+    const { result } = renderWithClient(() =>
+      useRebalancingHistory({ portfolioId: null, dateFrom: "2026-07-08", dateTo: null })
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const gteCall = (builder.gte as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(gteCall[0]).toBe("executed_at");
+    expect(gteCall[1]).toBe(new Date("2026-07-08T00:00:00").toISOString());
+  });
 });
