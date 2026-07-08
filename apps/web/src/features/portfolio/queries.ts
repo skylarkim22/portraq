@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import type {
+  ActionItem,
   Market,
   Portfolio,
   PortfolioAsset,
@@ -14,10 +15,41 @@ export const portfolioKeys = {
   snapshots: (id: string) => [...portfolioKeys.all, "snapshots", id] as const,
 };
 
+export type PortfolioCardAsset = {
+  ticker: string;
+  market: Market;
+  ratio: number;
+  shares: number;
+  currentPrice: number;
+  color: string;
+};
+
+export type PortfolioCardExecutionSummary = {
+  buyCount: number;
+  sellCount: number;
+  holdCount: number;
+};
+
 export type PortfolioListItem = {
   id: string;
   name: string;
+  updatedAt: string;
+  assets: PortfolioCardAsset[];
+  latestExecution: PortfolioCardExecutionSummary | null;
 };
+
+const summarizeExecution = (
+  actions: ActionItem[]
+): PortfolioCardExecutionSummary =>
+  actions.reduce(
+    (acc, action) => {
+      if (action.action === "buy") acc.buyCount += 1;
+      else if (action.action === "sell") acc.sellCount += 1;
+      else acc.holdCount += 1;
+      return acc;
+    },
+    { buyCount: 0, sellCount: 0, holdCount: 0 }
+  );
 
 export const portfolioListQueryOptions = () =>
   queryOptions({
@@ -25,11 +57,42 @@ export const portfolioListQueryOptions = () =>
     queryFn: async (): Promise<PortfolioListItem[]> => {
       const { data, error } = await createClient()
         .from("portfolios")
-        .select("id, name")
+        .select(
+          "id, name, updated_at, portfolio_assets(ticker, market, ratio, shares, current_price, color, sort_order), execution_records(executed_at, actions)"
+        )
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      return data.map((row) => {
+        const assets: PortfolioCardAsset[] = row.portfolio_assets
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((asset) => ({
+            ticker: asset.ticker,
+            market: asset.market as Market,
+            ratio: asset.ratio,
+            shares: asset.shares,
+            currentPrice: asset.current_price,
+            color: asset.color,
+          }));
+
+        const executions = [...row.execution_records].sort(
+          (a, b) =>
+            new Date(b.executed_at).getTime() - new Date(a.executed_at).getTime()
+        );
+
+        const latestExecution = executions[0]
+          ? summarizeExecution(executions[0].actions as ActionItem[])
+          : null;
+
+        return {
+          id: row.id,
+          name: row.name,
+          updatedAt: row.updated_at,
+          assets,
+          latestExecution,
+        };
+      });
     },
     staleTime: 1000 * 30,
   });

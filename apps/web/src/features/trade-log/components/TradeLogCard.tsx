@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ActionChip } from "@portraq/ui";
 import { toKrwPrice } from "@portraq/lib/utils";
 import { useDeleteTradeLog } from "@/features/trade-log/hooks";
 import { EditTradeModal } from "@/features/trade-log/components/EditTradeModal";
@@ -39,15 +40,7 @@ export const TradeLogCard = ({ log }: TradeLogCardProps) => {
   return (
     <>
       <div className="flex items-start gap-3 rounded-xl border border-border bg-background p-3.5">
-        <span
-          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold ${
-            isBuy
-              ? "border-[#c7d5fd] bg-[#eef2ff] text-primary"
-              : "border-[#fecaca] bg-[#fef2f2] text-[#dc2626]"
-          }`}
-        >
-          {isBuy ? "매수" : "매도"}
-        </span>
+        <ActionChip action={log.type} className="shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">

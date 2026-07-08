@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
+import { ActionChip } from "@portraq/ui";
 import { formatExecutedDate } from "@/lib/dateFormat";
 import type {
   EnrichedActionItem,
@@ -63,9 +63,9 @@ export const RebalancingHistoryRecordHeader = ({
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {counts.buy > 0 && <ActionTypeChip action="buy" suffix={` ${counts.buy}종`} />}
-        {counts.sell > 0 && <ActionTypeChip action="sell" suffix={` ${counts.sell}종`} />}
-        {counts.hold > 0 && <ActionTypeChip action="hold" suffix={` ${counts.hold}종`} />}
+        {counts.buy > 0 && <ActionChip action="buy">매수 {counts.buy}종</ActionChip>}
+        {counts.sell > 0 && <ActionChip action="sell">매도 {counts.sell}종</ActionChip>}
+        {counts.hold > 0 && <ActionChip action="hold">유지 {counts.hold}종</ActionChip>}
       </div>
     </button>
   );
