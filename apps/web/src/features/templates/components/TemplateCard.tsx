@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { Card } from "@portraq/ui";
 import type { PortfolioTemplate } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
+import { formatExecutedDate } from "@/lib/dateFormat";
 import {
   MARKET_BADGE_CLASS,
   MARKET_LABELS,
@@ -49,7 +50,7 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
             </span>
             {template.sourceDate && (
               <span className="text-[11px] font-medium text-muted-foreground">
-                기준일 {template.sourceDate}
+                기준일 {formatExecutedDate(template.sourceDate)}
               </span>
             )}
           </div>

@@ -28,7 +28,7 @@ describe("TemplateCard", () => {
     expect(screen.getByText("US")).toBeInTheDocument();
     expect(screen.getByText("+10.4%")).toBeInTheDocument();
     expect(screen.getByText("-32.7%")).toBeInTheDocument();
-    expect(screen.getByText(/기준일 2026-03-31/)).toBeInTheDocument();
+    expect(screen.getByText(/기준일 2026\. 3\. 31/)).toBeInTheDocument();
     expect(screen.queryByText(/이 포트폴리오 사용하기/)).not.toBeInTheDocument();
   });
 

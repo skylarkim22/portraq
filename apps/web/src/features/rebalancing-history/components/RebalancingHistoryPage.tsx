@@ -8,7 +8,7 @@ import type {
 } from "@/features/rebalancing-history/queries";
 import { RebalancingHistoryFilters } from "@/features/rebalancing-history/components/RebalancingHistoryFilters";
 import { RebalancingHistoryRecordCard } from "@/features/rebalancing-history/components/RebalancingHistoryRecordCard";
-import { formatMonthLabel } from "@/features/rebalancing-history/dateFormat";
+import { formatMonthLabel } from "@/lib/dateFormat";
 
 const groupByMonth = (records: RebalancingHistoryRecord[]) => {
   const groups: { label: string; records: RebalancingHistoryRecord[] }[] = [];

@@ -15,7 +15,7 @@ import type {
 } from "@/features/rebalancing-history/queries";
 import { RebalancingHistoryActionRow } from "@/features/rebalancing-history/components/RebalancingHistoryActionRow";
 import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
-import { formatExecutedDate } from "@/features/rebalancing-history/dateFormat";
+import { formatExecutedDate } from "@/lib/dateFormat";
 
 type RebalancingHistoryRecordCardProps = {
   record: RebalancingHistoryRecord;
