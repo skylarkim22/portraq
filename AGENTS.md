@@ -134,7 +134,8 @@ src/components/[ComponentName]/
 ## Tanstack Query 코드 작성 가이드
 
 - `useQuery` 사용할 때는 `queryOptions`을 사용하여 데이터를 받아온다.
-- `useMutation` 사용해서 업데이트 할때는 낙관적 업데이트를 사용한다.
+- `useMutation`으로 수정(update/create/save)할 때는 낙관적 업데이트(`onMutate`에서 캐시를 미리 반영, 실패 시 `onError`에서 롤백)를 사용한다.
+- 삭제(delete) mutation은 낙관적 업데이트를 사용하지 않는다. 서버가 성공을 확인한 `onSuccess`에서만 캐시를 반영한다. 단, `invalidateQueries`로 넓게 무효화하기보다 해당 항목만 캐시에서 직접 제거하는 방식을 우선한다(무한 스크롤 쿼리 등에서 불필요한 전체 재조회를 피하기 위함).
 
 ### 데이터 레이어 패턴
 

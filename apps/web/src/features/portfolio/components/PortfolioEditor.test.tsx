@@ -169,7 +169,7 @@ describe("PortfolioEditor", () => {
     render(<PortfolioEditor portfolioId="p1" />);
 
     expect(
-      screen.queryByRole("link", { name: /이달의 매수 가이드/ })
+      screen.queryByRole("link", { name: /리밸런싱/ })
     ).not.toBeInTheDocument();
   });
 
@@ -188,7 +188,7 @@ describe("PortfolioEditor", () => {
 
     render(<PortfolioEditor portfolioId="p1" />);
 
-    const link = screen.getByRole("link", { name: /이달의 매수 가이드/ });
+    const link = screen.getByRole("link", { name: /리밸런싱/ });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/portfolio/p1/guide");
   });
@@ -255,11 +255,11 @@ describe("PortfolioEditor", () => {
       ).toHaveValue("");
     });
 
-    it("이달의 매수 가이드 버튼을 보여주지 않는다", () => {
+    it("리밸런싱 버튼을 보여주지 않는다", () => {
       render(<PortfolioEditor portfolioId={null} />);
 
       expect(
-        screen.queryByRole("link", { name: /이달의 매수 가이드/ })
+        screen.queryByRole("link", { name: /리밸런싱/ })
       ).not.toBeInTheDocument();
     });
 

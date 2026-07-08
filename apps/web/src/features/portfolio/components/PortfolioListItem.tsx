@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil, RefreshCcw } from "lucide-react";
 import { Button, Card } from "@portraq/ui";
 import type { PortfolioListItem as PortfolioListItemType } from "@/features/portfolio/queries";
 import { usePortfolio } from "@/features/portfolio/hooks";
@@ -38,7 +38,20 @@ export const PortfolioListItem = ({ portfolio }: PortfolioListItemProps) => {
             <p className="text-xs text-muted-foreground">불러오는 중...</p>
           )}
           {data && <AllocationSummary assets={data.assets} />}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {data && data.assets.length > 0 && (
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="h-7 gap-1 px-2.5 text-xs"
+              >
+                <Link href={`/portfolio/${portfolio.id}/guide`}>
+                  <RefreshCcw size={12} />
+                  리밸런싱
+                </Link>
+              </Button>
+            )}
             <Button
               asChild
               type="button"
