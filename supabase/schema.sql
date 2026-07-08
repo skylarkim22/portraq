@@ -368,13 +368,13 @@ INSERT INTO portfolio_templates (id, name, strategy, market, cagr, mdd, descript
   '2026-03-31',
   '[
     {"ticker": "AAPL",  "name": "Apple",                "market": "US", "ratio": 22.0, "sort_order": 1},
-    {"ticker": "AXP",   "name": "American Express",     "market": "US", "ratio": 15.8, "sort_order": 2},
-    {"ticker": "BAC",   "name": "Bank of America",      "market": "US", "ratio":  9.8, "sort_order": 3},
-    {"ticker": "GOOGL", "name": "Alphabet",             "market": "US", "ratio":  5.9, "sort_order": 4},
-    {"ticker": "KO",    "name": "Coca-Cola",            "market": "US", "ratio":  5.0, "sort_order": 5},
-    {"ticker": "OXY",   "name": "Occidental Petroleum", "market": "US", "ratio":  4.8, "sort_order": 6},
-    {"ticker": "CVX",   "name": "Chevron",              "market": "US", "ratio":  4.0, "sort_order": 7},
-    {"ticker": null,    "name": "기타 (비공개 종목)",    "market": "US", "ratio": 32.7, "sort_order": 8}
+    {"ticker": "AXP",   "name": "American Express",     "market": "US", "ratio": 17.4, "sort_order": 2},
+    {"ticker": "KO",    "name": "Coca-Cola",            "market": "US", "ratio": 11.6, "sort_order": 3},
+    {"ticker": "BAC",   "name": "Bank of America",      "market": "US", "ratio":  9.5, "sort_order": 4},
+    {"ticker": "CVX",   "name": "Chevron",              "market": "US", "ratio":  6.6, "sort_order": 5},
+    {"ticker": "OXY",   "name": "Occidental Petroleum", "market": "US", "ratio":  6.5, "sort_order": 6},
+    {"ticker": "GOOGL", "name": "Alphabet",             "market": "US", "ratio":  6.3, "sort_order": 7},
+    {"ticker": null,    "name": "기타 (비공개 종목)",    "market": "US", "ratio": 20.1, "sort_order": 8}
   ]'
 ),
 (
@@ -382,10 +382,10 @@ INSERT INTO portfolio_templates (id, name, strategy, market, cagr, mdd, descript
   '레이 달리오',
   'asset-allocation',
   'MIXED',
-  7.2,
-  -12.4,
+  7.4,
+  -20.6,
   '어떤 경제 환경에서도 수익을 내는 올웨더 포트폴리오. 인플레이션·디플레이션·성장·침체 4가지 국면에서 균형 잡힌 리스크를 유지하는 자산배분 전략.',
-  '2025-01-01',
+  '2026-06-30',
   '[
     {"ticker": "VTI",  "name": "Vanguard Total Stock Market ETF",     "market": "US", "ratio": 30.0, "sort_order": 1},
     {"ticker": "TLT",  "name": "iShares 20+ Year Treasury Bond ETF",  "market": "US", "ratio": 40.0, "sort_order": 2},
