@@ -1,7 +1,7 @@
 import { Button, Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
 import { toKrwPrice } from "@portraq/lib/utils";
-import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
+import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { RebalancingPriceRow } from "@/features/portfolio/components/RebalancingPriceRow";
 
 const BUDGET_PRESETS = [100_000, 300_000, 500_000, 1_000_000];

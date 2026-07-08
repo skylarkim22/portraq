@@ -63,20 +63,16 @@ export interface PortfolioSnapshot {
   assets: SnapshotAsset[];
 }
 
-export interface TradeItem {
-  ticker: string;
-  quantity: number;
-  price: number;
-  tax?: number | null;
-  exchangeRate?: number | null;
-}
-
 export interface TradeLog {
   id: string;
   userId: string;
   type: "buy" | "sell";
   date: string;
-  items: TradeItem[];
+  ticker: string;
+  quantity: number;
+  price: number;
+  tax?: number | null;
+  exchangeRate?: number | null;
   memo: string | null;
   createdAt: string;
 }

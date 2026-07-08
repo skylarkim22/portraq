@@ -17,11 +17,13 @@ const MANUAL_MARKET_OPTIONS: { label: string; value: Market }[] = [
 type StockSearchProps = {
   onSelect: (asset: Asset) => void;
   existingTickers?: string[];
+  clearQueryOnSelect?: boolean;
 };
 
 export function StockSearch({
   onSelect,
   existingTickers = [],
+  clearQueryOnSelect = true,
 }: StockSearchProps) {
   const [query, setQuery] = useState("");
   const [market, setMarket] = useState<MarketFilter>("ALL");
@@ -41,6 +43,11 @@ export function StockSearch({
   const handleQueryChange = (value: string) => {
     setQuery(value);
     setManualEntry(false);
+  };
+
+  const handleSelect = (asset: Asset) => {
+    onSelect(asset);
+    if (clearQueryOnSelect) setQuery("");
   };
 
   const handleManualAdd = () => {
@@ -172,7 +179,7 @@ export function StockSearch({
               <button
                 key={asset.ticker}
                 type="button"
-                onClick={() => onSelect(asset)}
+                onClick={() => handleSelect(asset)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted"
               >
                 <span

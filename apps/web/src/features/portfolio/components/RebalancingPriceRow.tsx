@@ -1,8 +1,8 @@
 import { Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
 import { toKrwPrice } from "@portraq/lib/utils";
-import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
-import { AssetColorBadge } from "@/features/portfolio/components/AssetColorBadge";
+import { useNumericTextInput } from "@/lib/useNumericTextInput";
+import { AssetColorBadge } from "@/components/AssetColorBadge";
 
 type RebalancingPriceRowProps = {
   asset: PortfolioAsset;
