@@ -15,6 +15,8 @@ import {
   usePortfolio,
   useSavePortfolio,
 } from "@/features/portfolio/hooks";
+import { useTemplate } from "@/features/templates/hooks";
+import { toPortfolioAssets } from "@/features/templates/toPortfolioAssets";
 import { AssetList } from "@/features/portfolio/components/AssetList";
 import { AllocationSummary } from "@/features/portfolio/components/AllocationSummary";
 import { PortfolioHeader } from "@/features/portfolio/components/PortfolioHeader";
@@ -24,22 +26,27 @@ const DEFAULT_PORTFOLIO_NAME = "내 포트폴리오";
 
 type PortfolioEditorProps = {
   portfolioId: string | null;
+  templateId?: string | null;
 };
 
-export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
+export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEditorProps) => {
   const isNew = portfolioId === null;
   const router = useRouter();
   const { data: user } = useUser();
   const { data: portfolio, isLoading, isError } = usePortfolio(portfolioId);
+  const { data: template, isFetched: isTemplateFetched } = useTemplate(
+    isNew ? templateId : null
+  );
   const createPortfolio = useCreatePortfolio();
   const savePortfolio = useSavePortfolio();
   const deletePortfolio = useDeletePortfolio();
 
-  const [hydrated, setHydrated] = useState(isNew);
+  const [hydrated, setHydrated] = useState(isNew && !templateId);
   const [name, setName] = useState("");
   const [memo, setMemo] = useState("");
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [replacingTicker, setReplacingTicker] = useState<string | null>(null);
   const isSavingRef = useRef(false);
 
   useEffect(() => {
@@ -51,9 +58,21 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
     }
   }, [portfolio, hydrated]);
 
+  useEffect(() => {
+    if (!isNew || !templateId || hydrated || !isTemplateFetched) return;
+
+    if (template) {
+      setName(template.name);
+      setAssets(toPortfolioAssets(template));
+    }
+
+    setHydrated(true);
+  }, [isNew, templateId, template, isTemplateFetched, hydrated]);
+
   const total = assets.reduce((sum, asset) => sum + asset.ratio, 0);
   const remaining = Math.max(0, 100 - total);
-  const showSlot = remaining > 0 && total <= 100;
+  const hasUnfilledSlot = assets.some((asset) => asset.isSlot);
+  const showSlot = hasUnfilledSlot || (remaining > 0 && total <= 100);
 
   const handleRatioChange = useCallback((ticker: string, ratio: number) => {
     setAssets((prev) =>
@@ -71,16 +90,43 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
 
   const handleAddAsset = (picked: Asset) => {
     setSearchOpen(false);
-    if (assets.some((asset) => asset.ticker === picked.ticker)) return;
+    if (assets.some((asset) => asset.ticker === picked.ticker)) {
+      setReplacingTicker(null);
+      toast.warning("이미 포트폴리오에 있는 종목입니다.");
+      return;
+    }
 
     const usedColors = assets.map((asset) => asset.color ?? "");
+    const color = resolveColor(undefined, picked.ticker, usedColors);
+
+    if (replacingTicker) {
+      setAssets((prev) =>
+        prev.map((asset) =>
+          asset.ticker === replacingTicker
+            ? {
+                ticker: picked.ticker,
+                name: picked.name,
+                market: picked.market,
+                color,
+                ratio: asset.ratio,
+                shares: asset.shares,
+                currentPrice: asset.currentPrice,
+                order: asset.order,
+              }
+            : asset
+        )
+      );
+      setReplacingTicker(null);
+      return;
+    }
+
     setAssets((prev) => [
       ...prev,
       {
         ticker: picked.ticker,
         name: picked.name,
         market: picked.market,
-        color: resolveColor(undefined, picked.ticker, usedColors),
+        color,
         ratio: 0,
         shares: 0,
         currentPrice: 0,
@@ -88,6 +134,11 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
       },
     ]);
   };
+
+  const handleFillSlot = useCallback((ticker: string) => {
+    setReplacingTicker(ticker);
+    setSearchOpen(true);
+  }, []);
 
   const handleSaveSuccess = () => {
     if (showSlot) {
@@ -189,7 +240,10 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
           memo={memo}
           onNameChange={setName}
           onMemoChange={setMemo}
-          onAddAssetClick={() => setSearchOpen(true)}
+          onAddAssetClick={() => {
+            setReplacingTicker(null);
+            setSearchOpen(true);
+          }}
         />
 
         {showSlot && (
@@ -208,12 +262,16 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
           onRatioChange={handleRatioChange}
           onRemove={handleRemove}
           onReorder={setAssets}
+          onFillSlot={handleFillSlot}
         />
 
         <Button
           type="button"
           variant="outline"
-          onClick={() => setSearchOpen(true)}
+          onClick={() => {
+            setReplacingTicker(null);
+            setSearchOpen(true);
+          }}
           className="h-auto w-full justify-center gap-2 rounded-lg border-dashed border-input bg-transparent px-0 py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary hover:bg-transparent hover:text-primary"
         >
           <Plus size={18} />
@@ -257,7 +315,10 @@ export const PortfolioEditor = ({ portfolioId }: PortfolioEditorProps) => {
 
       {searchOpen && (
         <AddAssetModal
-          onClose={() => setSearchOpen(false)}
+          onClose={() => {
+            setSearchOpen(false);
+            setReplacingTicker(null);
+          }}
           onSelect={handleAddAsset}
           existingTickers={assets.map((asset) => asset.ticker)}
         />

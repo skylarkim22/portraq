@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
 import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
@@ -13,9 +13,10 @@ type AssetRowProps = {
   asset: PortfolioAsset;
   onRatioChange: (ticker: string, ratio: number) => void;
   onRemove: (ticker: string) => void;
+  onFillSlot: (ticker: string) => void;
 };
 
-export const AssetRow = memo(({ asset, onRatioChange, onRemove }: AssetRowProps) => {
+export const AssetRow = memo(({ asset, onRatioChange, onRemove, onFillSlot }: AssetRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: asset.ticker });
 
@@ -44,16 +45,31 @@ export const AssetRow = memo(({ asset, onRatioChange, onRemove }: AssetRowProps)
           <GripVertical size={18} />
         </button>
 
-        <AssetColorBadge name={asset.name} ticker={asset.ticker} color={asset.color} />
+        {asset.isSlot ? (
+          <button
+            type="button"
+            onClick={() => onFillSlot(asset.ticker)}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-dashed border-input py-1.5 pl-1 pr-2 text-left text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <Plus size={16} className="shrink-0" />
+            <span className="truncate text-[13px] font-semibold">
+              {asset.name ?? "종목을 직접 추가하세요"}
+            </span>
+          </button>
+        ) : (
+          <>
+            <AssetColorBadge name={asset.name} ticker={asset.ticker} color={asset.color} />
 
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-extrabold text-foreground">
-            {asset.name ?? asset.ticker}
-          </div>
-          <div className="truncate text-xs text-muted-foreground">
-            {asset.ticker} · {asset.market ?? "KR"}
-          </div>
-        </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[15px] font-extrabold text-foreground">
+                {asset.name ?? asset.ticker}
+              </div>
+              <div className="truncate text-xs text-muted-foreground">
+                {asset.ticker} · {asset.market ?? "KR"}
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="flex shrink-0 items-center gap-1">
           <Input
