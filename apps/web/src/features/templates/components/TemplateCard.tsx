@@ -43,8 +43,15 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-1 text-[17px] font-extrabold text-foreground">
-            {template.name}
+          <div className="mb-1 flex flex-wrap items-baseline gap-1.5">
+            <span className="text-[17px] font-extrabold text-foreground">
+              {template.name}
+            </span>
+            {template.sourceDate && (
+              <span className="text-[11px] font-medium text-muted-foreground">
+                기준일 {template.sourceDate}
+              </span>
+            )}
           </div>
           <div className="mb-2 flex flex-wrap gap-1">
             <span

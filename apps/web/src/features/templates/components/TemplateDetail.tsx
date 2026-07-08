@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { InfoPopover } from "@portraq/ui";
 import type { PortfolioTemplate } from "@portraq/lib/types";
-import { resolveTemplateAssetColors } from "@/features/templates/templateStyles";
+import {
+  CAGR_EXPLANATION,
+  MDD_EXPLANATION,
+  resolveTemplateAssetColors,
+} from "@/features/templates/templateStyles";
 
 const MDD_SCALE = 50;
 
@@ -26,16 +31,18 @@ export const TemplateDetail = ({ template }: TemplateDetailProps) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             10Y CAGR
+            <InfoPopover label="10Y CAGR 설명">{CAGR_EXPLANATION}</InfoPopover>
           </div>
           <div className="text-xl font-extrabold text-[var(--portraq-success)]">
             {template.cagr !== null ? `+${template.cagr}%` : "-"}
           </div>
         </div>
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             MDD
+            <InfoPopover label="MDD 설명">{MDD_EXPLANATION}</InfoPopover>
           </div>
           <div className="text-xl font-extrabold text-destructive">
             {template.mdd !== null ? `${template.mdd}%` : "-"}

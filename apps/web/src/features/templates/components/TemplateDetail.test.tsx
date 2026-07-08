@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect } from "vitest";
 import { TemplateDetail } from "@/features/templates/components/TemplateDetail";
 import type { PortfolioTemplate } from "@portraq/lib/types";
@@ -44,5 +45,16 @@ describe("TemplateDetail", () => {
     expect(
       screen.queryByText(/우량 기업을 적정 가격에/)
     ).not.toBeInTheDocument();
+  });
+
+  it("10Y CAGR/MDD 안내 아이콘을 클릭하면 용어 설명이 노출된다", async () => {
+    const user = userEvent.setup();
+    render(<TemplateDetail template={mockTemplate} />);
+
+    await user.click(screen.getByRole("button", { name: "10Y CAGR 설명" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("CAGR");
+
+    await user.click(screen.getByRole("button", { name: "MDD 설명" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("MDD");
   });
 });

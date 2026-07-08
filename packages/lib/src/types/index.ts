@@ -81,7 +81,7 @@ export interface TradeLog {
   createdAt: string;
 }
 
-export type TemplateStrategy = "passive" | "value" | "quant" | "asset-allocation";
+export type TemplateStrategy = "passive" | "value" | "quant" | "asset-allocation" | "growth";
 
 export type TemplateMarket = "KR" | "US" | "MIXED";
 

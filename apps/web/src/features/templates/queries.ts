@@ -11,8 +11,8 @@ const DISPLAY_ORDER = [
   "ray-dalio-all-weather",
   "john-bogle",
   "warren-buffett",
-  "peter-lynch",
-  "kang-hwan-guk",
+  "cathie-wood",
+  "michael-burry",
 ];
 
 export const templateListQueryOptions = () =>

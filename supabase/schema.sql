@@ -317,7 +317,7 @@ GRANT EXECUTE ON FUNCTION delete_portfolio(UUID) TO authenticated;
 CREATE TABLE portfolio_templates (
   id          TEXT        PRIMARY KEY,
   name        TEXT        NOT NULL,
-  strategy    TEXT        NOT NULL CHECK (strategy IN ('passive', 'value', 'quant', 'asset-allocation')),
+  strategy    TEXT        NOT NULL CHECK (strategy IN ('passive', 'value', 'quant', 'asset-allocation', 'growth')),
   market      TEXT        NOT NULL CHECK (market IN ('KR', 'US', 'MIXED')),
   cagr        NUMERIC,
   mdd         NUMERIC,
@@ -395,21 +395,24 @@ INSERT INTO portfolio_templates (id, name, strategy, market, cagr, mdd, descript
   ]'
 ),
 (
-  'peter-lynch',
-  '피터 린치',
-  'value',
-  'MIXED',
-  11.3,
-  -28.1,
-  '"아는 기업에 투자하라." 일상에서 발견한 소비재·유통·헬스케어 성장주를 발굴하는 전략. 마젤란 펀드 운용 시절 연평균 29%의 수익률을 기록했다.',
-  '2025-01-01',
+  'cathie-wood',
+  '캐시 우드',
+  'growth',
+  'US',
+  13.5,
+  -80.9,
+  'AI·유전체학·로보틱스·핀테크 등 파괴적 혁신 기술에 집중 투자하는 액티브 성장주 전략. ARK Invest의 대표 펀드 ARKK 기준이며, 고위험·고변동성으로 2021년 고점 대비 80% 넘게 하락한 적이 있다.',
+  '2026-07-06',
   '[
-    {"ticker": "MCD",  "name": "McDonald''s",        "market": "US", "ratio": 15.0, "sort_order": 1},
-    {"ticker": "NKE",  "name": "Nike",               "market": "US", "ratio": 15.0, "sort_order": 2},
-    {"ticker": "SBUX", "name": "Starbucks",          "market": "US", "ratio": 10.0, "sort_order": 3},
-    {"ticker": "HD",   "name": "Home Depot",         "market": "US", "ratio": 10.0, "sort_order": 4},
-    {"ticker": null,   "name": "직접 발굴 성장주 A", "market": "US", "ratio": 25.0, "sort_order": 5},
-    {"ticker": null,   "name": "직접 발굴 성장주 B", "market": "US", "ratio": 25.0, "sort_order": 6}
+    {"ticker": "TSLA", "name": "Tesla",                 "market": "US", "ratio": 9.9, "sort_order": 1},
+    {"ticker": "TEM",  "name": "Tempus AI",              "market": "US", "ratio": 5.8, "sort_order": 2},
+    {"ticker": "CRSP", "name": "CRISPR Therapeutics",    "market": "US", "ratio": 5.3, "sort_order": 3},
+    {"ticker": "HOOD", "name": "Robinhood Markets",      "market": "US", "ratio": 5.0, "sort_order": 4},
+    {"ticker": "AMD",  "name": "Advanced Micro Devices", "market": "US", "ratio": 4.4, "sort_order": 5},
+    {"ticker": "SHOP", "name": "Shopify",                "market": "US", "ratio": 4.3, "sort_order": 6},
+    {"ticker": "SPCX", "name": "SpaceX",                 "market": "US", "ratio": 4.2, "sort_order": 7},
+    {"ticker": "COIN", "name": "Coinbase Global",        "market": "US", "ratio": 4.0, "sort_order": 8},
+    {"ticker": null,   "name": "기타 ARK 보유 종목(40여개)", "market": "US", "ratio": 57.1, "sort_order": 9}
   ]'
 ),
 (
@@ -428,20 +431,21 @@ INSERT INTO portfolio_templates (id, name, strategy, market, cagr, mdd, descript
   ]'
 ),
 (
-  'kang-hwan-guk',
-  '강환국',
-  'quant',
-  'MIXED',
-  12.1,
-  -22.3,
-  '데이터와 규칙으로만 투자하는 퀀트·팩터 전략. 저PBR·저PER 가치 팩터와 모멘텀 팩터를 결합하여 한국 시장에서 초과 수익을 추구한다.',
-  '2025-01-01',
+  'michael-burry',
+  '마이클 버리',
+  'value',
+  'US',
+  26.7,
+  null,
+  '"빅쇼트"로 유명한 역발상 가치투자자. 저평가되거나 시장이 외면한 자산에 집중 베팅하며, 때로는 하락 자체에 베팅한다. 2000~2008년 사이온 캐피털 시절 누적 489% 수익률(연평균 약 26.7%)을 기록했다. 최근 13F는 매크로 헤지 성격의 옵션 포지션 위주라 아래 비중은 참고용 근사치이며, 공매도·해외 자산 등은 13F에 공시되지 않아 실제 전략의 일부만 드러난다.',
+  null,
   '[
-    {"ticker": "069500", "name": "KODEX 200",          "market": "KR", "ratio": 25.0, "sort_order": 1},
-    {"ticker": "360750", "name": "TIGER 미국S&P500",   "market": "KR", "ratio": 20.0, "sort_order": 2},
-    {"ticker": "132030", "name": "KODEX 골드선물(H)",  "market": "KR", "ratio": 10.0, "sort_order": 3},
-    {"ticker": "114820", "name": "TIGER 국채3년",      "market": "KR", "ratio": 10.0, "sort_order": 4},
-    {"ticker": null,     "name": "퀀트 선정 가치주 A", "market": "KR", "ratio": 17.5, "sort_order": 5},
-    {"ticker": null,     "name": "퀀트 선정 가치주 B", "market": "KR", "ratio": 17.5, "sort_order": 6}
+    {"ticker": "PLTR", "name": "Palantir Technologies (풋옵션)", "market": "US", "ratio": 66.04, "sort_order": 1},
+    {"ticker": "NVDA", "name": "Nvidia (풋옵션)",                 "market": "US", "ratio": 13.51, "sort_order": 2},
+    {"ticker": "PFE",  "name": "Pfizer (콜옵션)",                 "market": "US", "ratio": 11.07, "sort_order": 3},
+    {"ticker": "HAL",  "name": "Halliburton (콜옵션)",            "market": "US", "ratio":  4.45, "sort_order": 4},
+    {"ticker": "MOH",  "name": "Molina Healthcare",               "market": "US", "ratio":  1.73, "sort_order": 5},
+    {"ticker": "LULU", "name": "Lululemon Athletica",             "market": "US", "ratio":  1.29, "sort_order": 6},
+    {"ticker": null,   "name": "기타 보유 종목",                   "market": "US", "ratio":  1.91, "sort_order": 7}
   ]'
 );
