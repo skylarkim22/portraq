@@ -80,3 +80,27 @@ export interface TradeLog {
   memo: string | null;
   createdAt: string;
 }
+
+export type TemplateStrategy = "passive" | "value" | "quant" | "asset-allocation" | "growth";
+
+export type TemplateMarket = "KR" | "US" | "MIXED";
+
+export interface TemplateAsset {
+  ticker: string | null;
+  name: string;
+  market: Market;
+  ratio: number;
+  sortOrder: number;
+}
+
+export interface PortfolioTemplate {
+  id: string;
+  name: string;
+  strategy: TemplateStrategy;
+  market: TemplateMarket;
+  cagr: number | null;
+  mdd: number | null;
+  description: string | null;
+  sourceDate: string | null;
+  assets: TemplateAsset[];
+}

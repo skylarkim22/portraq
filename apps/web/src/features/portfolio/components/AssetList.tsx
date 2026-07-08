@@ -19,6 +19,7 @@ type AssetListProps = {
   onRatioChange: (ticker: string, ratio: number) => void;
   onRemove: (ticker: string) => void;
   onReorder: (assets: PortfolioAsset[]) => void;
+  onFillSlot: (ticker: string) => void;
 };
 
 export const AssetList = ({
@@ -26,6 +27,7 @@ export const AssetList = ({
   onRatioChange,
   onRemove,
   onReorder,
+  onFillSlot,
 }: AssetListProps) => {
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -61,6 +63,7 @@ export const AssetList = ({
               asset={asset}
               onRatioChange={onRatioChange}
               onRemove={onRemove}
+              onFillSlot={onFillSlot}
             />
           ))}
         </div>

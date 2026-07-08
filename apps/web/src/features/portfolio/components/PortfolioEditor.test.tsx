@@ -1,8 +1,10 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { toast } from "sonner";
 import { PortfolioEditor } from "@/features/portfolio/components/PortfolioEditor";
 import { usePortfolio } from "@/features/portfolio/hooks";
+import { useTemplate } from "@/features/templates/hooks";
 import { useUser } from "@/features/auth/hooks";
 import type { Portfolio } from "@portraq/lib/types";
 
@@ -34,8 +36,8 @@ vi.mock("@/features/auth/hooks", () => ({
 }));
 
 vi.mock("@/features/portfolio/hooks", () => ({
-  usePortfolio: vi.fn(() => ({
-    data: mockPortfolio,
+  usePortfolio: vi.fn((id: string | null) => ({
+    data: id === null ? undefined : mockPortfolio,
     isLoading: false,
     isError: false,
   })),
@@ -55,20 +57,34 @@ vi.mock("@/features/portfolio/hooks", () => ({
   })),
 }));
 
+vi.mock("@/features/templates/hooks", () => ({
+  useTemplate: vi.fn(() => ({ data: undefined })),
+}));
+
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
 }));
 
 vi.mock("@/features/stocks/components/StockSearch", () => ({
   StockSearch: ({ onSelect }: { onSelect: (asset: unknown) => void }) => (
-    <button
-      type="button"
-      onClick={() =>
-        onSelect({ ticker: "TSLA", name: "Tesla", market: "US", color: "#e85d4a", isActive: true })
-      }
-    >
-      TSLA 선택
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          onSelect({ ticker: "TSLA", name: "Tesla", market: "US", color: "#e85d4a", isActive: true })
+        }
+      >
+        TSLA 선택
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onSelect({ ticker: "AAPL", name: "Apple", market: "US", color: "#355df9", isActive: true })
+        }
+      >
+        AAPL 선택
+      </button>
+    </>
   ),
 }));
 
@@ -80,6 +96,10 @@ describe("PortfolioEditor", () => {
     deleteMutateMock.mockReset();
     deleteMutateAsyncMock.mockReset();
     routerReplaceMock.mockReset();
+    vi.mocked(useTemplate).mockReturnValue({
+      data: undefined,
+      isFetched: false,
+    } as ReturnType<typeof useTemplate>);
     vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
@@ -241,6 +261,133 @@ describe("PortfolioEditor", () => {
       expect(
         screen.queryByRole("link", { name: /이달의 매수 가이드/ })
       ).not.toBeInTheDocument();
+    });
+
+    it("templateId가 있으면 템플릿의 이름/종목으로 초기값을 세팅하고, null-ticker 종목은 채우기용 슬롯으로 표시한다", () => {
+      vi.mocked(useTemplate).mockReturnValue({
+        data: {
+          id: "warren-buffett",
+          name: "워런 버핏",
+          strategy: "value",
+          market: "US",
+          cagr: 10.4,
+          mdd: -32.7,
+          description: null,
+          sourceDate: null,
+          assets: [
+            { ticker: "AAPL", name: "Apple", market: "US", ratio: 60, sortOrder: 0 },
+            { ticker: null, name: "기타 (비공개 종목)", market: "US", ratio: 40, sortOrder: 1 },
+          ],
+        },
+        isFetched: true,
+      } as ReturnType<typeof useTemplate>);
+
+      render(<PortfolioEditor portfolioId={null} templateId="warren-buffett" />);
+
+      expect(screen.getByDisplayValue("워런 버핏")).toBeInTheDocument();
+      expect(screen.getAllByText(/AAPL/).length).toBeGreaterThan(0);
+      expect(
+        screen.getByRole("button", { name: /기타 \(비공개 종목\)/ })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/미확정 슬롯이 남아 있습니다/)
+      ).toBeInTheDocument();
+    });
+
+    it("슬롯을 클릭해 종목을 선택하면 슬롯이 실제 종목으로 교체되고 미확정 슬롯 안내가 사라진다", async () => {
+      vi.mocked(useTemplate).mockReturnValue({
+        data: {
+          id: "warren-buffett",
+          name: "워런 버핏",
+          strategy: "value",
+          market: "US",
+          cagr: 10.4,
+          mdd: -32.7,
+          description: null,
+          sourceDate: null,
+          assets: [
+            { ticker: "AAPL", name: "Apple", market: "US", ratio: 60, sortOrder: 0 },
+            { ticker: null, name: "기타 (비공개 종목)", market: "US", ratio: 40, sortOrder: 1 },
+          ],
+        },
+        isFetched: true,
+      } as ReturnType<typeof useTemplate>);
+
+      const user = userEvent.setup();
+      render(<PortfolioEditor portfolioId={null} templateId="warren-buffett" />);
+
+      await user.click(
+        screen.getByRole("button", { name: /기타 \(비공개 종목\)/ })
+      );
+      await user.click(screen.getByRole("button", { name: "TSLA 선택" }));
+
+      expect(
+        screen.queryByRole("button", { name: /기타 \(비공개 종목\)/ })
+      ).not.toBeInTheDocument();
+      expect(screen.getAllByText(/TSLA/).length).toBeGreaterThan(0);
+      expect(
+        screen.queryByText(/미확정 슬롯이 남아 있습니다/)
+      ).not.toBeInTheDocument();
+      expect(screen.getByDisplayValue("40")).toBeInTheDocument();
+    });
+
+    it("슬롯 교체 중 이미 있는 종목을 고르면 경고만 뜨고, 이어서 다른 종목으로 정상 교체할 수 있다", async () => {
+      vi.mocked(useTemplate).mockReturnValue({
+        data: {
+          id: "warren-buffett",
+          name: "워런 버핏",
+          strategy: "value",
+          market: "US",
+          cagr: 10.4,
+          mdd: -32.7,
+          description: null,
+          sourceDate: null,
+          assets: [
+            { ticker: "AAPL", name: "Apple", market: "US", ratio: 60, sortOrder: 0 },
+            { ticker: null, name: "기타 (비공개 종목)", market: "US", ratio: 40, sortOrder: 1 },
+          ],
+        },
+        isFetched: true,
+      } as ReturnType<typeof useTemplate>);
+
+      const user = userEvent.setup();
+      render(<PortfolioEditor portfolioId={null} templateId="warren-buffett" />);
+
+      await user.click(
+        screen.getByRole("button", { name: /기타 \(비공개 종목\)/ })
+      );
+      await user.click(screen.getByRole("button", { name: "AAPL 선택" }));
+
+      expect(toast.warning).toHaveBeenCalledWith(
+        "이미 포트폴리오에 있는 종목입니다."
+      );
+      expect(
+        screen.getByRole("button", { name: /기타 \(비공개 종목\)/ })
+      ).toBeInTheDocument();
+
+      await user.click(
+        screen.getByRole("button", { name: /기타 \(비공개 종목\)/ })
+      );
+      await user.click(screen.getByRole("button", { name: "TSLA 선택" }));
+
+      expect(
+        screen.queryByRole("button", { name: /기타 \(비공개 종목\)/ })
+      ).not.toBeInTheDocument();
+      expect(screen.getAllByText(/TSLA/).length).toBeGreaterThan(0);
+    });
+
+    it("templateId에 해당하는 템플릿을 찾지 못해도 무한 로딩 없이 빈 편집 화면을 보여준다", () => {
+      vi.mocked(useTemplate).mockReturnValue({
+        data: undefined,
+        isFetched: true,
+      } as ReturnType<typeof useTemplate>);
+
+      render(<PortfolioEditor portfolioId={null} templateId="unknown-template" />);
+
+      expect(screen.queryByText("불러오는 중...")).not.toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("포트폴리오 이름을 입력하세요")
+      ).toHaveValue("");
     });
 
     it("저장 버튼을 누르면 포트폴리오를 생성한 뒤 저장하고 새 id로 이동한다", async () => {

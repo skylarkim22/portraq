@@ -21,3 +21,6 @@ export { Slider } from "./ui/slider";
 
 export { ActionChip } from "./ActionChip";
 export type { ActionChipProps } from "./ActionChip";
+
+export { InfoPopover } from "./InfoPopover";
+export type { InfoPopoverProps } from "./InfoPopover";
