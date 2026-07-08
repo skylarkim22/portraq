@@ -46,6 +46,24 @@ describe("PortfolioListItem", () => {
       "href",
       "/portfolio/p1"
     );
+    expect(screen.getByRole("link", { name: /리밸런싱/ })).toHaveAttribute(
+      "href",
+      "/portfolio/p1/guide"
+    );
+  });
+
+  it("종목이 없는 포트폴리오는 리밸런싱 버튼을 보여주지 않는다", async () => {
+    vi.mocked(usePortfolio).mockReturnValue({
+      data: { ...mockPortfolio, assets: [] },
+      isLoading: false,
+    } as ReturnType<typeof usePortfolio>);
+
+    const user = userEvent.setup();
+    render(<PortfolioListItem portfolio={{ id: "p1", name: "테스트 포트폴리오" }} />);
+
+    await user.click(screen.getByRole("button", { name: /테스트 포트폴리오/ }));
+
+    expect(screen.queryByRole("link", { name: /리밸런싱/ })).not.toBeInTheDocument();
   });
 
   it("펼치기 전에는 usePortfolio를 null로 호출해 조회를 비활성화한다", () => {
