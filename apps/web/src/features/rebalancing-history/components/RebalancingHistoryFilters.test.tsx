@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { RebalancingHistoryFilters } from "@/features/rebalancing-history/components/RebalancingHistoryFilters";
@@ -48,6 +48,57 @@ describe("RebalancingHistoryFilters", () => {
       portfolioId: "p1",
       dateFrom: null,
       dateTo: null,
+    });
+  });
+
+  it("종료일 입력에 시작일을 min으로 지정한다", () => {
+    render(
+      <RebalancingHistoryFilters
+        value={{ portfolioId: null, dateFrom: "2026-07-01", dateTo: null }}
+        onChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("종료일")).toHaveAttribute("min", "2026-07-01");
+  });
+
+  it("시작일을 기존 종료일보다 늦게 바꾸면 종료일이 시작일과 같아진다", () => {
+    const onChange = vi.fn();
+    render(
+      <RebalancingHistoryFilters
+        value={{ portfolioId: null, dateFrom: "2026-07-01", dateTo: "2026-07-05" }}
+        onChange={onChange}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("시작일"), {
+      target: { value: "2026-07-10" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith({
+      portfolioId: null,
+      dateFrom: "2026-07-10",
+      dateTo: "2026-07-10",
+    });
+  });
+
+  it("시작일을 기존 종료일보다 이르게 바꾸면 종료일은 그대로 유지한다", () => {
+    const onChange = vi.fn();
+    render(
+      <RebalancingHistoryFilters
+        value={{ portfolioId: null, dateFrom: "2026-07-01", dateTo: "2026-07-05" }}
+        onChange={onChange}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("시작일"), {
+      target: { value: "2026-06-20" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith({
+      portfolioId: null,
+      dateFrom: "2026-06-20",
+      dateTo: "2026-07-05",
     });
   });
 });

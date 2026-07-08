@@ -51,15 +51,21 @@ export const RebalancingHistoryFilters = ({
           type="date"
           aria-label="시작일"
           value={value.dateFrom ?? ""}
-          onChange={(e) =>
-            onChange({ ...value, dateFrom: e.target.value || null })
-          }
+          onChange={(e) => {
+            const dateFrom = e.target.value || null;
+            const dateTo =
+              dateFrom && value.dateTo && value.dateTo < dateFrom
+                ? dateFrom
+                : value.dateTo;
+            onChange({ ...value, dateFrom, dateTo });
+          }}
           className="h-9 w-auto px-2.5 text-sm"
         />
         <span className="text-sm text-muted-foreground">~</span>
         <Input
           type="date"
           aria-label="종료일"
+          min={value.dateFrom ?? undefined}
           value={value.dateTo ?? ""}
           onChange={(e) =>
             onChange({ ...value, dateTo: e.target.value || null })
