@@ -19,6 +19,17 @@ export { Textarea } from "./ui/textarea";
 
 export { Slider } from "./ui/slider";
 
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+} from "./ui/select";
+
 export { ActionChip } from "./ActionChip";
 export type { ActionChipProps } from "./ActionChip";
 
