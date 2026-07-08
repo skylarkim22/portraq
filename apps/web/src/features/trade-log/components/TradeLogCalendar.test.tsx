@@ -15,7 +15,6 @@ const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
   memo: null,
   name: "Apple",
   market: "US",
-  color: "#000",
   createdAt: "2026-01-15T00:00:00Z",
   ...overrides,
 });

@@ -15,9 +15,7 @@ import {
   toSellRowDraft,
   type SellRowDraft,
 } from "@/features/trade-log/components/SellTradeRow";
-import { MEMO_MIN_LENGTH } from "@/features/trade-log/constants";
-
-const DEFAULT_EXCHANGE_RATE = 1380;
+import { MEMO_MIN_LENGTH, DEFAULT_EXCHANGE_RATE } from "@/features/trade-log/constants";
 
 type SellTradeModalProps = {
   defaultDate: string;
@@ -62,7 +60,6 @@ export const SellTradeModal = ({ defaultDate, onClose }: SellTradeModalProps) =>
       exchangeRate: row.market === "US" ? row.exchangeRate : undefined,
       name: row.name,
       market: row.market,
-      color: row.color,
     }));
 
     createTradeLog.mutate(

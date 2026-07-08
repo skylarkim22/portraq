@@ -9,7 +9,6 @@ export type SellRowDraft = {
   ticker: string;
   name: string;
   market: Market;
-  color: string;
   avgPrice: number;
   maxQuantity: number;
   quantity: number;
@@ -22,7 +21,6 @@ export const toSellRowDraft = (holding: Holding, defaultFx: number): SellRowDraf
   ticker: holding.ticker,
   name: holding.name,
   market: holding.market,
-  color: holding.color,
   avgPrice: holding.avgPrice,
   maxQuantity: holding.quantity,
   quantity: 1,

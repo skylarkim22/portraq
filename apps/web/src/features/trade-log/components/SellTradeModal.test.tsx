@@ -26,7 +26,6 @@ const buyLog = (): EnrichedTradeLog => ({
   price: 192000,
   name: "Apple Inc.",
   market: "US",
-  color: "#355df9",
   memo: null,
   createdAt: "2026-01-01T00:00:00Z",
 });

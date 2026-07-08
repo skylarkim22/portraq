@@ -22,7 +22,6 @@ const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
   memo: "테스트 메모입니다 20자 이상 채워보아요",
   name: "Apple",
   market: "US",
-  color: "#000",
   createdAt: "2026-01-15T00:00:00Z",
   ...overrides,
 });

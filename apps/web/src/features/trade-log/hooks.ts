@@ -18,7 +18,6 @@ export type CreateTradeLogItem = {
   exchangeRate?: number;
   name: string;
   market: Market;
-  color: string;
 };
 
 export type CreateTradeLogInput = {
@@ -89,7 +88,6 @@ export const useCreateTradeLog = () => {
         createdAt: new Date().toISOString(),
         name: item.name,
         market: item.market,
-        color: item.color,
       }));
 
       queryClient.setQueryData<EnrichedTradeLog[]>(tradeLogKeys.list(), (old) =>
@@ -103,6 +101,9 @@ export const useCreateTradeLog = () => {
         queryClient.setQueryData(tradeLogKeys.list(), context.previous);
       }
     },
+    // 낙관적으로 넣은 row는 `optimistic-...` 가짜 id를 쓰므로, 서버가 생성한
+    // 진짜 id로 교체하기 위해 성공 후 재조회가 필요하다 (update/delete와 달리
+    // create만 이 재조회가 꼭 필요함).
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: tradeLogKeys.all });
     },
@@ -166,9 +167,8 @@ export const useUpdateTradeLog = () => {
         queryClient.setQueryData(tradeLogKeys.list(), context.previous);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: tradeLogKeys.all });
-    },
+    // create와 달리 update는 낙관적 patch가 실제 row id를 그대로 사용하므로
+    // (새 id를 서버 응답으로 교체할 필요가 없음) 전체 재조회가 불필요하다.
   });
 };
 

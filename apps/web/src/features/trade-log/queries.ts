@@ -1,6 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { Market, TradeLog } from "@portraq/lib/types";
-import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
 export const tradeLogKeys = {
@@ -11,7 +10,6 @@ export const tradeLogKeys = {
 export type EnrichedTradeLog = TradeLog & {
   name: string;
   market: Market;
-  color: string;
 };
 
 export const tradeLogListQueryOptions = queryOptions({
@@ -26,15 +24,12 @@ export const tradeLogListQueryOptions = queryOptions({
 
     const tickers = Array.from(new Set(data.map((row) => row.ticker)));
 
-    const assetByTicker = new Map<
-      string,
-      { name: string; market: Market; color: string }
-    >();
+    const assetByTicker = new Map<string, { name: string; market: Market }>();
 
     if (tickers.length > 0) {
       const { data: assets, error: assetsError } = await createClient()
         .from("assets")
-        .select("ticker, name, market, color")
+        .select("ticker, name, market")
         .in("ticker", tickers);
       if (assetsError) throw assetsError;
 
@@ -42,7 +37,6 @@ export const tradeLogListQueryOptions = queryOptions({
         assetByTicker.set(asset.ticker, {
           name: asset.name,
           market: asset.market as Market,
-          color: asset.color,
         });
       });
     }
@@ -63,7 +57,6 @@ export const tradeLogListQueryOptions = queryOptions({
         createdAt: row.created_at,
         name: asset?.name ?? row.ticker,
         market: asset?.market ?? "KR",
-        color: asset?.color ?? DEFAULT_ASSET_COLOR,
       };
     });
   },

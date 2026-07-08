@@ -31,7 +31,6 @@ export const BuyTradeModal = ({ defaultDate, onClose }: BuyTradeModalProps) => {
         ticker: asset.ticker,
         name: asset.name,
         market: asset.market,
-        color: asset.color,
         quantity: 1,
         price: 0,
       },

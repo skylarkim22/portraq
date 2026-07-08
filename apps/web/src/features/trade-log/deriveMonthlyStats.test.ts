@@ -14,7 +14,6 @@ const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
   memo: null,
   name: "Apple",
   market: "KR",
-  color: "#000",
   createdAt: "2026-01-01T00:00:00Z",
   ...overrides,
 });
@@ -34,7 +33,7 @@ describe("deriveMonthlyStats", () => {
       }),
     ];
     const holdings: Holding[] = [
-      { ticker: "OXY", name: "Occidental", market: "KR", color: "#000", avgPrice: 50000, quantity: 5 },
+      { ticker: "OXY", name: "Occidental", market: "KR", avgPrice: 50000, quantity: 5 },
     ];
 
     const stats = deriveMonthlyStats(logs, holdings);
@@ -50,7 +49,7 @@ describe("deriveMonthlyStats", () => {
       log({ id: "l1", type: "sell", ticker: "AAPL", quantity: 2, price: 100000, tax: 1000 }),
     ];
     const holdings: Holding[] = [
-      { ticker: "AAPL", name: "Apple", market: "KR", color: "#000", avgPrice: 70000, quantity: 8 },
+      { ticker: "AAPL", name: "Apple", market: "KR", avgPrice: 70000, quantity: 8 },
     ];
 
     const stats = deriveMonthlyStats(logs, holdings);
@@ -74,7 +73,7 @@ describe("deriveMonthlyStats", () => {
       }),
     ];
     const holdings: Holding[] = [
-      { ticker: "AAPL", name: "Apple", market: "US", color: "#000", avgPrice: 70000, quantity: 5 },
+      { ticker: "AAPL", name: "Apple", market: "US", avgPrice: 70000, quantity: 5 },
     ];
 
     const stats = deriveMonthlyStats(logs, holdings);

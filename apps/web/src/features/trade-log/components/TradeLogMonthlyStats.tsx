@@ -1,11 +1,6 @@
 import { Card } from "@portraq/ui";
-import type { Market } from "@portraq/lib/types";
 import type { MonthlyStats } from "@/features/trade-log/deriveMonthlyStats";
-
-const MARKET_COLOR: Record<Market, string> = {
-  US: "#1d4ed8",
-  KR: "#be123c",
-};
+import { MARKET_COLOR } from "@/features/trade-log/constants";
 
 type TradeLogMonthlyStatsProps = {
   month: number;

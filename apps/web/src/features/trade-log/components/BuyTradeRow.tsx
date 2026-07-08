@@ -2,18 +2,13 @@ import { Trash2 } from "lucide-react";
 import { Input } from "@portraq/ui";
 import type { Market } from "@portraq/lib/types";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-
-const MARKET_BADGE_CLASS: Record<"KR" | "US", string> = {
-  US: "bg-[#eff6ff] text-[#1d4ed8]",
-  KR: "bg-[#fff1f2] text-[#be123c]",
-};
+import { MARKET_BADGE_CLASS } from "@/features/trade-log/constants";
 
 export type BuyRowDraft = {
   rowId: string;
   ticker: string;
   name: string;
   market: Market;
-  color: string;
   quantity: number;
   price: number;
 };

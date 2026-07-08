@@ -42,7 +42,7 @@ export const TradeLogCard = ({ log }: TradeLogCardProps) => {
         <span
           className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold ${
             isBuy
-              ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#16a34a]"
+              ? "border-[#c7d5fd] bg-[#eef2ff] text-primary"
               : "border-[#fecaca] bg-[#fef2f2] text-[#dc2626]"
           }`}
         >

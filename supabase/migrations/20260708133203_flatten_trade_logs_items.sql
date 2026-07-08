@@ -19,6 +19,9 @@ CREATE TABLE trade_logs_new (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- memo는 예전 스키마에서 items 배열 원소가 아니라 행(t) 단위 컬럼이었으므로
+-- t.memo에서 가져온다 (item->>'memo'는 항상 NULL이라 이전에는 백필 시
+-- 메모가 유실되는 버그가 있었다).
 INSERT INTO trade_logs_new
   (user_id, type, date, ticker, quantity, price, tax, exchange_rate, memo, created_at)
 SELECT
@@ -30,7 +33,7 @@ SELECT
   (item->>'price')::numeric,
   (item->>'tax')::numeric,
   (item->>'exchangeRate')::numeric,
-  item->>'memo',
+  t.memo,
   t.created_at
 FROM trade_logs t, LATERAL jsonb_array_elements(t.items) AS item;
 

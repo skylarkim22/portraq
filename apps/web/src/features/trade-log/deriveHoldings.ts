@@ -5,7 +5,6 @@ export type Holding = {
   ticker: string;
   name: string;
   market: Market;
-  color: string;
   avgPrice: number;
   quantity: number;
 };
@@ -15,7 +14,7 @@ export type Holding = {
 export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
   const buyTotals = new Map<
     string,
-    { qty: number; cost: number; name: string; market: Market; color: string }
+    { qty: number; cost: number; name: string; market: Market }
   >();
   const soldQty = new Map<string, number>();
 
@@ -26,7 +25,6 @@ export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
         cost: 0,
         name: row.name,
         market: row.market,
-        color: row.color,
       };
       entry.qty += row.quantity;
       entry.cost += row.quantity * row.price;
@@ -37,11 +35,10 @@ export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
   }
 
   return Array.from(buyTotals.entries())
-    .map(([ticker, { qty, cost, name, market, color }]) => ({
+    .map(([ticker, { qty, cost, name, market }]) => ({
       ticker,
       name,
       market,
-      color,
       avgPrice: qty > 0 ? cost / qty : 0,
       quantity: qty - (soldQty.get(ticker) ?? 0),
     }))

@@ -25,7 +25,6 @@ const buyLog: EnrichedTradeLog = {
   price: 83000,
   name: "Coca-Cola",
   market: "KR",
-  color: "#000",
   memo: "신년 첫 적립 매수, 목표 비중 도달 전 분할 매수",
   createdAt: "2026-01-15T00:00:00Z",
 };
@@ -42,7 +41,6 @@ const sellLog: EnrichedTradeLog = {
   tax: 500,
   name: "Apple Inc.",
   market: "US",
-  color: "#000",
   memo: "비중 초과분 일부 정리하는 매도 기록입니다",
   createdAt: "2026-01-15T00:00:00Z",
 };
