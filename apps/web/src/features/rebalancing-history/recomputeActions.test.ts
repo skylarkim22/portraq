@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { recomputeActions } from "@/features/rebalancing-history/hooks";
+import { recomputeActions } from "@/features/rebalancing-history/recomputeActions";
 
 describe("recomputeActions", () => {
   it("수량이 양수이면 매수로, totalAmount를 재계산한다", () => {
