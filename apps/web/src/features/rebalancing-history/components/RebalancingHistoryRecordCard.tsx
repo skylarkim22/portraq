@@ -14,6 +14,7 @@ import type {
   RebalancingHistoryRecord,
 } from "@/features/rebalancing-history/queries";
 import { RebalancingHistoryActionRow } from "@/features/rebalancing-history/components/RebalancingHistoryActionRow";
+import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
 
 type RebalancingHistoryRecordCardProps = {
   record: RebalancingHistoryRecord;
@@ -151,21 +152,9 @@ export const RebalancingHistoryRecordCard = ({
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {counts.buy > 0 && (
-            <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 py-0.5 text-xs font-bold text-[#16a34a]">
-              매수 {counts.buy}종
-            </span>
-          )}
-          {counts.sell > 0 && (
-            <span className="rounded-full border border-[#fecaca] bg-[#fef2f2] px-2.5 py-0.5 text-xs font-bold text-[#dc2626]">
-              매도 {counts.sell}종
-            </span>
-          )}
-          {counts.hold > 0 && (
-            <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
-              유지 {counts.hold}종
-            </span>
-          )}
+          {counts.buy > 0 && <ActionTypeChip action="buy" suffix={` ${counts.buy}종`} />}
+          {counts.sell > 0 && <ActionTypeChip action="sell" suffix={` ${counts.sell}종`} />}
+          {counts.hold > 0 && <ActionTypeChip action="hold" suffix={` ${counts.hold}종`} />}
         </div>
       </button>
 

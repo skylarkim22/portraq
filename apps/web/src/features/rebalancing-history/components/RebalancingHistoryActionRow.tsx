@@ -1,20 +1,8 @@
 import { Input } from "@portraq/ui";
-import type { ActionType } from "@portraq/lib/types";
 import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
 import { AssetColorBadge } from "@/features/portfolio/components/AssetColorBadge";
+import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
 import type { EnrichedActionItem } from "@/features/rebalancing-history/queries";
-
-const CHIP_STYLE: Record<ActionType, string> = {
-  buy: "bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]",
-  sell: "bg-[#fef2f2] text-[#dc2626] border-[#fecaca]",
-  hold: "bg-muted text-muted-foreground border-border",
-};
-
-const CHIP_LABEL: Record<ActionType, string> = {
-  buy: "매수",
-  sell: "매도",
-  hold: "유지",
-};
 
 type RebalancingHistoryActionRowProps = {
   action: EnrichedActionItem;
@@ -91,11 +79,7 @@ export const RebalancingHistoryActionRow = ({
         </div>
       ) : (
         <div className="flex shrink-0 items-center gap-3">
-          <span
-            className={`rounded-full border px-2.5 py-1 text-xs font-bold ${CHIP_STYLE[action.action]}`}
-          >
-            {CHIP_LABEL[action.action]}
-          </span>
+          <ActionTypeChip action={action.action} />
           <div className="text-right">
             <div className="text-sm font-extrabold text-foreground">
               {action.action === "hold" ? "—" : `${Math.abs(action.quantity)}주`}
