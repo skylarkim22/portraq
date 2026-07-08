@@ -15,14 +15,10 @@ import type {
 } from "@/features/rebalancing-history/queries";
 import { RebalancingHistoryActionRow } from "@/features/rebalancing-history/components/RebalancingHistoryActionRow";
 import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
+import { formatExecutedDate } from "@/features/rebalancing-history/dateFormat";
 
 type RebalancingHistoryRecordCardProps = {
   record: RebalancingHistoryRecord;
-};
-
-const formatDate = (iso: string) => {
-  const date = new Date(iso);
-  return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}`;
 };
 
 const countByAction = (actions: EnrichedActionItem[]) => {
@@ -132,7 +128,7 @@ export const RebalancingHistoryRecordCard = ({
                 {record.portfolioName}
               </div>
               <div className="text-xs text-muted-foreground">
-                {formatDate(record.executedAt)}
+                {formatExecutedDate(record.executedAt)}
               </div>
             </div>
           </div>

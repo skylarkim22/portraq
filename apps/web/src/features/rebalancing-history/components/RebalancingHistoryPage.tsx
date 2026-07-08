@@ -8,17 +8,13 @@ import type {
 } from "@/features/rebalancing-history/queries";
 import { RebalancingHistoryFilters } from "@/features/rebalancing-history/components/RebalancingHistoryFilters";
 import { RebalancingHistoryRecordCard } from "@/features/rebalancing-history/components/RebalancingHistoryRecordCard";
-
-const monthLabel = (iso: string) => {
-  const date = new Date(iso);
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
-};
+import { formatMonthLabel } from "@/features/rebalancing-history/dateFormat";
 
 const groupByMonth = (records: RebalancingHistoryRecord[]) => {
   const groups: { label: string; records: RebalancingHistoryRecord[] }[] = [];
 
   records.forEach((record) => {
-    const label = monthLabel(record.executedAt);
+    const label = formatMonthLabel(record.executedAt);
     const lastGroup = groups[groups.length - 1];
     if (lastGroup && lastGroup.label === label) {
       lastGroup.records.push(record);
