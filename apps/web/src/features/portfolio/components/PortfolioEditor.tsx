@@ -250,7 +250,7 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
           <div className="flex flex-col gap-0.5 rounded-[10px] border border-[#fed7aa] bg-[#fff7ed] px-3.5 py-2.5 text-[13px] font-semibold text-[#c2410c]">
             <span className="font-extrabold">미확정 슬롯이 남아 있습니다.</span>
             <span>
-              종목을 채워야 &apos;이달의 매수 가이드&apos; 버튼이 나타납니다.
+              종목을 채워야 &apos;리밸런싱&apos; 버튼이 나타납니다.
               저장은 가능하지만 리밸런싱은 슬롯을 모두 채운 후 진행할 수
               있습니다.
             </span>
@@ -294,7 +294,7 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
           <Button asChild type="button" variant="outline" className="w-full gap-2">
             <Link href={`/portfolio/${portfolioId}/guide`}>
               <RefreshCcw size={15} />
-              이달의 매수 가이드
+              리밸런싱
             </Link>
           </Button>
         )}
