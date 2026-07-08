@@ -1,6 +1,6 @@
 import { Input } from "@portraq/ui";
-import { useNumericTextInput } from "@/features/portfolio/useNumericTextInput";
-import { AssetColorBadge } from "@/features/portfolio/components/AssetColorBadge";
+import { useNumericTextInput } from "@/lib/useNumericTextInput";
+import { AssetColorBadge } from "@/components/AssetColorBadge";
 import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
 import type { EnrichedActionItem } from "@/features/rebalancing-history/queries";
 

@@ -72,6 +72,19 @@ describe("StockSearch", () => {
     );
   });
 
+  it("종목을 클릭하면 검색어가 초기화되고 드롭다운이 닫힌다", async () => {
+    const user = userEvent.setup();
+    renderWithClient(<StockSearch onSelect={vi.fn()} />);
+
+    const input = screen.getByPlaceholderText(/티커 또는 종목명/);
+    await user.type(input, "삼성");
+    await waitFor(() => screen.getByText("삼성전자"));
+    await user.click(screen.getByText("삼성전자"));
+
+    expect(input).toHaveValue("");
+    expect(screen.queryByText("삼성전자")).not.toBeInTheDocument();
+  });
+
   it("시장 탭을 클릭하면 market 필터로 다시 조회한다", async () => {
     const user = userEvent.setup();
     renderWithClient(<StockSearch onSelect={vi.fn()} />);

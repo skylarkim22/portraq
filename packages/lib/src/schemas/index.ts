@@ -27,18 +27,14 @@ export const rebalancingStep2Schema = z.object({
   additionalBudget: z.number().min(0, "투자금을 입력해주세요"),
 });
 
-export const tradeItemSchema = z.object({
+export const tradeLogSchema = z.object({
+  type: z.enum(["buy", "sell"]),
+  date: z.string().min(1),
   ticker: z.string().min(1),
   quantity: z.number().positive("수량을 입력해주세요"),
   price: z.number().positive("가격을 입력해주세요"),
   tax: z.number().min(0).nullable().optional(),
   exchangeRate: z.number().positive().nullable().optional(),
-});
-
-export const tradeLogSchema = z.object({
-  type: z.enum(["buy", "sell"]),
-  date: z.string().min(1),
-  items: z.array(tradeItemSchema).min(1, "종목을 추가해주세요"),
   memo: z.string().max(1000).nullable().optional(),
 });
 
