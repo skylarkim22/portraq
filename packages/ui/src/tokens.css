@@ -24,6 +24,14 @@
   --portraq-primary: #355df9;
   --portraq-success: #2db87a;
   --portraq-warning: #e85d4a;
+
+  /* 매수/매도 액션 칩 색상 (ActionChip, RebalancingActionStep 등에서 공유) */
+  --buy: #16a34a;
+  --buy-tint: #f0fdf4;
+  --buy-border: #bbf7d0;
+  --sell: #dc2626;
+  --sell-tint: #fef2f2;
+  --sell-border: #fecaca;
 }
 
 @theme inline {
@@ -46,6 +54,12 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-buy: var(--buy);
+  --color-buy-tint: var(--buy-tint);
+  --color-buy-border: var(--buy-border);
+  --color-sell: var(--sell);
+  --color-sell-tint: var(--sell-tint);
+  --color-sell-border: var(--sell-border);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

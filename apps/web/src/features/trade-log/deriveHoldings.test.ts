@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { deriveHoldings } from "@/features/trade-log/deriveHoldings";
+import { deriveHoldings, toAvgPriceMap } from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
@@ -47,5 +47,20 @@ describe("deriveHoldings", () => {
     ];
 
     expect(deriveHoldings(logs)).toEqual([]);
+  });
+});
+
+describe("toAvgPriceMap", () => {
+  it("holdings를 ticker → avgPrice 맵으로 변환한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({ id: "l1", type: "buy", ticker: "AAPL", quantity: 5, price: 200000 }),
+      log({ id: "l2", type: "buy", ticker: "KO", quantity: 10, price: 80000 }),
+    ];
+
+    const map = toAvgPriceMap(deriveHoldings(logs));
+
+    expect(map.get("AAPL")).toBe(200000);
+    expect(map.get("KO")).toBe(80000);
+    expect(map.get("UNKNOWN")).toBeUndefined();
   });
 });

@@ -56,11 +56,36 @@ describe("TradeLogDayFeed", () => {
       }),
     ];
 
-    renderWithClient(<TradeLogDayFeed dateLabel="1월 15일" logs={logs} />);
+    const holdings = [
+      { ticker: "OXY", name: "Occidental", market: "KR" as const, avgPrice: 58000, quantity: 5 },
+    ];
+
+    renderWithClient(
+      <TradeLogDayFeed dateLabel="1월 15일" logs={logs} holdings={holdings} />
+    );
 
     expect(screen.getByText("1월 15일 거래 내역")).toBeInTheDocument();
     expect(screen.getByText("KO")).toBeInTheDocument();
     expect(screen.getByText("OXY")).toBeInTheDocument();
     expect(screen.getByText(/세금 400원/)).toBeInTheDocument();
+  });
+
+  it("avgPrice를 알 수 없는 매도 기록은 순손익 박스를 보여주지 않는다", () => {
+    const logs = [
+      log({
+        id: "l2",
+        type: "sell",
+        ticker: "OXY",
+        quantity: 3,
+        price: 60000,
+        tax: 400,
+        name: "Occidental",
+        market: "KR",
+      }),
+    ];
+
+    renderWithClient(<TradeLogDayFeed dateLabel="1월 15일" logs={logs} />);
+
+    expect(screen.queryByText(/세후 순손익/)).not.toBeInTheDocument();
   });
 });

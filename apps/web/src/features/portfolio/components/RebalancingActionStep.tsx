@@ -1,5 +1,5 @@
 import { TriangleAlert } from "lucide-react";
-import { Button } from "@portraq/ui";
+import { ActionChip, Button } from "@portraq/ui";
 import type { RebalancingActionRow } from "@/features/portfolio/deriveActionRows";
 import { RebalancingActionRowCard } from "@/features/portfolio/components/RebalancingActionRowCard";
 
@@ -32,27 +32,19 @@ export const RebalancingActionStep = ({
 
   return (
     <div className="flex flex-col gap-4 p-6">
-      <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/40 p-4 text-center">
-        <div>
-          <div className="mb-1 text-xs font-semibold text-muted-foreground">
-            매수
-          </div>
-          <div className="text-xl font-extrabold text-[#16a34a]">
-            {buyCount}종
-          </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl bg-buy-tint p-4">
+          <ActionChip action="buy" className="mb-1.5" />
+          <div className="text-xl font-extrabold text-buy">{buyCount}종</div>
         </div>
-        <div className="border-x border-border">
-          <div className="mb-1 text-xs font-semibold text-muted-foreground">
-            매도
-          </div>
-          <div className="text-xl font-extrabold text-[#dc2626]">
+        <div className="rounded-xl bg-sell-tint p-4">
+          <ActionChip action="sell" className="mb-1.5" />
+          <div className="text-xl font-extrabold text-sell">
             {sellCount}종
           </div>
         </div>
-        <div>
-          <div className="mb-1 text-xs font-semibold text-muted-foreground">
-            유지
-          </div>
+        <div className="rounded-xl bg-muted p-4">
+          <ActionChip action="hold" className="mb-1.5" />
           <div className="text-xl font-extrabold text-muted-foreground">
             {holdCount}종
           </div>
@@ -88,7 +80,7 @@ export const RebalancingActionStep = ({
           <span className="font-semibold text-muted-foreground">
             매도 수령 예상
           </span>
-          <span className="font-extrabold text-[#16a34a]">
+          <span className="font-extrabold text-[var(--portraq-success)]">
             -{Math.round(totalSellAmount).toLocaleString("ko-KR")}원
           </span>
         </div>

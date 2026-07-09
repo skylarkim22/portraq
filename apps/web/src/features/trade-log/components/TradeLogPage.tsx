@@ -90,6 +90,7 @@ export const TradeLogPage = () => {
           <TradeLogDayFeed
             dateLabel={dateLabel}
             logs={logsByDate.get(selectedDate) ?? []}
+            holdings={holdings}
           />
         </div>
       )}

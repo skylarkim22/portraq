@@ -29,9 +29,9 @@ export const TemplateGallery = () => {
           </p>
         </div>
         <div className="flex flex-col items-start gap-3 sm:items-end">
-          <Button asChild type="button" variant="outline" className="gap-2">
+          <Button asChild type="button" variant="outline" size="sm" className="gap-2">
             <Link href="/portfolio/new">
-              <Plus size={16} />
+              <Plus size={14} />
               직접 구성
             </Link>
           </Button>
