@@ -33,7 +33,6 @@ const record = (id: string, executedAt: string): RebalancingHistoryRecord => ({
       action: "buy",
       quantity: 1,
       pricePerShare: 200,
-      totalAmount: 200,
       name: "Apple",
       color: "#355df9",
     },

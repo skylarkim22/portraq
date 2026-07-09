@@ -36,7 +36,6 @@ export interface ActionItem {
   action: ActionType;
   quantity: number;
   pricePerShare: number;
-  totalAmount: number;
 }
 
 export interface ExecutionRecord {

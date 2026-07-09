@@ -54,12 +54,11 @@ describe("buildRebalancingExecutionPayload", () => {
     ]);
   });
 
-  it("actions는 매도 수량·총액을 음수로 담는다", () => {
+  it("actions는 매도 수량을 음수로 담는다", () => {
     const { actions } = buildRebalancingExecutionPayload(rows, assets);
 
     const sell = actions.find((a) => a.ticker === "MSFT")!;
     expect(sell.quantity).toBe(-3);
-    expect(sell.totalAmount).toBe(-300);
   });
 
   it("rows에 없는 자산은 기존 shares를 그대로 유지한다", () => {

@@ -36,8 +36,8 @@ const baseRow = {
   executed_at: "2026-01-15T00:00:00Z",
   total_budget: 500000,
   actions: [
-    { ticker: "AAPL", action: "buy", quantity: 1, pricePerShare: 200, totalAmount: 200 },
-    { ticker: "TSLA", action: "sell", quantity: -1, pricePerShare: 220, totalAmount: -220 },
+    { ticker: "AAPL", action: "buy", quantity: 1, pricePerShare: 200 },
+    { ticker: "TSLA", action: "sell", quantity: -1, pricePerShare: 220 },
   ],
   portfolios: { name: "워런 버핏 전략" },
   portfolio_snapshots: [

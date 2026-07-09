@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { recomputeActions } from "@/features/rebalancing-history/recomputeActions";
 
 describe("recomputeActions", () => {
-  it("수량이 양수이면 매수로, totalAmount를 재계산한다", () => {
+  it("수량이 양수이면 매수로 판정한다", () => {
     const [result] = recomputeActions([
       { ticker: "AAPL", quantity: 2, pricePerShare: 200 },
     ]);
@@ -12,7 +12,6 @@ describe("recomputeActions", () => {
       quantity: 2,
       pricePerShare: 200,
       action: "buy",
-      totalAmount: 400,
     });
   });
 
@@ -22,7 +21,6 @@ describe("recomputeActions", () => {
     ]);
 
     expect(result.action).toBe("sell");
-    expect(result.totalAmount).toBe(-660);
   });
 
   it("수량이 0이면 유지로 판정한다", () => {
@@ -31,6 +29,5 @@ describe("recomputeActions", () => {
     ]);
 
     expect(result.action).toBe("hold");
-    expect(result.totalAmount).toBe(0);
   });
 });
