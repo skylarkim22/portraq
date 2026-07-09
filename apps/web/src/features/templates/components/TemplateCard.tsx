@@ -22,11 +22,13 @@ type TemplateCardProps = {
 export const TemplateCard = ({ template }: TemplateCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
-  const previewSegments = resolveTemplateAssetColors(template.assets).map((asset) => ({
-    key: asset.ticker ?? `slot-${asset.sortOrder}`,
-    ratio: asset.ratio,
-    color: asset.color,
-  }));
+  const previewSegments = resolveTemplateAssetColors(template.assets).map(
+    (asset) => ({
+      key: asset.ticker ?? `slot-${asset.sortOrder}`,
+      ratio: asset.ratio,
+      color: asset.color,
+    }),
+  );
 
   return (
     <Card className="overflow-hidden p-0">
@@ -44,7 +46,7 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex flex-wrap items-baseline gap-1.5">
+          <div className="mb-2 flex flex-wrap items-baseline gap-1.5">
             <span className="text-[17px] font-extrabold text-foreground">
               {template.name}
             </span>
@@ -54,7 +56,16 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
               </span>
             )}
           </div>
-          <div className="mb-2 flex flex-wrap gap-1">
+          <div className="mb-3 flex h-1.5 gap-0.5 overflow-hidden rounded">
+            {previewSegments.map((segment) => (
+              <div
+                key={segment.key}
+                className="h-full rounded"
+                style={{ flex: segment.ratio, backgroundColor: segment.color }}
+              />
+            ))}
+          </div>
+          <div className="mb-3 flex flex-wrap gap-1">
             <span
               className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STRATEGY_BADGE_CLASS[template.strategy]}`}
             >
@@ -65,15 +76,6 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
             >
               {MARKET_LABELS[template.market]}
             </span>
-          </div>
-          <div className="flex h-1.5 max-w-[280px] gap-0.5 overflow-hidden rounded">
-            {previewSegments.map((segment) => (
-              <div
-                key={segment.key}
-                className="h-full rounded"
-                style={{ flex: segment.ratio, backgroundColor: segment.color }}
-              />
-            ))}
           </div>
         </div>
 
@@ -97,7 +99,10 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
           {expanded ? (
             <ChevronDown size={18} className="shrink-0 text-muted-foreground" />
           ) : (
-            <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
+            <ChevronRight
+              size={18}
+              className="shrink-0 text-muted-foreground"
+            />
           )}
         </div>
       </button>

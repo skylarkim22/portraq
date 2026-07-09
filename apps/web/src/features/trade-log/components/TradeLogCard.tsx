@@ -5,15 +5,17 @@ import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ActionChip } from "@portraq/ui";
 import { toKrwPrice } from "@portraq/lib/utils";
+import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
 import { useDeleteTradeLog } from "@/features/trade-log/hooks";
 import { EditTradeModal } from "@/features/trade-log/components/EditTradeModal";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 type TradeLogCardProps = {
   log: EnrichedTradeLog;
+  avgPrice?: number;
 };
 
-export const TradeLogCard = ({ log }: TradeLogCardProps) => {
+export const TradeLogCard = ({ log, avgPrice }: TradeLogCardProps) => {
   const isBuy = log.type === "buy";
   const [editOpen, setEditOpen] = useState(false);
 
@@ -24,8 +26,17 @@ export const TradeLogCard = ({ log }: TradeLogCardProps) => {
     : toKrwPrice(log.price, log.market, log.exchangeRate ?? 1);
   const total = log.quantity * priceKrw;
 
+  // avgPrice가 없으면(예: 전량 매도해 보유 수량이 0이 된 종목) 0으로
+  // 대체하지 않는다 — 실제로는 알 수 없는 평균단가를 0으로 취급하면
+  // 손익이 실제보다 부풀려져 보이므로, 이 경우 순손익 박스 자체를 숨긴다.
+  const pnlAfterTax =
+    isBuy || avgPrice === undefined
+      ? null
+      : calcSellPnl(log, log.market, avgPrice).pnlAfterTax;
+
   const handleDelete = () => {
-    if (!window.confirm("이 거래 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
+    if (!window.confirm("이 거래 기록을 삭제하시겠습니까? 되돌릴 수 없습니다."))
+      return;
 
     deleteLog.mutate(log.id, {
       onSuccess: () => {
@@ -39,49 +50,101 @@ export const TradeLogCard = ({ log }: TradeLogCardProps) => {
 
   return (
     <>
-      <div className="flex items-start gap-3 rounded-xl border border-border bg-background p-3.5">
-        <ActionChip action={log.type} className="shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold text-foreground">{log.name}</span>
-              <span className="text-xs text-muted-foreground">{log.ticker}</span>
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                aria-label={`${log.ticker} 수정`}
-                onClick={() => setEditOpen(true)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Pencil size={14} />
-              </button>
-              <button
-                type="button"
-                aria-label={`${log.ticker} 삭제`}
-                onClick={handleDelete}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {log.quantity}주 × {Math.round(priceKrw).toLocaleString("ko-KR")}원 ={" "}
-            <span className="font-bold text-foreground">
-              {Math.round(total).toLocaleString("ko-KR")}원
+      <div className="rounded-2xl border border-border bg-background p-4">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <ActionChip action={log.type} className="shrink-0" />
+            <span className="truncate text-sm font-extrabold text-foreground">
+              {log.name}
             </span>
-            {!isBuy && log.tax
-              ? ` · 세금 ${Math.round(log.tax).toLocaleString("ko-KR")}원`
-              : ""}
+            <span className="truncate text-xs text-muted-foreground">
+              {log.ticker}
+            </span>
           </div>
-          {log.memo && (
-            <div className="mt-1 text-xs text-muted-foreground/70">{log.memo}</div>
-          )}
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              aria-label={`${log.ticker} 수정`}
+              onClick={() => setEditOpen(true)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              type="button"
+              aria-label={`${log.ticker} 삭제`}
+              onClick={handleDelete}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
+
+        <div className="mb-2 grid grid-cols-3 gap-2">
+          <div className="rounded-lg bg-muted/60 px-3 py-2">
+            <div className="text-[10px] font-semibold text-muted-foreground">
+              수량
+            </div>
+            <div className="text-sm font-extrabold text-foreground">
+              {log.quantity}주
+            </div>
+          </div>
+          <div className="rounded-lg bg-muted/60 px-3 py-2">
+            <div className="text-[10px] font-semibold text-muted-foreground">
+              가격
+            </div>
+            <div className="text-sm font-extrabold text-foreground">
+              {Math.round(priceKrw).toLocaleString("ko-KR")}원
+            </div>
+          </div>
+          <div className="rounded-lg bg-muted/60 px-3 py-2">
+            <div className="text-[10px] font-semibold text-muted-foreground">
+              합계
+            </div>
+            <div className="text-sm font-extrabold text-foreground">
+              {Math.round(total).toLocaleString("ko-KR")}원
+            </div>
+          </div>
+        </div>
+
+        {pnlAfterTax !== null && (
+          <div
+            className={`mb-2 flex items-center justify-between rounded-lg px-3 py-2 ${
+              pnlAfterTax >= 0
+                ? "bg-[var(--portraq-success)]/10"
+                : "bg-destructive/10"
+            }`}
+          >
+            <span className="text-xs text-muted-foreground">
+              {log.tax
+                ? `세금 ${Math.round(log.tax).toLocaleString("ko-KR")}원 · `
+                : ""}
+              세후 순손익
+            </span>
+            <span
+              className={`text-sm font-extrabold ${
+                pnlAfterTax >= 0
+                  ? "text-[var(--portraq-success)]"
+                  : "text-destructive"
+              }`}
+            >
+              {pnlAfterTax >= 0 ? "+" : ""}
+              {Math.round(pnlAfterTax).toLocaleString("ko-KR")}원
+            </span>
+          </div>
+        )}
+
+        {log.memo && (
+          <div className="rounded-lg border border-border bg-white/60 px-3 py-2">
+            <div className="text-xs text-muted-foreground">{log.memo}</div>
+          </div>
+        )}
       </div>
 
-      {editOpen && <EditTradeModal log={log} onClose={() => setEditOpen(false)} />}
+      {editOpen && (
+        <EditTradeModal log={log} onClose={() => setEditOpen(false)} />
+      )}
     </>
   );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, RefreshCcw, Trash2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@portraq/ui";
 import type { Asset, PortfolioAsset } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
+import { ErrorState } from "@/components/ErrorState";
 import { useUser } from "@/features/auth/hooks";
 import {
   useCreatePortfolio,
@@ -29,13 +30,16 @@ type PortfolioEditorProps = {
   templateId?: string | null;
 };
 
-export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEditorProps) => {
+export const PortfolioEditor = ({
+  portfolioId,
+  templateId = null,
+}: PortfolioEditorProps) => {
   const isNew = portfolioId === null;
   const router = useRouter();
   const { data: user } = useUser();
   const { data: portfolio, isLoading, isError } = usePortfolio(portfolioId);
   const { data: template, isFetched: isTemplateFetched } = useTemplate(
-    isNew ? templateId : null
+    isNew ? templateId : null,
   );
   const createPortfolio = useCreatePortfolio();
   const savePortfolio = useSavePortfolio();
@@ -49,25 +53,23 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
   const [replacingTicker, setReplacingTicker] = useState<string | null>(null);
   const isSavingRef = useRef(false);
 
-  useEffect(() => {
-    if (portfolio && !hydrated) {
-      setName(portfolio.name);
-      setMemo(portfolio.memo ?? "");
-      setAssets(portfolio.assets);
-      setHydrated(true);
-    }
-  }, [portfolio, hydrated]);
-
-  useEffect(() => {
-    if (!isNew || !templateId || hydrated || !isTemplateFetched) return;
-
+  // 서버에서 불러온 portfolio/template 데이터를 로컬 편집 state로 복사하는
+  // 최초 1회 초기화. useEffect로 하면 커밋 후 별도 렌더가 한 번 더 발생해
+  // (cascading render) 로딩 스켈레톤 이후 빈 폼이 한 프레임 노출될 수 있어,
+  // 렌더 도중 조건부로 setState하는 방식으로 커밋을 한 번만 발생시킨다.
+  // (https://react.dev/learn/you-might-not-need-an-effect)
+  if (!hydrated && portfolio) {
+    setHydrated(true);
+    setName(portfolio.name);
+    setMemo(portfolio.memo ?? "");
+    setAssets(portfolio.assets);
+  } else if (!hydrated && isNew && templateId && isTemplateFetched) {
+    setHydrated(true);
     if (template) {
       setName(template.name);
       setAssets(toPortfolioAssets(template));
     }
-
-    setHydrated(true);
-  }, [isNew, templateId, template, isTemplateFetched, hydrated]);
+  }
 
   const total = assets.reduce((sum, asset) => sum + asset.ratio, 0);
   const remaining = Math.max(0, 100 - total);
@@ -76,7 +78,9 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
 
   const handleRatioChange = useCallback((ticker: string, ratio: number) => {
     setAssets((prev) =>
-      prev.map((asset) => (asset.ticker === ticker ? { ...asset, ratio } : asset))
+      prev.map((asset) =>
+        asset.ticker === ticker ? { ...asset, ratio } : asset,
+      ),
     );
   }, []);
 
@@ -84,7 +88,7 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
     setAssets((prev) =>
       prev
         .filter((asset) => asset.ticker !== ticker)
-        .map((asset, index) => ({ ...asset, order: index }))
+        .map((asset, index) => ({ ...asset, order: index })),
     );
   }, []);
 
@@ -113,8 +117,8 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
                 currentPrice: asset.currentPrice,
                 order: asset.order,
               }
-            : asset
-        )
+            : asset,
+        ),
       );
       setReplacingTicker(null);
       return;
@@ -143,7 +147,7 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
   const handleSaveSuccess = () => {
     if (showSlot) {
       toast.warning(
-        "미확정 슬롯이 남아 있습니다. 저장은 완료됐지만 리밸런싱 결과가 정확하지 않을 수 있습니다."
+        "미확정 슬롯이 남아 있습니다. 저장은 완료됐지만 리밸런싱 결과가 정확하지 않을 수 있습니다.",
       );
     } else {
       toast.success("포트폴리오가 저장되었습니다.");
@@ -197,7 +201,7 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
         onSettled: () => {
           isSavingRef.current = false;
         },
-      }
+      },
     );
   };
 
@@ -218,9 +222,15 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
 
   if (isError) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm text-destructive">
-        포트폴리오를 불러오지 못했습니다. 접근 권한이 없거나 존재하지 않는 포트폴리오입니다.
-      </div>
+      <ErrorState
+        message={
+          <>
+            포트폴리오를 불러오지 못했습니다.
+            <br />
+            잠시후 다시 시도해 주세요.
+          </>
+        }
+      />
     );
   }
 
@@ -250,9 +260,8 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
           <div className="flex flex-col gap-0.5 rounded-[10px] border border-[#fed7aa] bg-[#fff7ed] px-3.5 py-2.5 text-[13px] font-semibold text-[#c2410c]">
             <span className="font-extrabold">미확정 슬롯이 남아 있습니다.</span>
             <span>
-              종목을 채워야 &apos;리밸런싱&apos; 버튼이 나타납니다.
-              저장은 가능하지만 리밸런싱은 슬롯을 모두 채운 후 진행할 수
-              있습니다.
+              종목을 채워야 &apos;리밸런싱&apos; 버튼이 나타납니다. 저장은
+              가능하지만 리밸런싱은 슬롯을 모두 채운 후 진행할 수 있습니다.
             </span>
           </div>
         )}
@@ -291,7 +300,12 @@ export const PortfolioEditor = ({ portfolioId, templateId = null }: PortfolioEdi
         </Button>
 
         {portfolioId && assets.length > 0 && !showSlot && (
-          <Button asChild type="button" variant="outline" className="w-full gap-2">
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+            className="w-full gap-2"
+          >
             <Link href={`/portfolio/${portfolioId}/guide`}>
               <RefreshCcw size={15} />
               리밸런싱

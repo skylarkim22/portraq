@@ -24,7 +24,7 @@ export const RebalancingHoldingsRow = ({
     <Card className="flex items-center gap-3 border-none bg-muted/40 p-3.5">
       <AssetColorBadge name={asset.name} ticker={asset.ticker} color={asset.color} />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-extrabold text-foreground">
+        <div className="line-clamp-2 text-sm font-extrabold text-foreground">
           {asset.name ?? asset.ticker}
         </div>
         <div className="truncate text-xs text-muted-foreground">

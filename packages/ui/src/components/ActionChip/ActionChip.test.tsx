@@ -19,13 +19,13 @@ describe("ActionChip", () => {
     expect(screen.getByText("BUY")).toBeInTheDocument();
   });
 
-  it("buy action에 primary(파란색) 스타일을 적용한다", () => {
+  it("buy action에 green 스타일을 적용한다", () => {
     render(<ActionChip action="buy" />);
-    expect(screen.getByText("매수").className).toContain("text-primary");
+    expect(screen.getByText("매수").className).toContain("text-buy");
   });
 
   it("sell action에 red 스타일을 적용한다", () => {
     render(<ActionChip action="sell" />);
-    expect(screen.getByText("매도").className).toContain("text-[#dc2626]");
+    expect(screen.getByText("매도").className).toContain("text-sell");
   });
 });

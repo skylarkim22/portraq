@@ -15,9 +15,9 @@ export const PortfolioListPage = () => {
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
           내 포트폴리오
         </h1>
-        <Button asChild type="button" className="gap-2">
+        <Button asChild type="button" variant="outline" size="sm" className="gap-1.5">
           <Link href="/portfolio/new">
-            <Plus size={16} />
+            <Plus size={14} />
             새로 만들기
           </Link>
         </Button>
@@ -32,9 +32,9 @@ export const PortfolioListPage = () => {
           <p className="text-sm text-muted-foreground">
             아직 저장된 포트폴리오가 없습니다.
           </p>
-          <Button asChild type="button" variant="outline" className="gap-2">
+          <Button asChild type="button" variant="outline" size="sm" className="gap-1.5">
             <Link href="/portfolio/new">
-              <Plus size={16} />
+              <Plus size={14} />
               포트폴리오 만들기
             </Link>
           </Button>

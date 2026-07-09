@@ -7,21 +7,6 @@ import { usePortfolioList } from "@/features/portfolio/hooks";
 import { PortfolioListItem } from "@/features/portfolio/components/PortfolioListItem";
 
 const PORTFOLIO_PREVIEW_LIMIT = 3;
-const SKELETON_COUNT = 3;
-
-const PortfolioCardSkeleton = () => (
-  <Card className="animate-pulse space-y-3 p-5">
-    <div className="space-y-2">
-      <div className="h-4 w-32 rounded bg-muted" />
-      <div className="h-3 w-24 rounded bg-muted" />
-    </div>
-    <div className="h-[7px] rounded bg-muted" />
-    <div className="flex items-center justify-between">
-      <div className="h-5 w-10 rounded-full bg-muted" />
-      <div className="h-4 w-20 rounded bg-muted" />
-    </div>
-  </Card>
-);
 
 export const PortfolioPreviewSection = () => {
   const { data: portfolios, isLoading } = usePortfolioList();
@@ -43,11 +28,7 @@ export const PortfolioPreviewSection = () => {
       </div>
 
       {isLoading && (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <PortfolioCardSkeleton key={i} />
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">불러오는 중...</p>
       )}
 
       {!isLoading && portfolios?.length === 0 && (

@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { Button, Input, Textarea } from "@portraq/ui";
+import { Button, Input } from "@portraq/ui";
 
 type PortfolioHeaderProps = {
   name: string;
@@ -25,16 +25,15 @@ export const PortfolioHeader = ({
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
           placeholder="포트폴리오 이름을 입력하세요"
-          className="mb-1 h-auto border-none bg-transparent px-0 text-2xl font-extrabold text-foreground shadow-none focus-visible:ring-0 md:text-2xl"
+          className="mb-1 h-auto border-none bg-transparent px-0 text-lg font-extrabold text-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-xl"
         />
-        <Textarea
+        <Input
           id="portfolio-memo"
           name="portfolio-memo"
           value={memo}
           onChange={(e) => onMemoChange(e.target.value)}
           placeholder="메모 (선택)"
-          rows={1}
-          className="min-h-0 resize-none border-none bg-transparent px-0 text-sm text-muted-foreground shadow-none focus-visible:ring-0"
+          className="h-auto border-none bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
       </div>
       <Button
