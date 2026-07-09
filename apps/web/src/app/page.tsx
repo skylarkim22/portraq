@@ -236,13 +236,13 @@ export default function Home() {
               ))}
             </nav>
             {isUserLoading ? (
-              <div className="animate-pulse" style={{ width: 76, height: 28, background: "#e4e4e7", borderRadius: 8 }} />
+              <div className="animate-pulse" style={{ width: 76, height: 32, background: "#e4e4e7", borderRadius: 8 }} />
             ) : user ? (
-              <a href="/home" className="btn-ghost" style={{ height: 28, padding: "0 14px", fontSize: 12 }}>
+              <a href="/home" className="btn-ghost" style={{ height: 32, padding: "0 14px", fontSize: 12 }}>
                 내 포트폴리오
               </a>
             ) : (
-              <a href="/login" className="btn-primary" style={{ height: 28, padding: "0 14px", fontSize: 12 }}>
+              <a href="/login" className="btn-primary" style={{ height: 32, padding: "0 14px", fontSize: 12 }}>
                 시작하기 <ArrowRight size={14} />
               </a>
             )}
@@ -715,7 +715,7 @@ export default function Home() {
                       <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 0" }}>
                         {day ? (
                           <>
-                            <span style={{ fontSize: 13, fontWeight: isToday ? 800 : 500, color: isToday ? "#355df9" : "#1c1c1e", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: isToday ? "#eef2ff" : "transparent" }}>{day}</span>
+                            <span style={{ fontSize: 13, fontWeight: isToday ? 800 : 500, color: isToday ? "#355df9" : "#1c1c1e", width: 28, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: isToday ? "#eef2ff" : "transparent" }}>{day}</span>
                             <div style={{ display: "flex", gap: 2, marginTop: 2, height: 7 }}>
                               {(dot === "buy" || dot === "both") && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />}
                               {(dot === "sell" || dot === "both") && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#dc2626", display: "inline-block" }} />}
