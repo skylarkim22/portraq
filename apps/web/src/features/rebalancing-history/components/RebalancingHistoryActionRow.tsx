@@ -35,7 +35,7 @@ export const RebalancingHistoryActionRow = ({
       <div className="flex min-w-0 items-center gap-3">
         <AssetColorBadge name={action.name} ticker={action.ticker} color={action.color} />
         <div className="min-w-0">
-          <div className="truncate text-xs font-extrabold text-foreground">
+          <div className="line-clamp-2 text-sm font-extrabold text-foreground">
             {action.name}
           </div>
           <div className="truncate text-xs text-muted-foreground">

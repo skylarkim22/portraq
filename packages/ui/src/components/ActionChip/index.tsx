@@ -6,8 +6,8 @@ const actionChipVariants = cva(
   {
     variants: {
       action: {
-        buy: "border-[#c7d5fd] bg-[#eef2ff] text-primary",
-        sell: "border-[#fecaca] bg-[#fef2f2] text-[#dc2626]",
+        buy: "border-buy-border bg-buy-tint text-buy",
+        sell: "border-sell-border bg-sell-tint text-sell",
         hold: "border-border bg-muted text-muted-foreground",
       },
     },

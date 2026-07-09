@@ -1,6 +1,6 @@
 import type { Market } from "@portraq/lib/types";
 import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
-import type { Holding } from "@/features/trade-log/deriveHoldings";
+import { toAvgPriceMap, type Holding } from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 export type MonthlyStats = {
@@ -17,7 +17,7 @@ export const deriveMonthlyStats = (
   monthLogs: EnrichedTradeLog[],
   holdings: Holding[]
 ): MonthlyStats => {
-  const avgPriceByTicker = new Map(holdings.map((h) => [h.ticker, h.avgPrice]));
+  const avgPriceByTicker = toAvgPriceMap(holdings);
 
   let totalBuyAmount = 0;
   let totalSellAmount = 0;

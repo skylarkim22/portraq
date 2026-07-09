@@ -9,6 +9,7 @@ import {
   toKrwPrice,
   type RebalancingAction,
 } from "@portraq/lib/utils";
+import { ErrorState } from "@/components/ErrorState";
 import {
   useLatestSnapshot,
   usePortfolio,
@@ -125,9 +126,15 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
 
   if (isError) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm text-destructive">
-        포트폴리오를 불러오지 못했습니다. 접근 권한이 없거나 존재하지 않는 포트폴리오입니다.
-      </div>
+      <ErrorState
+        message={
+          <>
+            포트폴리오를 불러오지 못했습니다.
+            <br />
+            잠시후 다시 시도해 주세요.
+          </>
+        }
+      />
     );
   }
 

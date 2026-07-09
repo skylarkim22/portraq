@@ -44,3 +44,6 @@ export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
     }))
     .filter((holding) => holding.quantity > 0);
 };
+
+export const toAvgPriceMap = (holdings: Holding[]): Map<string, number> =>
+  new Map(holdings.map((holding) => [holding.ticker, holding.avgPrice]));

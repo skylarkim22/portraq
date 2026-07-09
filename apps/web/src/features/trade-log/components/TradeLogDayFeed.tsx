@@ -1,12 +1,20 @@
 import { TradeLogCard } from "@/features/trade-log/components/TradeLogCard";
+import { toAvgPriceMap, type Holding } from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 type TradeLogDayFeedProps = {
   dateLabel: string;
   logs: EnrichedTradeLog[];
+  holdings?: Holding[];
 };
 
-export const TradeLogDayFeed = ({ dateLabel, logs }: TradeLogDayFeedProps) => {
+export const TradeLogDayFeed = ({
+  dateLabel,
+  logs,
+  holdings = [],
+}: TradeLogDayFeedProps) => {
+  const avgPriceByTicker = toAvgPriceMap(holdings);
+
   return (
     <section>
       <h2 className="mb-3 text-[15px] font-extrabold text-foreground">
@@ -18,7 +26,13 @@ export const TradeLogDayFeed = ({ dateLabel, logs }: TradeLogDayFeedProps) => {
             해당 날짜에 등록된 거래가 없습니다.
           </div>
         ) : (
-          logs.map((log) => <TradeLogCard key={log.id} log={log} />)
+          logs.map((log) => (
+            <TradeLogCard
+              key={log.id}
+              log={log}
+              avgPrice={avgPriceByTicker.get(log.ticker)}
+            />
+          ))
         )}
       </div>
     </section>

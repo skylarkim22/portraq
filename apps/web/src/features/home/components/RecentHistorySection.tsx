@@ -7,21 +7,6 @@ import { useRebalancingHistory } from "@/features/rebalancing-history/hooks";
 import { formatExecutedDate } from "@/lib/dateFormat";
 
 const RECENT_HISTORY_LIMIT = 3;
-const SKELETON_COUNT = 3;
-
-const RecentHistoryRowSkeleton = ({ index }: { index: number }) => (
-  <div
-    className={`flex animate-pulse items-center justify-between gap-3 p-4 ${
-      index > 0 ? "border-t border-border" : ""
-    }`}
-  >
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="h-9 w-9 shrink-0 rounded-[10px] bg-muted" />
-      <div className="h-4 w-32 rounded bg-muted" />
-    </div>
-    <div className="h-3 w-16 shrink-0 rounded bg-muted" />
-  </div>
-);
 
 export const RecentHistorySection = () => {
   const { data: historyPages, isLoading } = useRebalancingHistory({
@@ -49,11 +34,7 @@ export const RecentHistorySection = () => {
       </div>
 
       {isLoading ? (
-        <Card className="overflow-hidden p-0">
-          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <RecentHistoryRowSkeleton key={i} index={i} />
-          ))}
-        </Card>
+        <p className="text-sm text-muted-foreground">불러오는 중...</p>
       ) : (
         <Card className="overflow-hidden p-0">
           {records.map((record, index) => (

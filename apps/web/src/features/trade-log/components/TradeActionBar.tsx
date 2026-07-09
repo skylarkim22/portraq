@@ -12,7 +12,11 @@ export const TradeActionBar = ({ onOpenBuy, onOpenSell }: TradeActionBarProps) =
       {/* 모바일: 하단 고정 전체 폭 바 */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-md md:hidden">
         <div className="mx-auto flex max-w-3xl gap-3">
-          <Button type="button" className="h-12 flex-1 gap-2" onClick={onOpenBuy}>
+          <Button
+            type="button"
+            className="h-12 flex-1 gap-2 bg-buy hover:bg-buy/90"
+            onClick={onOpenBuy}
+          >
             <CirclePlus size={17} />
             매수 기록
           </Button>
@@ -32,7 +36,7 @@ export const TradeActionBar = ({ onOpenBuy, onOpenSell }: TradeActionBarProps) =
       <div className="fixed bottom-6 right-6 z-40 hidden flex-col gap-3 md:flex">
         <Button
           type="button"
-          className="h-12 gap-2 rounded-full px-5 shadow-lg"
+          className="h-12 gap-2 rounded-full bg-buy px-5 shadow-lg hover:bg-buy/90"
           onClick={onOpenBuy}
         >
           <CirclePlus size={17} />

@@ -105,10 +105,10 @@ export const TradeLogCalendar = ({
               <span>{day}</span>
               <span className="flex h-[5px] gap-[3px]">
                 {marker.hasBuy && (
-                  <span className="h-[5px] w-[5px] rounded-full bg-primary" />
+                  <span className="h-[5px] w-[5px] rounded-full bg-buy" />
                 )}
                 {marker.hasSell && (
-                  <span className="h-[5px] w-[5px] rounded-full bg-[#dc2626]" />
+                  <span className="h-[5px] w-[5px] rounded-full bg-sell" />
                 )}
               </span>
             </button>
@@ -118,11 +118,11 @@ export const TradeLogCalendar = ({
 
       <div className="mt-4 flex items-center gap-4 border-t border-border pt-3.5">
         <div className="flex items-center gap-2">
-          <span className="h-[5px] w-[5px] rounded-full bg-primary" />
+          <span className="h-[5px] w-[5px] rounded-full bg-buy" />
           <span className="text-xs font-semibold text-muted-foreground">매수</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-[5px] w-[5px] rounded-full bg-[#dc2626]" />
+          <span className="h-[5px] w-[5px] rounded-full bg-sell" />
           <span className="text-xs font-semibold text-muted-foreground">매도</span>
         </div>
       </div>
