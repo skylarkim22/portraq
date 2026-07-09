@@ -53,7 +53,6 @@ const record = (id: string): RebalancingHistoryRecord => ({
       action: "buy",
       quantity: 2,
       pricePerShare: 200,
-      totalAmount: 400,
       name: "Apple",
       color: "#355df9",
     },
@@ -126,7 +125,6 @@ describe("useUpdateExecutionRecord", () => {
           action: "buy",
           quantity: 5,
           pricePerShare: 300,
-          totalAmount: 1500,
         },
       ],
     });
@@ -138,7 +136,6 @@ describe("useUpdateExecutionRecord", () => {
       expect(cache.pages[0][0].actions[0]).toMatchObject({
         ticker: "AAPL",
         quantity: 5,
-        totalAmount: 1500,
         name: "Apple",
         color: "#355df9",
       });

@@ -44,7 +44,6 @@ const mockRecord: RebalancingHistoryRecord = {
       action: "buy",
       quantity: 2,
       pricePerShare: 200,
-      totalAmount: 400,
       name: "Apple",
       color: "#355df9",
     },
@@ -53,7 +52,6 @@ const mockRecord: RebalancingHistoryRecord = {
       action: "sell",
       quantity: -1,
       pricePerShare: 220,
-      totalAmount: -220,
       name: "Tesla",
       color: "#e85d4a",
     },
@@ -118,7 +116,7 @@ describe("RebalancingHistoryRecordCard", () => {
       {
         id: "e1",
         actions: expect.arrayContaining([
-          expect.objectContaining({ ticker: "AAPL", quantity: 3, totalAmount: 600 }),
+          expect.objectContaining({ ticker: "AAPL", quantity: 3 }),
         ]),
       },
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) })

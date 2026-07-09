@@ -15,11 +15,11 @@ export const RebalancingHistoryRecordDetail = ({
 }: RebalancingHistoryRecordDetailProps) => {
   const totalBuyAmount = record.actions
     .filter((action) => action.action === "buy")
-    .reduce((sum, action) => sum + action.totalAmount, 0);
+    .reduce((sum, action) => sum + action.quantity * action.pricePerShare, 0);
 
   const sellRecovery = -record.actions
     .filter((action) => action.action === "sell")
-    .reduce((sum, action) => sum + action.totalAmount, 0);
+    .reduce((sum, action) => sum + action.quantity * action.pricePerShare, 0);
 
   return (
     <div className="flex flex-col gap-3 border-t border-border bg-muted/30 p-4">

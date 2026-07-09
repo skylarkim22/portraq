@@ -100,7 +100,6 @@ export function toActionItems(actions: RebalancingAction[]): ActionItem[] {
       action: a.action,
       quantity,
       pricePerShare: a.pricePerShare,
-      totalAmount: quantity * a.pricePerShare,
     };
   });
 }
