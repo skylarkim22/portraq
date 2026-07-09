@@ -160,7 +160,8 @@ GRANT EXECUTE ON FUNCTION save_portfolio(UUID, TEXT, TEXT, JSONB) TO authenticat
 
 -- ============================================================
 -- execution_records (PRD 5.3)
--- ActionItem[]: { ticker, action: 'buy'|'sell'|'hold', quantity, price_per_share, total_amount }
+-- ActionItem[]: { ticker, action: 'buy'|'sell'|'hold', quantity, pricePerShare }
+-- (총액은 저장하지 않고 quantity * pricePerShare로 그때그때 계산한다)
 -- ============================================================
 CREATE TABLE execution_records (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),

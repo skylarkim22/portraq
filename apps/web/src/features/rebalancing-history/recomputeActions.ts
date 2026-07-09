@@ -18,5 +18,4 @@ export const recomputeActions = (edits: UpdateActionInput[]): ActionItem[] =>
     quantity: edit.quantity,
     pricePerShare: edit.pricePerShare,
     action: deriveActionType(edit.quantity),
-    totalAmount: edit.quantity * edit.pricePerShare,
   }));

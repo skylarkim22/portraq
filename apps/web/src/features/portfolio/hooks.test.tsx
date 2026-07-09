@@ -175,7 +175,7 @@ describe("useRecordRebalancingExecution", () => {
       await result.current.mutateAsync({
         totalBudget: 500000,
         actions: [
-          { ticker: "AAPL", action: "buy", quantity: 2, pricePerShare: 200, totalAmount: 400 },
+          { ticker: "AAPL", action: "buy", quantity: 2, pricePerShare: 200 },
         ],
         updatedAssets: [{ ticker: "AAPL", shares: 7, currentPrice: 200 }],
         snapshotAssets: [

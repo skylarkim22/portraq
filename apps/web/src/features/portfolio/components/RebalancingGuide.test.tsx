@@ -149,7 +149,6 @@ describe("RebalancingGuide", () => {
             action: "buy",
             quantity: 3,
             pricePerShare: 1000,
-            totalAmount: 3000,
           }),
         ],
         updatedAssets: [

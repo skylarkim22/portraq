@@ -42,7 +42,6 @@ export const buildRebalancingExecutionPayload = (
     action: row.action,
     quantity: row.quantity,
     pricePerShare: row.pricePerShare,
-    totalAmount: row.quantity * row.pricePerShare,
   }));
 
   return { actions, updatedAssets, snapshotAssets };

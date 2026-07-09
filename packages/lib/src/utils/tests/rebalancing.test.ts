@@ -80,7 +80,7 @@ describe("calcRebalancingActions", () => {
 });
 
 describe("toActionItems", () => {
-  it("매도 액션의 수량과 총액을 음수로 변환한다", () => {
+  it("매도 액션의 수량을 음수로 변환한다", () => {
     const result = calcRebalancingActions({
       assets: [{ ticker: "AAPL", ratio: 0, shares: 10, order: 0 }],
       holdings: [{ ticker: "AAPL", shares: 10, pricePerShare: 200 }],
@@ -91,10 +91,10 @@ describe("toActionItems", () => {
 
     expect(item.action).toBe("sell");
     expect(item.quantity).toBeLessThan(0);
-    expect(item.totalAmount).toBe(item.quantity * item.pricePerShare);
+    expect(item.pricePerShare).toBe(200);
   });
 
-  it("매수 액션의 총액은 수량 × 현재가로 계산한다", () => {
+  it("매수 액션의 수량은 양수로 유지한다", () => {
     const result = calcRebalancingActions({
       assets: [{ ticker: "AAPL", ratio: 100, shares: 0, order: 0 }],
       holdings: [{ ticker: "AAPL", shares: 0, pricePerShare: 200 }],
@@ -104,7 +104,7 @@ describe("toActionItems", () => {
     const [item] = toActionItems(result);
 
     expect(item.action).toBe("buy");
-    expect(item.totalAmount).toBe(item.quantity * item.pricePerShare);
+    expect(item.quantity).toBeGreaterThan(0);
   });
 });
 
