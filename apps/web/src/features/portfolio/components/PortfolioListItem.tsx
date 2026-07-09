@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { RefreshCcw } from "lucide-react";
 import { ActionChip, Button, Card } from "@portraq/ui";
-import type { PortfolioListItem as PortfolioListItemType } from "@/features/portfolio/queries";
+import type { PortfolioSummary } from "@/features/portfolio/queries";
 import {
-  calcPortfolioCardValue,
+  derivePortfolioCardValue,
   deriveAssetsMarket,
 } from "@/features/portfolio/derivePortfolioCardMetrics";
 import { MARKET_BADGE_CLASS, MARKET_LABELS } from "@/features/templates/templateStyles";
 import { formatExecutedDate } from "@/lib/dateFormat";
 
 type PortfolioListItemProps = {
-  portfolio: PortfolioListItemType;
+  portfolio: PortfolioSummary;
 };
 
 export const PortfolioListItem = ({ portfolio }: PortfolioListItemProps) => {
-  const totalValue = calcPortfolioCardValue(portfolio.assets);
+  const totalValue = derivePortfolioCardValue(portfolio.assets);
   const hasAssets = portfolio.assets.length > 0;
   const market = deriveAssetsMarket(portfolio.assets.map((asset) => asset.market));
   const execution = portfolio.latestExecution;

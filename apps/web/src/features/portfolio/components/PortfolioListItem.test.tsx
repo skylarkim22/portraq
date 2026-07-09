@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { PortfolioListItem } from "@/features/portfolio/components/PortfolioListItem";
-import type { PortfolioListItem as PortfolioListItemType } from "@/features/portfolio/queries";
+import type { PortfolioSummary } from "@/features/portfolio/queries";
 
-const basePortfolio: PortfolioListItemType = {
+const basePortfolio: PortfolioSummary = {
   id: "p1",
   name: "워런 버핏 전략",
   updatedAt: "2026-01-15",

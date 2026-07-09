@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
-  calcPortfolioCardValue,
+  derivePortfolioCardValue,
   deriveAssetsMarket,
 } from "@/features/portfolio/derivePortfolioCardMetrics";
 
-describe("calcPortfolioCardValue", () => {
+describe("derivePortfolioCardValue", () => {
   it("보유 자산의 평가금액 합계를 계산한다", () => {
-    const totalValue = calcPortfolioCardValue([
+    const totalValue = derivePortfolioCardValue([
       { shares: 10, currentPrice: 1000 },
       { shares: 5, currentPrice: 2000 },
     ]);

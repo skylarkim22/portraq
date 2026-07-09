@@ -30,7 +30,7 @@ export type PortfolioCardExecutionSummary = {
   holdCount: number;
 };
 
-export type PortfolioListItem = {
+export type PortfolioSummary = {
   id: string;
   name: string;
   updatedAt: string;
@@ -54,7 +54,7 @@ const summarizeExecution = (
 export const portfolioListQueryOptions = () =>
   queryOptions({
     queryKey: portfolioKeys.lists(),
-    queryFn: async (): Promise<PortfolioListItem[]> => {
+    queryFn: async (): Promise<PortfolioSummary[]> => {
       const { data, error } = await createClient()
         .from("portfolios")
         .select(

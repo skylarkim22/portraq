@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { deriveHomeSummary } from "@/features/home/deriveHomeSummary";
-import type { PortfolioListItem } from "@/features/portfolio/queries";
+import type { PortfolioSummary } from "@/features/portfolio/queries";
 
 const makePortfolio = (
-  overrides: Partial<PortfolioListItem> = {}
-): PortfolioListItem => ({
+  overrides: Partial<PortfolioSummary> = {}
+): PortfolioSummary => ({
   id: "p1",
   name: "포트폴리오",
   updatedAt: "2026-01-01",

@@ -1,11 +1,11 @@
 import type { Market, TemplateMarket } from "@portraq/lib/types";
 
-export type PortfolioCardAssetInput = {
+type PortfolioCardAssetInput = {
   shares: number;
   currentPrice: number;
 };
 
-export const calcPortfolioCardValue = (assets: PortfolioCardAssetInput[]): number =>
+export const derivePortfolioCardValue = (assets: PortfolioCardAssetInput[]): number =>
   assets.reduce((sum, asset) => sum + asset.shares * asset.currentPrice, 0);
 
 export const deriveAssetsMarket = (markets: Market[]): TemplateMarket => {

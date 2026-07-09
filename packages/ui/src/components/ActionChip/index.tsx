@@ -17,16 +17,20 @@ const actionChipVariants = cva(
   }
 );
 
-const LABELS: Record<string, string> = { buy: "매수", sell: "매도", hold: "유지" };
+type ActionChipAction = NonNullable<VariantProps<typeof actionChipVariants>["action"]>;
+
+const LABELS: Record<ActionChipAction, string> = {
+  buy: "매수",
+  sell: "매도",
+  hold: "유지",
+};
 
 export interface ActionChipProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof actionChipVariants> {}
 
-export function ActionChip({ action, className, children, ...props }: ActionChipProps) {
-  return (
-    <span className={cn(actionChipVariants({ action }), className)} {...props}>
-      {children ?? LABELS[action ?? "hold"]}
-    </span>
-  );
-}
+export const ActionChip = ({ action, className, children, ...props }: ActionChipProps) => (
+  <span className={cn(actionChipVariants({ action }), className)} {...props}>
+    {children ?? LABELS[action ?? "hold"]}
+  </span>
+);
