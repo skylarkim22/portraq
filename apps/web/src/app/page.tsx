@@ -242,8 +242,8 @@ export default function Home() {
                 내 포트폴리오
               </a>
             ) : (
-              <a href="/login" className="btn-primary" style={{ padding: "10px 22px", fontSize: 14 }}>
-                시작하기 <ArrowRight size={16} />
+              <a href="/login" className="btn-primary" style={{ padding: "6px 14px", fontSize: 12 }}>
+                시작하기 <ArrowRight size={14} />
               </a>
             )}
           </div>
