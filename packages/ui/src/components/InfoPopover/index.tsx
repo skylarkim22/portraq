@@ -6,9 +6,15 @@ export interface InfoPopoverProps {
   label: string;
   children: React.ReactNode;
   className?: string;
+  align?: "left" | "right";
 }
 
-export function InfoPopover({ label, children, className }: InfoPopoverProps) {
+export function InfoPopover({
+  label,
+  children,
+  className,
+  align = "right",
+}: InfoPopoverProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +57,10 @@ export function InfoPopover({ label, children, className }: InfoPopoverProps) {
         <div
           role="tooltip"
           onClick={(event) => event.stopPropagation()}
-          className="absolute right-0 top-full z-20 mt-1.5 w-56 rounded-lg border border-border bg-popover p-3 text-left text-xs font-normal normal-case leading-relaxed text-popover-foreground shadow-lg"
+          className={cn(
+            "absolute top-full z-20 mt-1.5 w-56 rounded-lg border border-border bg-popover p-3 text-left text-xs font-normal normal-case leading-relaxed text-popover-foreground shadow-lg",
+            align === "left" ? "left-0" : "right-0"
+          )}
         >
           {children}
         </div>
