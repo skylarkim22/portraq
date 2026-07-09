@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@portraq/ui";
 import { ArrowRight } from "lucide-react";
 import { InfoPopover } from "@portraq/ui";
 import type { PortfolioTemplate } from "@portraq/lib/types";
@@ -33,7 +34,9 @@ export const TemplateDetail = ({ template }: TemplateDetailProps) => {
         <div>
           <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             10Y CAGR
-            <InfoPopover label="10Y CAGR 설명">{CAGR_EXPLANATION}</InfoPopover>
+            <InfoPopover label="10Y CAGR 설명" align="left">
+              {CAGR_EXPLANATION}
+            </InfoPopover>
           </div>
           <div className="text-xl font-extrabold text-[var(--portraq-success)]">
             {template.cagr !== null ? `+${template.cagr}%` : "-"}
@@ -71,7 +74,10 @@ export const TemplateDetail = ({ template }: TemplateDetailProps) => {
         </div>
         <div className="flex flex-wrap gap-2">
           {holdings.map((asset) => (
-            <div key={asset.ticker ?? `slot-${asset.sortOrder}`} className="flex items-center gap-1">
+            <div
+              key={asset.ticker ?? `slot-${asset.sortOrder}`}
+              className="flex items-center gap-1"
+            >
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: asset.color }}
@@ -88,13 +94,18 @@ export const TemplateDetail = ({ template }: TemplateDetailProps) => {
       </div>
 
       <div className="flex justify-end">
-        <Link
-          href={`/portfolio/new?template=${template.id}`}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-muted"
+        <Button
+          asChild
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2"
         >
-          이 포트폴리오 사용하기
-          <ArrowRight size={15} />
-        </Link>
+          <Link href={`/portfolio/new?template=${template.id}`}>
+            이 포트폴리오 사용하기
+            <ArrowRight size={14} />
+          </Link>
+        </Button>
       </div>
     </div>
   );
