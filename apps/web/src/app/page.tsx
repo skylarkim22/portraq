@@ -1375,9 +1375,9 @@ export default function Home() {
                     className="flex gap-2 flex-wrap"
                     style={{ marginTop: 16 }}
                   >
-                    <span className="chip-buy">AAPL 매수 +2주</span>
-                    <span className="chip-hold">KO 유지</span>
-                    <span className="chip-sell">BAC 매도 -1주</span>
+                    <ActionChip action="buy">AAPL 매수 +2주</ActionChip>
+                    <ActionChip action="hold">KO 유지</ActionChip>
+                    <ActionChip action="sell">BAC 매도 -1주</ActionChip>
                   </div>
                 ),
               },
@@ -1546,7 +1546,7 @@ export default function Home() {
                       dot: "#355df9",
                       from: 38,
                       to: 42,
-                      chip: <span className="chip-buy">매수 +2주</span>,
+                      chip: <ActionChip action="buy">매수 +2주</ActionChip>,
                       amt: "약 437,000원",
                     },
                     {
@@ -1554,7 +1554,7 @@ export default function Home() {
                       dot: "#6b8ffb",
                       from: 30,
                       to: 28,
-                      chip: <span className="chip-sell">매도 -1주</span>,
+                      chip: <ActionChip action="sell">매도 -1주</ActionChip>,
                       amt: "약 58,000원",
                     },
                     {
@@ -1562,7 +1562,7 @@ export default function Home() {
                       dot: "#f59e0b",
                       from: 10,
                       to: 10,
-                      chip: <span className="chip-hold">유지</span>,
+                      chip: <ActionChip action="hold">유지</ActionChip>,
                       amt: null,
                     },
                     {
@@ -1570,7 +1570,7 @@ export default function Home() {
                       dot: "#93c5fd",
                       from: 9,
                       to: 12,
-                      chip: <span className="chip-buy">매수 +3주</span>,
+                      chip: <ActionChip action="buy">매수 +3주</ActionChip>,
                       amt: "약 145,000원",
                     },
                   ].map(({ t, dot, from, to, chip, amt }) => (
@@ -2056,13 +2056,7 @@ export default function Home() {
                           marginBottom: 10,
                         }}
                       >
-                        <span
-                          className={
-                            entry.type === "buy" ? "chip-buy" : "chip-sell"
-                          }
-                        >
-                          {entry.type === "buy" ? "매수" : "매도"}
-                        </span>
+                        <ActionChip action={entry.type} />
                         <span
                           style={{
                             fontSize: 13,
