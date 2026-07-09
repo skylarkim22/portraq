@@ -236,9 +236,9 @@ export default function Home() {
               ))}
             </nav>
             {isUserLoading ? (
-              <div className="animate-pulse" style={{ width: 84, height: 32, background: "#e4e4e7", borderRadius: 8 }} />
+              <div className="animate-pulse" style={{ width: 76, height: 28, background: "#e4e4e7", borderRadius: 8 }} />
             ) : user ? (
-              <a href="/home" className="btn-ghost" style={{ padding: "8px 16px", fontSize: 13 }}>
+              <a href="/home" className="btn-ghost" style={{ padding: "6px 14px", fontSize: 12 }}>
                 내 포트폴리오
               </a>
             ) : (
