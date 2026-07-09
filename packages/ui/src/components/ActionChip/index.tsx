@@ -2,13 +2,13 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const actionChipVariants = cva(
-  "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
   {
     variants: {
       action: {
-        buy: "bg-green-100 text-green-700",
-        sell: "bg-red-100 text-red-700",
-        hold: "bg-gray-100 text-gray-600",
+        buy: "border-[#c7d5fd] bg-[#eef2ff] text-primary",
+        sell: "border-[#fecaca] bg-[#fef2f2] text-[#dc2626]",
+        hold: "border-border bg-muted text-muted-foreground",
       },
     },
     defaultVariants: {
@@ -17,16 +17,20 @@ const actionChipVariants = cva(
   }
 );
 
-const LABELS: Record<string, string> = { buy: "매수", sell: "매도", hold: "유지" };
+type ActionChipAction = NonNullable<VariantProps<typeof actionChipVariants>["action"]>;
+
+const LABELS: Record<ActionChipAction, string> = {
+  buy: "매수",
+  sell: "매도",
+  hold: "유지",
+};
 
 export interface ActionChipProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof actionChipVariants> {}
 
-export function ActionChip({ action, className, children, ...props }: ActionChipProps) {
-  return (
-    <span className={cn(actionChipVariants({ action }), className)} {...props}>
-      {children ?? LABELS[action ?? "hold"]}
-    </span>
-  );
-}
+export const ActionChip = ({ action, className, children, ...props }: ActionChipProps) => (
+  <span className={cn(actionChipVariants({ action }), className)} {...props}>
+    {children ?? LABELS[action ?? "hold"]}
+  </span>
+);
