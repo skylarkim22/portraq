@@ -238,7 +238,7 @@ export default function Home() {
             {isUserLoading ? (
               <div className="animate-pulse" style={{ width: 84, height: 32, background: "#e4e4e7", borderRadius: 8 }} />
             ) : user ? (
-              <a href="/portfolio" className="btn-ghost" style={{ padding: "8px 16px", fontSize: 13 }}>
+              <a href="/home" className="btn-ghost" style={{ padding: "8px 16px", fontSize: 13 }}>
                 내 포트폴리오
               </a>
             ) : (
@@ -268,7 +268,7 @@ export default function Home() {
                 {isUserLoading ? (
                   <div className="animate-pulse" style={{ width: 160, height: 50, background: "#e4e4e7", borderRadius: 8 }} />
                 ) : user ? (
-                  <a href="/portfolio" className="btn-primary" style={{ fontSize: 15, padding: "14px 28px" }}>
+                  <a href="/home" className="btn-primary" style={{ fontSize: 15, padding: "14px 28px" }}>
                     내 포트폴리오로 이동 <ArrowRight size={18} />
                   </a>
                 ) : (
