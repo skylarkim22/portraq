@@ -238,11 +238,11 @@ export default function Home() {
             {isUserLoading ? (
               <div className="animate-pulse" style={{ width: 76, height: 28, background: "#e4e4e7", borderRadius: 8 }} />
             ) : user ? (
-              <a href="/home" className="btn-ghost" style={{ padding: "6px 14px", fontSize: 12 }}>
+              <a href="/home" className="btn-ghost" style={{ height: 28, padding: "0 14px", fontSize: 12 }}>
                 내 포트폴리오
               </a>
             ) : (
-              <a href="/login" className="btn-primary" style={{ padding: "6px 14px", fontSize: 12 }}>
+              <a href="/login" className="btn-primary" style={{ height: 28, padding: "0 14px", fontSize: 12 }}>
                 시작하기 <ArrowRight size={14} />
               </a>
             )}
