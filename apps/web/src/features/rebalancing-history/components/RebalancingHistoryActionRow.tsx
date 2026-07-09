@@ -1,7 +1,6 @@
-import { Input } from "@portraq/ui";
+import { ActionChip, Input } from "@portraq/ui";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { AssetColorBadge } from "@/components/AssetColorBadge";
-import { ActionTypeChip } from "@/features/rebalancing-history/components/ActionTypeChip";
 import type { EnrichedActionItem } from "@/features/rebalancing-history/queries";
 
 type RebalancingHistoryActionRowProps = {
@@ -79,7 +78,7 @@ export const RebalancingHistoryActionRow = ({
         </div>
       ) : (
         <div className="flex shrink-0 items-center gap-3">
-          <ActionTypeChip action={action.action} />
+          <ActionChip action={action.action} />
           <div className="text-right">
             <div className="text-sm font-extrabold text-foreground">
               {action.action === "hold" ? "—" : `${Math.abs(action.quantity)}주`}
