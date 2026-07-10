@@ -37,8 +37,7 @@ export interface RebalancingAction {
   targetRatio: number;
 }
 
-const MIN_SHARES_KR = 1;
-const MIN_SHARES_US = 0.5;
+const MIN_SHARES = 1;
 
 export function calcRebalancingActions(
   input: RebalancingInput
@@ -68,9 +67,6 @@ export function calcRebalancingActions(
       const currentRatio =
         totalCurrentValue > 0 ? (currentValue / totalBudget) * 100 : 0;
 
-      // PRD: 차이가 1주(KR) 또는 0.5주(US) 미만이면 유지
-      const minShares =
-        (asset.market ?? "KR") === "KR" ? MIN_SHARES_KR : MIN_SHARES_US;
       const quantityRaw = price > 0 ? Math.abs(diff) / price : 0;
 
       // 매도는 목표 비율과의 괴리(%p)가 임계값 이상일 때만 발생시킨다.
@@ -81,12 +77,12 @@ export function calcRebalancingActions(
       let action: ActionType = "hold";
       let quantity = 0;
 
-      if (diff > 0 && quantityRaw >= minShares) {
+      if (diff > 0 && quantityRaw >= MIN_SHARES) {
         action = "buy";
         quantity = Math.floor(quantityRaw);
       } else if (
         diff < 0 &&
-        quantityRaw >= minShares &&
+        quantityRaw >= MIN_SHARES &&
         deviation >= sellThresholdPercent
       ) {
         action = "sell";

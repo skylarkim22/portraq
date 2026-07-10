@@ -37,7 +37,7 @@ describe("calcRebalancingActions", () => {
     expect(result[0].action).toBe("hold");
   });
 
-  it("market이 KR이면 0.5주 차이는 유지, US면 매수로 처리한다", () => {
+  it("0.5주 차이는 시장(KR/US)과 무관하게 유지로 처리한다", () => {
     const holdings = [{ ticker: "X", shares: 0, pricePerShare: 100 }];
 
     const krResult = calcRebalancingActions({
@@ -52,7 +52,7 @@ describe("calcRebalancingActions", () => {
       holdings,
       additionalBudget: 50,
     });
-    expect(usResult[0].action).toBe("buy");
+    expect(usResult[0].action).toBe("hold");
   });
 
   it("market 필드가 없으면 KR 기준(1주)으로 처리한다", () => {
