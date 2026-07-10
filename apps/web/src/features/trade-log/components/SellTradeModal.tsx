@@ -29,7 +29,17 @@ export const SellTradeModal = ({ defaultDate, onClose }: SellTradeModalProps) =>
 
   const { data: logs } = useTradeLogs();
   const createTradeLog = useCreateTradeLog();
-  const holdings = deriveHoldings(logs ?? []);
+  const holdings = deriveHoldings(logs ?? [], date);
+
+  const handleDateChange = (newDate: string) => {
+    setDate(newDate);
+    // 날짜를 이전 시점으로 바꿔서 아직 매수하지 않았던 종목이 되면,
+    // 이미 추가해둔 매도 행도 함께 제거한다.
+    const validTickers = new Set(
+      deriveHoldings(logs ?? [], newDate).map((holding) => holding.ticker)
+    );
+    setRows((prev) => prev.filter((row) => validTickers.has(row.ticker)));
+  };
 
   const handleAddHolding = (holding: Holding) => {
     if (rows.some((row) => row.ticker === holding.ticker)) return;
@@ -105,7 +115,7 @@ export const SellTradeModal = ({ defaultDate, onClose }: SellTradeModalProps) =>
             type="date"
             aria-label="날짜"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
             className="mb-5"
           />
 

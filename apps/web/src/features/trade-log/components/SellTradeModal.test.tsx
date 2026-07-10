@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SellTradeModal } from "@/features/trade-log/components/SellTradeModal";
@@ -92,5 +92,46 @@ describe("SellTradeModal", () => {
     render(<SellTradeModal defaultDate="2026-01-15" onClose={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: "매도 기록 저장" })).toBeDisabled();
+  });
+
+  it("매수일보다 이전 날짜로 바꾸면 보유 종목 목록에서 사라진다", () => {
+    vi.mocked(useTradeLogs).mockReturnValue({
+      data: [
+        {
+          id: "l1",
+          userId: "u1",
+          type: "buy",
+          date: "2026-05-10",
+          ticker: "005930",
+          quantity: 10,
+          price: 70000,
+          name: "삼성전자",
+          market: "KR",
+          memo: null,
+          createdAt: "2026-05-10T00:00:00Z",
+        },
+      ],
+    } as unknown as ReturnType<typeof useTradeLogs>);
+
+    render(<SellTradeModal defaultDate="2026-05-15" onClose={vi.fn()} />);
+
+    expect(screen.getByText(/삼성전자/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("날짜"), { target: { value: "2026-04-01" } });
+
+    expect(screen.queryByText(/삼성전자/)).not.toBeInTheDocument();
+    expect(screen.getByText("매도 가능한 보유 종목이 없습니다.")).toBeInTheDocument();
+  });
+
+  it("종목 추가 후 매수일보다 이전 날짜로 바꾸면 매도 행도 함께 제거된다", async () => {
+    const user = userEvent.setup();
+    render(<SellTradeModal defaultDate="2026-01-15" onClose={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByLabelText("AAPL 매도 수량")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("날짜"), { target: { value: "2025-12-01" } });
+
+    expect(screen.queryByLabelText("AAPL 매도 수량")).not.toBeInTheDocument();
   });
 });
