@@ -23,7 +23,7 @@ import { RebalancingHoldingsStep } from "@/features/portfolio/components/Rebalan
 import { RebalancingBudgetStep } from "@/features/portfolio/components/RebalancingBudgetStep";
 import { RebalancingActionStep } from "@/features/portfolio/components/RebalancingActionStep";
 
-const DEFAULT_EXCHANGE_RATE = 1400;
+const DEFAULT_EXCHANGE_RATE = 1500;
 const DEFAULT_SELL_THRESHOLD_PERCENT = 5;
 
 type RebalancingGuideProps = {
