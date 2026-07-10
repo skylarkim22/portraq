@@ -181,6 +181,11 @@ describe("RebalancingGuide", () => {
       "10"
     );
     await user.click(screen.getByRole("button", { name: "투자금 설정" }));
+
+    const priceInput = screen.getByRole("textbox", { name: "005930 현재가" });
+    await user.clear(priceInput);
+    await user.type(priceInput, "1000");
+
     await user.click(screen.getByRole("button", { name: "계산하기" }));
 
     expect(screen.getByText(/미확정 슬롯이 남아 있어/)).toBeInTheDocument();

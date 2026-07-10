@@ -44,7 +44,7 @@ describe("HomePage", () => {
       isLoading: false,
     } as unknown as ReturnType<typeof usePortfolioList>);
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[]] },
+      data: { pages: [{ records: [], hasMore: false }] },
       isLoading: false,
     } as unknown as ReturnType<typeof useRebalancingHistory>);
 
@@ -66,7 +66,7 @@ describe("HomePage", () => {
       isLoading: false,
     } as unknown as ReturnType<typeof usePortfolioList>);
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[]] },
+      data: { pages: [{ records: [], hasMore: false }] },
       isLoading: false,
     } as unknown as ReturnType<typeof useRebalancingHistory>);
 

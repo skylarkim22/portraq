@@ -10,6 +10,7 @@ import {
   rebalancingHistoryInfiniteQueryOptions,
   rebalancingHistoryKeys,
   type RebalancingHistoryFilters,
+  type RebalancingHistoryPage,
   type RebalancingHistoryRecord,
 } from "@/features/rebalancing-history/queries";
 
@@ -17,18 +18,25 @@ export const useRebalancingHistory = (filters: RebalancingHistoryFilters) => {
   return useInfiniteQuery(rebalancingHistoryInfiniteQueryOptions(filters));
 };
 
-type HistoryPages = InfiniteData<RebalancingHistoryRecord[]>;
+type HistoryPages = InfiniteData<RebalancingHistoryPage>;
 
+// hasMore는 건드리지 않고 records만 갱신한다 — "더보기" 노출 여부는 처음
+// 조회 시점에 서버가 알려준 값을 그대로 유지해야, 캐시에서 항목을 지워도
+// 다음 페이지가 있는지 여부가 잘못 바뀌지 않는다.
 const patchHistoryCache = (
   queryClient: ReturnType<typeof useQueryClient>,
-  updater: (page: RebalancingHistoryRecord[]) => RebalancingHistoryRecord[]
+  updater: (records: RebalancingHistoryRecord[]) => RebalancingHistoryRecord[]
 ) => {
   const previous = queryClient.getQueriesData<HistoryPages>({
     queryKey: rebalancingHistoryKeys.all,
   });
   queryClient.setQueriesData<HistoryPages>(
     { queryKey: rebalancingHistoryKeys.all },
-    (old) => old && { ...old, pages: old.pages.map(updater) }
+    (old) =>
+      old && {
+        ...old,
+        pages: old.pages.map((page) => ({ ...page, records: updater(page.records) })),
+      }
   );
   return previous;
 };
@@ -53,6 +61,11 @@ export const useDeleteExecutionRecord = () => {
     },
     onSuccess: (_data, id) => {
       patchHistoryCache(queryClient, (page) => page.filter((record) => record.id !== id));
+      // 캐시에서 즉시 제거해 삭제 반응은 빠르게 보여주되, 그 페이지가 10개
+      // 미만으로 줄어든 빈 자리는 서버의 다음 항목으로 다시 채워야 한다.
+      // 커서 기반 페이지네이션이라 이미 불러온 페이지들을 순서대로 다시
+      // 조회하면 각 페이지가 자동으로 10개씩 재정렬된다.
+      queryClient.refetchQueries({ queryKey: rebalancingHistoryKeys.all, type: "active" });
     },
   });
 };

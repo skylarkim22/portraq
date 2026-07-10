@@ -23,7 +23,8 @@ import { RebalancingHoldingsStep } from "@/features/portfolio/components/Rebalan
 import { RebalancingBudgetStep } from "@/features/portfolio/components/RebalancingBudgetStep";
 import { RebalancingActionStep } from "@/features/portfolio/components/RebalancingActionStep";
 
-const DEFAULT_EXCHANGE_RATE = 1400;
+const DEFAULT_EXCHANGE_RATE = 1500;
+const DEFAULT_SELL_THRESHOLD_PERCENT = 5;
 
 type RebalancingGuideProps = {
   portfolioId: string;
@@ -41,6 +42,9 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [exchangeRate, setExchangeRate] = useState(DEFAULT_EXCHANGE_RATE);
   const [additionalBudget, setAdditionalBudget] = useState(0);
+  const [sellThresholdPercent, setSellThresholdPercent] = useState(
+    DEFAULT_SELL_THRESHOLD_PERCENT
+  );
   const [overrides, setOverrides] = useState<Record<string, number>>({});
 
   const assets = useMemo(
@@ -88,8 +92,18 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
       assets,
       holdings: holdingInputs,
       additionalBudget,
+      sellThresholdPercent,
     });
-  }, [step, hasUndeterminedSlot, assets, holdings, prices, exchangeRate, additionalBudget]);
+  }, [
+    step,
+    hasUndeterminedSlot,
+    assets,
+    holdings,
+    prices,
+    exchangeRate,
+    additionalBudget,
+    sellThresholdPercent,
+  ]);
 
   const rows = useMemo(
     () => deriveActionRows(actions, overrides, assets),
@@ -184,6 +198,8 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
             onExchangeRateChange={setExchangeRate}
             additionalBudget={additionalBudget}
             onBudgetChange={setAdditionalBudget}
+            sellThresholdPercent={sellThresholdPercent}
+            onSellThresholdPercentChange={setSellThresholdPercent}
             onPrev={() => setStep(1)}
             onNext={handleGoStep3}
           />
