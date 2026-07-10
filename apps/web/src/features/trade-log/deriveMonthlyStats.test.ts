@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { deriveMonthlyStats } from "@/features/trade-log/deriveMonthlyStats";
-import type { Holding } from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
@@ -20,6 +19,15 @@ const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
 
 describe("deriveMonthlyStats", () => {
   it("매수/매도 금액과 세금 합계를 계산한다", () => {
+    const oxyBuy = log({
+      id: "b1",
+      type: "buy",
+      ticker: "OXY",
+      date: "2025-12-01",
+      quantity: 5,
+      price: 50000,
+      name: "Occidental",
+    });
     const logs: EnrichedTradeLog[] = [
       log({ id: "l1", type: "buy", ticker: "KO", quantity: 10, price: 83000, name: "Coca-Cola" }),
       log({
@@ -32,11 +40,8 @@ describe("deriveMonthlyStats", () => {
         name: "Occidental",
       }),
     ];
-    const holdings: Holding[] = [
-      { ticker: "OXY", name: "Occidental", market: "KR", avgPrice: 50000, quantity: 5 },
-    ];
 
-    const stats = deriveMonthlyStats(logs, holdings);
+    const stats = deriveMonthlyStats(logs, [oxyBuy, ...logs]);
 
     expect(stats.totalBuyAmount).toBe(830000);
     expect(stats.totalSellAmount).toBe(180000);
@@ -45,14 +50,19 @@ describe("deriveMonthlyStats", () => {
   });
 
   it("순손익 = (매도가-평균단가)*수량 - 세금, 순수익률 = 순손익/매도분 매수원금*100", () => {
+    const aaplBuy = log({
+      id: "b1",
+      type: "buy",
+      ticker: "AAPL",
+      date: "2025-12-01",
+      quantity: 8,
+      price: 70000,
+    });
     const logs: EnrichedTradeLog[] = [
       log({ id: "l1", type: "sell", ticker: "AAPL", quantity: 2, price: 100000, tax: 1000 }),
     ];
-    const holdings: Holding[] = [
-      { ticker: "AAPL", name: "Apple", market: "KR", avgPrice: 70000, quantity: 8 },
-    ];
 
-    const stats = deriveMonthlyStats(logs, holdings);
+    const stats = deriveMonthlyStats(logs, [aaplBuy, ...logs]);
 
     // pnl = (100000-70000)*2 = 60000, after tax = 59000
     expect(stats.netPnl).toBe(59000);
@@ -61,6 +71,15 @@ describe("deriveMonthlyStats", () => {
   });
 
   it("US 종목 매도는 환율로 원화 환산해 계산한다", () => {
+    const aaplBuy = log({
+      id: "b1",
+      type: "buy",
+      ticker: "AAPL",
+      date: "2025-12-01",
+      quantity: 5,
+      price: 70000,
+      market: "US",
+    });
     const logs: EnrichedTradeLog[] = [
       log({
         id: "l1",
@@ -72,11 +91,8 @@ describe("deriveMonthlyStats", () => {
         market: "US",
       }),
     ];
-    const holdings: Holding[] = [
-      { ticker: "AAPL", name: "Apple", market: "US", avgPrice: 70000, quantity: 5 },
-    ];
 
-    const stats = deriveMonthlyStats(logs, holdings);
+    const stats = deriveMonthlyStats(logs, [aaplBuy, ...logs]);
 
     // priceKrw = 60*1400 = 84000, amount = 168000
     expect(stats.totalSellAmount).toBe(168000);
@@ -97,7 +113,7 @@ describe("deriveMonthlyStats", () => {
       }),
     ];
 
-    const stats = deriveMonthlyStats(logs, []);
+    const stats = deriveMonthlyStats(logs, logs);
 
     const us = stats.marketShare.find((m) => m.market === "US");
     const kr = stats.marketShare.find((m) => m.market === "KR");

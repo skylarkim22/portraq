@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTradeLogs } from "@/features/trade-log/hooks";
-import { deriveHoldings } from "@/features/trade-log/deriveHoldings";
 import { deriveMonthlyStats } from "@/features/trade-log/deriveMonthlyStats";
 import { filterLogsByMonth, groupLogsByDate } from "@/features/trade-log/groupByDay";
 import { TradeLogCalendar } from "@/features/trade-log/components/TradeLogCalendar";
@@ -26,8 +25,7 @@ export const TradeLogPage = () => {
 
   const monthLogs = filterLogsByMonth(allLogs, year, month);
   const logsByDate = groupLogsByDate(allLogs);
-  const holdings = deriveHoldings(allLogs);
-  const stats = deriveMonthlyStats(monthLogs, holdings);
+  const stats = deriveMonthlyStats(monthLogs, allLogs);
 
   const handlePrevMonth = () => {
     if (month === 1) {
@@ -90,7 +88,7 @@ export const TradeLogPage = () => {
           <TradeLogDayFeed
             dateLabel={dateLabel}
             logs={logsByDate.get(selectedDate) ?? []}
-            holdings={holdings}
+            allLogs={allLogs}
           />
         </div>
       )}

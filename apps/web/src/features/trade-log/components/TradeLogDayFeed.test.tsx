@@ -34,38 +34,37 @@ describe("TradeLogDayFeed", () => {
   });
 
   it("로그의 종목별로 카드를 렌더링한다", () => {
-    const logs = [
-      log({
-        id: "l1",
-        type: "buy",
-        ticker: "KO",
-        quantity: 10,
-        price: 83000,
-        name: "Coca-Cola",
-        market: "KR",
-      }),
-      log({
-        id: "l2",
-        type: "sell",
-        ticker: "OXY",
-        quantity: 3,
-        price: 60000,
-        tax: 400,
-        name: "Occidental",
-        market: "KR",
-      }),
-    ];
-
-    const holdings = [
-      { ticker: "OXY", name: "Occidental", market: "KR" as const, avgPrice: 58000, quantity: 5 },
-    ];
+    const buyLog = log({
+      id: "l1",
+      type: "buy",
+      ticker: "OXY",
+      date: "2026-01-10",
+      quantity: 5,
+      price: 58000,
+      name: "Occidental",
+      market: "KR",
+    });
+    const sellLog = log({
+      id: "l2",
+      type: "sell",
+      ticker: "OXY",
+      date: "2026-01-15",
+      quantity: 3,
+      price: 60000,
+      tax: 400,
+      name: "Occidental",
+      market: "KR",
+    });
 
     renderWithClient(
-      <TradeLogDayFeed dateLabel="1월 15일" logs={logs} holdings={holdings} />
+      <TradeLogDayFeed
+        dateLabel="1월 15일"
+        logs={[sellLog]}
+        allLogs={[buyLog, sellLog]}
+      />
     );
 
     expect(screen.getByText("1월 15일 거래 내역")).toBeInTheDocument();
-    expect(screen.getByText("KO")).toBeInTheDocument();
     expect(screen.getByText("OXY")).toBeInTheDocument();
     expect(screen.getByText(/세금 400원/)).toBeInTheDocument();
   });
@@ -87,5 +86,50 @@ describe("TradeLogDayFeed", () => {
     renderWithClient(<TradeLogDayFeed dateLabel="1월 15일" logs={logs} />);
 
     expect(screen.queryByText(/세후 순손익/)).not.toBeInTheDocument();
+  });
+
+  it("매도일 이후에 추가된 매수 기록은 평균단가 계산에서 제외한다", () => {
+    const earlyBuy = log({
+      id: "l1",
+      type: "buy",
+      ticker: "OXY",
+      date: "2026-01-10",
+      quantity: 5,
+      price: 50000,
+      name: "Occidental",
+      market: "KR",
+    });
+    const sellLog = log({
+      id: "l2",
+      type: "sell",
+      ticker: "OXY",
+      date: "2026-01-15",
+      quantity: 3,
+      price: 60000,
+      name: "Occidental",
+      market: "KR",
+    });
+    const laterBuy = log({
+      id: "l3",
+      type: "buy",
+      ticker: "OXY",
+      date: "2026-01-20",
+      quantity: 5,
+      price: 100000,
+      name: "Occidental",
+      market: "KR",
+    });
+
+    renderWithClient(
+      <TradeLogDayFeed
+        dateLabel="1월 15일"
+        logs={[sellLog]}
+        allLogs={[earlyBuy, sellLog, laterBuy]}
+      />
+    );
+
+    // 매도일(1/15) 이전 매수만 반영: 평균매수가 50,000원 → 차액 +10,000원
+    expect(screen.getByText("50,000원")).toBeInTheDocument();
+    expect(screen.getByText("+10,000원")).toBeInTheDocument();
   });
 });
