@@ -43,8 +43,17 @@ export const RebalancingHistoryPage = () => {
     isFetchingNextPage,
   } = useRebalancingHistory(filters);
 
-  const records = data?.pages.flat() ?? [];
+  const records = data?.pages.flatMap((page) => page.records) ?? [];
   const groups = groupByMonth(records);
+
+  // 포트폴리오별로 가장 최근(맨 앞) 기록만 삭제 가능하게 한다.
+  // records는 executed_at DESC로 정렬돼 있으므로 portfolioId별 첫 등장이 최신 기록이다.
+  const latestRecordIdByPortfolio = new Map<string, string>();
+  for (const record of records) {
+    if (!latestRecordIdByPortfolio.has(record.portfolioId)) {
+      latestRecordIdByPortfolio.set(record.portfolioId, record.id);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -85,7 +94,11 @@ export const RebalancingHistoryPage = () => {
                 {group.label}
               </div>
               {group.records.map((record) => (
-                <RebalancingHistoryRecordCard key={record.id} record={record} />
+                <RebalancingHistoryRecordCard
+                  key={record.id}
+                  record={record}
+                  canDelete={latestRecordIdByPortfolio.get(record.portfolioId) === record.id}
+                />
               ))}
             </div>
           ))}

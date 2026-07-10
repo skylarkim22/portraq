@@ -69,17 +69,36 @@ describe("useDeleteExecutionRecord", () => {
     const { result, queryClient } = renderWithClient(() => useDeleteExecutionRecord());
 
     queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
-      pages: [[record("e1"), record("e2")]],
-      pageParams: [0],
+      pages: [{ records: [record("e1"), record("e2")], hasMore: false }],
+      pageParams: [null],
     });
 
     result.current.mutate("e1");
 
     await waitFor(() => {
       const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
-        pages: RebalancingHistoryRecord[][];
+        pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
       };
-      expect(cache.pages[0].map((r) => r.id)).toEqual(["e2"]);
+      expect(cache.pages[0].records.map((r) => r.id)).toEqual(["e2"]);
+    });
+  });
+
+  it("삭제해도 hasMore는 그대로 유지되어 더보기 노출 여부가 바뀌지 않는다", async () => {
+    fromMock.mockReturnValue(makeBuilder({ data: null, error: null }));
+    const { result, queryClient } = renderWithClient(() => useDeleteExecutionRecord());
+
+    queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
+      pages: [{ records: [record("e1"), record("e2")], hasMore: true }],
+      pageParams: [null],
+    });
+
+    result.current.mutate("e1");
+
+    await waitFor(() => {
+      const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
+        pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
+      };
+      expect(cache.pages[0].hasMore).toBe(true);
     });
   });
 
@@ -88,8 +107,8 @@ describe("useDeleteExecutionRecord", () => {
     const { result, queryClient } = renderWithClient(() => useDeleteExecutionRecord());
 
     queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
-      pages: [[record("e1"), record("e2")]],
-      pageParams: [0],
+      pages: [{ records: [record("e1"), record("e2")], hasMore: false }],
+      pageParams: [null],
     });
 
     result.current.mutate("e1");
@@ -97,9 +116,9 @@ describe("useDeleteExecutionRecord", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
-      pages: RebalancingHistoryRecord[][];
+      pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
     };
-    expect(cache.pages[0].map((r) => r.id)).toEqual(["e1", "e2"]);
+    expect(cache.pages[0].records.map((r) => r.id)).toEqual(["e1", "e2"]);
   });
 });
 
@@ -113,8 +132,8 @@ describe("useUpdateExecutionRecord", () => {
     const { result, queryClient } = renderWithClient(() => useUpdateExecutionRecord());
 
     queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
-      pages: [[record("e1")]],
-      pageParams: [0],
+      pages: [{ records: [record("e1")], hasMore: false }],
+      pageParams: [null],
     });
 
     result.current.mutate({
@@ -131,9 +150,9 @@ describe("useUpdateExecutionRecord", () => {
 
     await waitFor(() => {
       const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
-        pages: RebalancingHistoryRecord[][];
+        pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
       };
-      expect(cache.pages[0][0].actions[0]).toMatchObject({
+      expect(cache.pages[0].records[0].actions[0]).toMatchObject({
         ticker: "AAPL",
         quantity: 5,
         name: "Apple",

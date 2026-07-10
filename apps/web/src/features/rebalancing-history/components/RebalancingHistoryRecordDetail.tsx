@@ -7,11 +7,13 @@ import type { ExecutionRecordEditor } from "@/features/rebalancing-history/useEx
 type RebalancingHistoryRecordDetailProps = {
   record: RebalancingHistoryRecord;
   editor: ExecutionRecordEditor;
+  canDelete: boolean;
 };
 
 export const RebalancingHistoryRecordDetail = ({
   record,
   editor,
+  canDelete,
 }: RebalancingHistoryRecordDetailProps) => {
   const totalBuyAmount = record.actions
     .filter((action) => action.action === "buy")
@@ -79,16 +81,18 @@ export const RebalancingHistoryRecordDetail = ({
           </>
         ) : (
           <>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={editor.isDeleting}
-              onClick={editor.remove}
-              className="h-8 gap-1 border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 size={13} />
-              삭제
-            </Button>
+            {canDelete && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={editor.isDeleting}
+                onClick={editor.remove}
+                className="h-8 gap-1 border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 size={13} />
+                삭제
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

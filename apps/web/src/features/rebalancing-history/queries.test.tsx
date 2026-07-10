@@ -7,10 +7,11 @@ function makeBuilder(result: { data: unknown; error: unknown }) {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.order = vi.fn(() => builder);
-  builder.range = vi.fn(() => builder);
+  builder.limit = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
   builder.gte = vi.fn(() => builder);
   builder.lte = vi.fn(() => builder);
+  builder.or = vi.fn(() => builder);
   builder.then = (resolve: (value: unknown) => unknown) => resolve(result);
   return builder;
 }
@@ -64,7 +65,7 @@ describe("useRebalancingHistory", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    const records = result.current.data?.pages.flat();
+    const records = result.current.data?.pages.flatMap((page) => page.records);
     expect(records?.[0]).toMatchObject({
       id: "e1",
       portfolioName: "워런 버핏 전략",
@@ -87,6 +88,40 @@ describe("useRebalancingHistory", () => {
     expect(result.current.hasNextPage).toBe(false);
   });
 
+  it("정확히 페이지 크기(10)만큼만 있으면 더보기를 노출하지 않는다", async () => {
+    // 다음 페이지 존재 여부를 판단하기 위해 PAGE_SIZE+1(11)개를 요청하는데,
+    // 서버에 정확히 10개만 있으면 11번째 행이 오지 않는다.
+    const tenRows = Array.from({ length: 10 }, (_, i) => ({
+      ...baseRow,
+      id: `e${i}`,
+    }));
+    fromMock.mockReturnValue(makeBuilder({ data: tenRows, error: null }));
+
+    const { result } = renderWithClient(() =>
+      useRebalancingHistory({ portfolioId: null, dateFrom: null, dateTo: null })
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.hasNextPage).toBe(false);
+    expect(result.current.data?.pages[0].records).toHaveLength(10);
+  });
+
+  it("11개가 반환되면 마지막 1개는 잘라내고 다음 페이지가 있다고 판단한다", async () => {
+    const elevenRows = Array.from({ length: 11 }, (_, i) => ({
+      ...baseRow,
+      id: `e${i}`,
+    }));
+    fromMock.mockReturnValue(makeBuilder({ data: elevenRows, error: null }));
+
+    const { result } = renderWithClient(() =>
+      useRebalancingHistory({ portfolioId: null, dateFrom: null, dateTo: null })
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.hasNextPage).toBe(true);
+    expect(result.current.data?.pages[0].records).toHaveLength(10);
+  });
+
   it("포트폴리오가 삭제되어 조인 결과가 없으면 안내 문구로 대체한다", async () => {
     fromMock.mockReturnValue(
       makeBuilder({
@@ -100,7 +135,7 @@ describe("useRebalancingHistory", () => {
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    const records = result.current.data?.pages.flat();
+    const records = result.current.data?.pages.flatMap((page) => page.records);
     expect(records?.[0].portfolioName).toBe("삭제된 포트폴리오");
     expect(records?.[0].actions[0].name).toBe("AAPL");
   });

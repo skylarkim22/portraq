@@ -66,7 +66,7 @@ describe("RebalancingHistoryRecordCard", () => {
   });
 
   it("기본 상태에서는 상세 내역이 접혀 있다", () => {
-    render(<RebalancingHistoryRecordCard record={mockRecord} />);
+    render(<RebalancingHistoryRecordCard record={mockRecord} canDelete />);
 
     expect(screen.getByText("워런 버핏 전략")).toBeInTheDocument();
     expect(screen.getByText("매수 1종")).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("RebalancingHistoryRecordCard", () => {
 
   it("클릭하면 펼쳐지고 총 실행 금액·매도 회수금 안내를 보여준다", async () => {
     const user = userEvent.setup();
-    render(<RebalancingHistoryRecordCard record={mockRecord} />);
+    render(<RebalancingHistoryRecordCard record={mockRecord} canDelete />);
 
     await user.click(screen.getByRole("button", { name: /워런 버핏 전략/ }));
 
@@ -87,7 +87,7 @@ describe("RebalancingHistoryRecordCard", () => {
 
   it("삭제 버튼 클릭 시 확인 후 삭제 mutate를 호출한다", async () => {
     const user = userEvent.setup();
-    render(<RebalancingHistoryRecordCard record={mockRecord} />);
+    render(<RebalancingHistoryRecordCard record={mockRecord} canDelete />);
 
     await user.click(screen.getByRole("button", { name: /워런 버핏 전략/ }));
     await user.click(screen.getByRole("button", { name: /삭제/ }));
@@ -99,9 +99,19 @@ describe("RebalancingHistoryRecordCard", () => {
     );
   });
 
+  it("canDelete가 false면 삭제 버튼을 보여주지 않는다", async () => {
+    const user = userEvent.setup();
+    render(<RebalancingHistoryRecordCard record={mockRecord} canDelete={false} />);
+
+    await user.click(screen.getByRole("button", { name: /워런 버핏 전략/ }));
+
+    expect(screen.queryByRole("button", { name: /삭제/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /수정/ })).toBeInTheDocument();
+  });
+
   it("수정 모드에서 수량을 바꾸고 저장하면 재계산된 actions로 mutate를 호출한다", async () => {
     const user = userEvent.setup();
-    render(<RebalancingHistoryRecordCard record={mockRecord} />);
+    render(<RebalancingHistoryRecordCard record={mockRecord} canDelete />);
 
     await user.click(screen.getByRole("button", { name: /워런 버핏 전략/ }));
     await user.click(screen.getByRole("button", { name: /수정/ }));
