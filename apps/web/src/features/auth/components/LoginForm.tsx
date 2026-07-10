@@ -37,7 +37,7 @@ export function LoginForm() {
         <Button
           type="button"
           variant="outline"
-          className="h-auto w-full justify-center gap-2.5 rounded-[10px] border-[#FEE500] bg-[#FEE500] py-3.5 text-[15px] font-bold text-[#191919] hover:text-[#191919]"
+          className="h-auto w-full justify-center gap-2.5 rounded-[10px] border-[#FEE500] bg-[#FEE500] py-3.5 text-[15px] font-bold text-[#191919] hover:bg-[#FEE500]/90 hover:text-[#191919]"
           disabled={signIn.isPending}
           onClick={() => signIn.mutate("kakao")}
         >

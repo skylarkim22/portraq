@@ -1224,7 +1224,7 @@ export default function Home() {
                       className="btn-primary"
                       style={{
                         padding: 12,
-                        fontSize: 14,
+                        fontSize: 12,
                         display: "flex",
                         justifyContent: "center",
                       }}
