@@ -42,7 +42,7 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [exchangeRate, setExchangeRate] = useState(DEFAULT_EXCHANGE_RATE);
   const [additionalBudget, setAdditionalBudget] = useState(0);
-  const [sellThreshold, setSellThreshold] = useState(
+  const [sellThresholdPercent, setSellThresholdPercent] = useState(
     DEFAULT_SELL_THRESHOLD_PERCENT
   );
   const [overrides, setOverrides] = useState<Record<string, number>>({});
@@ -92,7 +92,7 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
       assets,
       holdings: holdingInputs,
       additionalBudget,
-      sellThresholdPercent: sellThreshold,
+      sellThresholdPercent,
     });
   }, [
     step,
@@ -102,7 +102,7 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
     prices,
     exchangeRate,
     additionalBudget,
-    sellThreshold,
+    sellThresholdPercent,
   ]);
 
   const rows = useMemo(
@@ -198,8 +198,8 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
             onExchangeRateChange={setExchangeRate}
             additionalBudget={additionalBudget}
             onBudgetChange={setAdditionalBudget}
-            sellThreshold={sellThreshold}
-            onSellThresholdChange={setSellThreshold}
+            sellThresholdPercent={sellThresholdPercent}
+            onSellThresholdPercentChange={setSellThresholdPercent}
             onPrev={() => setStep(1)}
             onNext={handleGoStep3}
           />

@@ -15,8 +15,8 @@ type RebalancingBudgetStepProps = {
   onExchangeRateChange: (rate: number) => void;
   additionalBudget: number;
   onBudgetChange: (budget: number) => void;
-  sellThreshold: number;
-  onSellThresholdChange: (threshold: number) => void;
+  sellThresholdPercent: number;
+  onSellThresholdPercentChange: (threshold: number) => void;
   onPrev: () => void;
   onNext: () => void;
 };
@@ -30,8 +30,8 @@ export const RebalancingBudgetStep = ({
   onExchangeRateChange,
   additionalBudget,
   onBudgetChange,
-  sellThreshold,
-  onSellThresholdChange,
+  sellThresholdPercent,
+  onSellThresholdPercentChange,
   onPrev,
   onNext,
 }: RebalancingBudgetStepProps) => {
@@ -42,6 +42,14 @@ export const RebalancingBudgetStep = ({
     onChange: onBudgetChange,
     min: 0,
     thousandsSeparator: true,
+  });
+
+  const sellThresholdInput = useNumericTextInput({
+    value: sellThresholdPercent,
+    onChange: onSellThresholdPercentChange,
+    min: 0,
+    max: 100,
+    decimalPlaces: 1,
   });
 
   const totalCurrentValue = assets.reduce((sum, asset) => {
@@ -62,41 +70,72 @@ export const RebalancingBudgetStep = ({
         계산합니다.
       </p>
 
-      <div>
-        <label
-          htmlFor="rebalancing-budget"
-          className="mb-2 block text-[13px] font-extrabold text-foreground"
-        >
-          이번 달 투자금
-        </label>
-        <div className="relative">
-          <Input
-            id="rebalancing-budget"
-            name="rebalancing-budget"
-            type="text"
-            inputMode="numeric"
-            value={budgetInput.text}
-            onFocus={budgetInput.handleFocus}
-            onChange={(e) => budgetInput.handleChange(e.target.value)}
-            onBlur={budgetInput.handleBlur}
-            className="h-11 pr-10 text-lg font-extrabold"
-          />
-          <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-            원
-          </span>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[13px] font-extrabold text-foreground">
+              매도 임계값
+            </span>
+            <span className="text-xs text-muted-foreground">
+              괴리가 이 값 미만이면 매도 없이 유지
+            </span>
+          </div>
+          <div className="relative">
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={sellThresholdInput.text}
+              onFocus={sellThresholdInput.handleFocus}
+              onChange={(e) => sellThresholdInput.handleChange(e.target.value)}
+              onBlur={sellThresholdInput.handleBlur}
+              className="h-11 pr-10 text-right text-lg font-extrabold"
+            />
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+              %
+            </span>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+            추가 투자금은 저비중 종목 매수에 우선 사용되며, 초과 비중 종목은
+            괴리가 임계값 이상일 때만 매도로 계산됩니다.
+          </p>
         </div>
-        <div className="mt-2 flex gap-2">
-          {BUDGET_PRESETS.map((preset) => (
-            <Button
-              key={preset}
-              type="button"
-              variant={additionalBudget === preset ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => onBudgetChange(preset)}
-            >
-              {preset / 10_000}만
-            </Button>
-          ))}
+
+        <div>
+          <label
+            htmlFor="rebalancing-budget"
+            className="mb-2 block text-[13px] font-extrabold text-foreground"
+          >
+            이번 달 투자금
+          </label>
+          <div className="relative">
+            <Input
+              id="rebalancing-budget"
+              name="rebalancing-budget"
+              type="text"
+              inputMode="numeric"
+              value={budgetInput.text}
+              onFocus={budgetInput.handleFocus}
+              onChange={(e) => budgetInput.handleChange(e.target.value)}
+              onBlur={budgetInput.handleBlur}
+              className="h-11 pr-10 text-right text-lg font-extrabold"
+            />
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+              원
+            </span>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {BUDGET_PRESETS.map((preset) => (
+              <Button
+                key={preset}
+                type="button"
+                variant={additionalBudget === preset ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => onBudgetChange(preset)}
+              >
+                {preset / 10_000}만
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -156,38 +195,6 @@ export const RebalancingBudgetStep = ({
           ))}
         </div>
       </div>
-
-      <Card className="border-border p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-[13px] font-extrabold text-foreground">
-            매도 임계값
-          </span>
-          <span className="text-xs text-muted-foreground">
-            목표 비율과의 괴리가 이 값 미만이면 매도 없이 유지
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Input
-              type="number"
-              min={0}
-              step={0.5}
-              value={sellThreshold}
-              onChange={(e) =>
-                onSellThresholdChange(Number(e.target.value) || 0)
-              }
-              className="h-10 pr-10 text-base font-extrabold"
-            />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-              %p
-            </span>
-          </div>
-        </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-          추가 투자금은 저비중 종목 매수에 우선 사용되며, 초과 비중 종목은
-          괴리가 임계값 이상일 때만 매도로 계산됩니다.
-        </p>
-      </Card>
 
       <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
         <span className="font-semibold text-muted-foreground">
