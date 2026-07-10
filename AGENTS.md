@@ -136,6 +136,7 @@ src/components/[ComponentName]/
 - `useQuery` 사용할 때는 `queryOptions`을 사용하여 데이터를 받아온다.
 - `useMutation`으로 수정(update/create/save)할 때는 낙관적 업데이트(`onMutate`에서 캐시를 미리 반영, 실패 시 `onError`에서 롤백)를 사용한다.
 - 삭제(delete) mutation은 낙관적 업데이트를 사용하지 않는다. 서버가 성공을 확인한 `onSuccess`에서만 캐시를 반영한다. 단, `invalidateQueries`로 넓게 무효화하기보다 해당 항목만 캐시에서 직접 제거하는 방식을 우선한다(무한 스크롤 쿼리 등에서 불필요한 전체 재조회를 피하기 위함).
+  - **예외**: 커서(keyset) 기반 무한 스크롤 쿼리에서, 삭제로 인해 페이지당 항목 수가 고정 페이지 크기 미만으로 줄어들어 목록을 다시 채워야 하는 경우에는 캐시 직접 제거 직후 `queryClient.refetchQueries({ queryKey, type: "active" })`로 이미 로드된 페이지를 재조회하는 것을 허용한다. 커서 기반이라 오프셋 밀림 없이 안전하게 다시 채워지기 때문이다. 단 오프셋 기반 페이지네이션에는 이 예외를 적용하지 않는다(삭제로 서버 데이터가 줄면 오프셋이 밀려 레코드를 건너뛰는 문제가 생긴다).
 
 ### 데이터 레이어 패턴
 
