@@ -52,12 +52,21 @@ export const RebalancingBudgetStep = ({
     decimalPlaces: 1,
   });
 
+  const exchangeRateInput = useNumericTextInput({
+    value: exchangeRate,
+    onChange: onExchangeRateChange,
+    min: 1,
+    thousandsSeparator: true,
+  });
+
+  const hasZeroPrice = assets.some((asset) => (prices[asset.ticker] ?? 0) <= 0);
+
   const totalCurrentValue = assets.reduce((sum, asset) => {
     const shares = holdings[asset.ticker] ?? 0;
     const price = toKrwPrice(
       prices[asset.ticker] ?? 0,
       asset.market ?? "KR",
-      exchangeRate
+      exchangeRate,
     );
     return sum + shares * price;
   }, 0);
@@ -66,8 +75,8 @@ export const RebalancingBudgetStep = ({
   return (
     <div className="flex flex-col gap-5 p-6">
       <p className="text-[13px] leading-relaxed text-muted-foreground">
-        이번 달 투자금과 종목별 현재가를 입력하면 매수·매도 주수를 자동으로
-        계산합니다.
+        이번 달 투자금은 저비중 종목 매수에 우선 사용되며, 초과 비중 종목은
+        괴리가 임계값 이상일 때만 매도로 계산됩니다.
       </p>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -94,10 +103,6 @@ export const RebalancingBudgetStep = ({
               %
             </span>
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-            추가 투자금은 저비중 종목 매수에 우선 사용되며, 초과 비중 종목은
-            괴리가 임계값 이상일 때만 매도로 계산됩니다.
-          </p>
         </div>
 
         <div>
@@ -128,11 +133,11 @@ export const RebalancingBudgetStep = ({
               <Button
                 key={preset}
                 type="button"
-                variant={additionalBudget === preset ? "secondary" : "outline"}
+                variant="outline"
                 size="sm"
-                onClick={() => onBudgetChange(preset)}
+                onClick={() => onBudgetChange(additionalBudget + preset)}
               >
-                {preset / 10_000}만
+                +{preset / 10_000}만
               </Button>
             ))}
           </div>
@@ -150,24 +155,25 @@ export const RebalancingBudgetStep = ({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <span className="whitespace-nowrap text-sm text-muted-foreground">
+              $1 =
+            </span>
             <div className="relative flex-1">
               <Input
-                type="number"
-                min={1}
-                step={1}
-                value={exchangeRate || ""}
+                type="text"
+                inputMode="numeric"
+                value={exchangeRateInput.text}
+                onFocus={exchangeRateInput.handleFocus}
                 onChange={(e) =>
-                  onExchangeRateChange(Number(e.target.value) || 0)
+                  exchangeRateInput.handleChange(e.target.value)
                 }
+                onBlur={exchangeRateInput.handleBlur}
                 className="h-10 pr-14 text-base font-extrabold"
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                원/$
+                원
               </span>
             </div>
-            <span className="whitespace-nowrap text-sm text-muted-foreground">
-              $1 = {exchangeRate.toLocaleString("ko-KR")}원
-            </span>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
             실시간 환율이 아닙니다. 매매 시점의 실제 환율을 직접 확인 후
@@ -205,11 +211,22 @@ export const RebalancingBudgetStep = ({
         </span>
       </div>
 
+      {hasZeroPrice && (
+        <p className="text-[11px] font-semibold text-destructive">
+          모든 종목의 현재가를 입력해야 계산할 수 있습니다.
+        </p>
+      )}
+
       <div className="flex gap-3">
         <Button type="button" variant="outline" onClick={onPrev}>
           이전
         </Button>
-        <Button type="button" className="flex-1" onClick={onNext}>
+        <Button
+          type="button"
+          className="flex-1"
+          onClick={onNext}
+          disabled={hasZeroPrice}
+        >
           계산하기
         </Button>
       </div>
