@@ -65,6 +65,48 @@ describe("calcRebalancingActions", () => {
     expect(result[0].action).toBe("hold");
   });
 
+  it("sellThresholdPercent를 지정하면 괴리가 임계값 미만인 초과 비중 종목은 매도 대신 유지한다", () => {
+    const result = calcRebalancingActions({
+      assets: [
+        { ticker: "AAPL", ratio: 50, shares: 0, order: 0 },
+        { ticker: "MSFT", ratio: 50, shares: 0, order: 1 },
+      ],
+      holdings: [
+        // AAPL: 목표보다 약 1%p 초과 비중, MSFT: 저비중
+        { ticker: "AAPL", shares: 52, pricePerShare: 100 },
+        { ticker: "MSFT", shares: 0, pricePerShare: 100 },
+      ],
+      additionalBudget: 5000,
+      sellThresholdPercent: 5,
+    });
+
+    const aapl = result.find((r) => r.ticker === "AAPL")!;
+    const msft = result.find((r) => r.ticker === "MSFT")!;
+
+    expect(aapl.action).toBe("hold");
+    expect(msft.action).toBe("buy");
+  });
+
+  it("sellThresholdPercent를 지정해도 괴리가 임계값 이상이면 매도로 계산한다", () => {
+    const result = calcRebalancingActions({
+      assets: [
+        { ticker: "AAPL", ratio: 50, shares: 0, order: 0 },
+        { ticker: "MSFT", ratio: 50, shares: 0, order: 1 },
+      ],
+      holdings: [
+        // AAPL: 목표보다 크게 초과 비중
+        { ticker: "AAPL", shares: 80, pricePerShare: 100 },
+        { ticker: "MSFT", shares: 0, pricePerShare: 100 },
+      ],
+      additionalBudget: 2000,
+      sellThresholdPercent: 5,
+    });
+
+    const aapl = result.find((r) => r.ticker === "AAPL")!;
+
+    expect(aapl.action).toBe("sell");
+  });
+
   it("isSlot 종목은 결과에서 제외한다", () => {
     const result = calcRebalancingActions({
       assets: [

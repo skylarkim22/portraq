@@ -15,6 +15,8 @@ type RebalancingBudgetStepProps = {
   onExchangeRateChange: (rate: number) => void;
   additionalBudget: number;
   onBudgetChange: (budget: number) => void;
+  sellThreshold: number;
+  onSellThresholdChange: (threshold: number) => void;
   onPrev: () => void;
   onNext: () => void;
 };
@@ -28,6 +30,8 @@ export const RebalancingBudgetStep = ({
   onExchangeRateChange,
   additionalBudget,
   onBudgetChange,
+  sellThreshold,
+  onSellThresholdChange,
   onPrev,
   onNext,
 }: RebalancingBudgetStepProps) => {
@@ -152,6 +156,38 @@ export const RebalancingBudgetStep = ({
           ))}
         </div>
       </div>
+
+      <Card className="border-border p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[13px] font-extrabold text-foreground">
+            매도 임계값
+          </span>
+          <span className="text-xs text-muted-foreground">
+            목표 비율과의 괴리가 이 값 미만이면 매도 없이 유지
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Input
+              type="number"
+              min={0}
+              step={0.5}
+              value={sellThreshold}
+              onChange={(e) =>
+                onSellThresholdChange(Number(e.target.value) || 0)
+              }
+              className="h-10 pr-10 text-base font-extrabold"
+            />
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
+              %p
+            </span>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          추가 투자금은 저비중 종목 매수에 우선 사용되며, 초과 비중 종목은
+          괴리가 임계값 이상일 때만 매도로 계산됩니다.
+        </p>
+      </Card>
 
       <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
         <span className="font-semibold text-muted-foreground">
