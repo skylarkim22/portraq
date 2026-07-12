@@ -5,16 +5,16 @@ import { RebalancingHistoryRecordCard } from "@/features/rebalancing-history/com
 import {
   useDeleteExecutionRecord,
   useUpdateExecutionRecord,
-} from "@/features/rebalancing-history/hooks";
+} from "@/features/rebalancing-history/mutations";
 import type { RebalancingHistoryRecord } from "@/features/rebalancing-history/queries";
 
 const updateMutateMock = vi.fn();
 const deleteMutateMock = vi.fn();
 
-vi.mock("@/features/rebalancing-history/hooks", async () => {
+vi.mock("@/features/rebalancing-history/mutations", async () => {
   const actual = await vi.importActual<
-    typeof import("@/features/rebalancing-history/hooks")
-  >("@/features/rebalancing-history/hooks");
+    typeof import("@/features/rebalancing-history/mutations")
+  >("@/features/rebalancing-history/mutations");
   return {
     ...actual,
     useUpdateExecutionRecord: vi.fn(() => ({

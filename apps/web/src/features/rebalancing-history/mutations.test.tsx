@@ -4,9 +4,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   useDeleteExecutionRecord,
   useUpdateExecutionRecord,
-} from "@/features/rebalancing-history/hooks";
+} from "@/features/rebalancing-history/mutations";
 import {
-  rebalancingHistoryKeys,
+  rebalancingHistoryQueries,
   type RebalancingHistoryFilters,
   type RebalancingHistoryRecord,
 } from "@/features/rebalancing-history/queries";
@@ -41,6 +41,8 @@ const filters: RebalancingHistoryFilters = {
   dateTo: null,
 };
 
+const listQueryKey = rebalancingHistoryQueries.list(filters).queryKey;
+
 const record = (id: string): RebalancingHistoryRecord => ({
   id,
   portfolioId: "p1",
@@ -68,7 +70,7 @@ describe("useDeleteExecutionRecord", () => {
     fromMock.mockReturnValue(makeBuilder({ data: null, error: null }));
     const { result, queryClient } = renderWithClient(() => useDeleteExecutionRecord());
 
-    queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
+    queryClient.setQueryData(listQueryKey, {
       pages: [{ records: [record("e1"), record("e2")], hasMore: false }],
       pageParams: [null],
     });
@@ -76,7 +78,7 @@ describe("useDeleteExecutionRecord", () => {
     result.current.mutate("e1");
 
     await waitFor(() => {
-      const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
+      const cache = queryClient.getQueryData(listQueryKey) as {
         pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
       };
       expect(cache.pages[0].records.map((r) => r.id)).toEqual(["e2"]);
@@ -87,7 +89,7 @@ describe("useDeleteExecutionRecord", () => {
     fromMock.mockReturnValue(makeBuilder({ data: null, error: null }));
     const { result, queryClient } = renderWithClient(() => useDeleteExecutionRecord());
 
-    queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
+    queryClient.setQueryData(listQueryKey, {
       pages: [{ records: [record("e1"), record("e2")], hasMore: true }],
       pageParams: [null],
     });
@@ -95,7 +97,7 @@ describe("useDeleteExecutionRecord", () => {
     result.current.mutate("e1");
 
     await waitFor(() => {
-      const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
+      const cache = queryClient.getQueryData(listQueryKey) as {
         pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
       };
       expect(cache.pages[0].hasMore).toBe(true);
@@ -106,7 +108,7 @@ describe("useDeleteExecutionRecord", () => {
     fromMock.mockReturnValue(makeBuilder({ data: null, error: new Error("delete failed") }));
     const { result, queryClient } = renderWithClient(() => useDeleteExecutionRecord());
 
-    queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
+    queryClient.setQueryData(listQueryKey, {
       pages: [{ records: [record("e1"), record("e2")], hasMore: false }],
       pageParams: [null],
     });
@@ -115,7 +117,7 @@ describe("useDeleteExecutionRecord", () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
+    const cache = queryClient.getQueryData(listQueryKey) as {
       pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
     };
     expect(cache.pages[0].records.map((r) => r.id)).toEqual(["e1", "e2"]);
@@ -131,7 +133,7 @@ describe("useUpdateExecutionRecord", () => {
     fromMock.mockReturnValue(makeBuilder({ data: null, error: null }));
     const { result, queryClient } = renderWithClient(() => useUpdateExecutionRecord());
 
-    queryClient.setQueryData(rebalancingHistoryKeys.list(filters), {
+    queryClient.setQueryData(listQueryKey, {
       pages: [{ records: [record("e1")], hasMore: false }],
       pageParams: [null],
     });
@@ -149,7 +151,7 @@ describe("useUpdateExecutionRecord", () => {
     });
 
     await waitFor(() => {
-      const cache = queryClient.getQueryData(rebalancingHistoryKeys.list(filters)) as {
+      const cache = queryClient.getQueryData(listQueryKey) as {
         pages: { records: RebalancingHistoryRecord[]; hasMore: boolean }[];
       };
       expect(cache.pages[0].records[0].actions[0]).toMatchObject({
