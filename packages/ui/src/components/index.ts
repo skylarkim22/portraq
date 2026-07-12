@@ -33,5 +33,8 @@ export {
 export { ActionChip } from "./ActionChip";
 export type { ActionChipProps } from "./ActionChip";
 
+export { AssetColorBadge } from "./AssetColorBadge";
+export type { AssetColorBadgeProps } from "./AssetColorBadge";
+
 export { InfoPopover } from "./InfoPopover";
 export type { InfoPopoverProps } from "./InfoPopover";

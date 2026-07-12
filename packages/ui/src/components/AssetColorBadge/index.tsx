@@ -1,10 +1,10 @@
 import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
 
-type AssetColorBadgeProps = {
+export interface AssetColorBadgeProps {
   name?: string;
   ticker: string;
   color?: string;
-};
+}
 
 export const AssetColorBadge = ({ name, ticker, color }: AssetColorBadgeProps) => {
   const resolvedColor = color ?? DEFAULT_ASSET_COLOR;

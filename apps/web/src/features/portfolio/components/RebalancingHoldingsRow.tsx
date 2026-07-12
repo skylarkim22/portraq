@@ -1,7 +1,6 @@
-import { Card, Input } from "@portraq/ui";
+import { AssetColorBadge, Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-import { AssetColorBadge } from "@/components/AssetColorBadge";
 
 type RebalancingHoldingsRowProps = {
   asset: PortfolioAsset;
