@@ -2,13 +2,17 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SellTradeModal } from "@/features/trade-log/components/SellTradeModal";
-import { useTradeLogs, useCreateTradeLog } from "@/features/trade-log/hooks";
+import { useTradeLogs } from "@/features/trade-log/hooks";
+import { useCreateTradeLog } from "@/features/trade-log/mutations";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 const mutateMock = vi.fn();
 
 vi.mock("@/features/trade-log/hooks", () => ({
   useTradeLogs: vi.fn(),
+}));
+
+vi.mock("@/features/trade-log/mutations", () => ({
   useCreateTradeLog: vi.fn(),
 }));
 

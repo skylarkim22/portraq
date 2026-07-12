@@ -2,14 +2,14 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TradeLogCard } from "@/features/trade-log/components/TradeLogCard";
-import { useDeleteTradeLog } from "@/features/trade-log/hooks";
+import { useDeleteTradeLog } from "@/features/trade-log/mutations";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 const deleteMutateMock = vi.fn();
 
-vi.mock("@/features/trade-log/hooks", async () => {
-  const actual = await vi.importActual<typeof import("@/features/trade-log/hooks")>(
-    "@/features/trade-log/hooks"
+vi.mock("@/features/trade-log/mutations", async () => {
+  const actual = await vi.importActual<typeof import("@/features/trade-log/mutations")>(
+    "@/features/trade-log/mutations"
   );
   return {
     ...actual,

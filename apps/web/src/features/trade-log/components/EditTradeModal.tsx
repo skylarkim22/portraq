@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-import { useUpdateTradeLog } from "@/features/trade-log/hooks";
+import { useUpdateTradeLog } from "@/features/trade-log/mutations";
 import { MEMO_MIN_LENGTH } from "@/features/trade-log/constants";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 

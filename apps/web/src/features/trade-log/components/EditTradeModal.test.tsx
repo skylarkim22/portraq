@@ -2,12 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { EditTradeModal } from "@/features/trade-log/components/EditTradeModal";
-import { useUpdateTradeLog } from "@/features/trade-log/hooks";
+import { useUpdateTradeLog } from "@/features/trade-log/mutations";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 const updateMutateMock = vi.fn();
 
-vi.mock("@/features/trade-log/hooks", () => ({
+vi.mock("@/features/trade-log/mutations", () => ({
   useUpdateTradeLog: vi.fn(() => ({ mutate: updateMutateMock, isPending: false })),
 }));
 
