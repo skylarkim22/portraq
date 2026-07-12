@@ -41,6 +41,13 @@ describe("stockSearchQueryOptions", () => {
     expect(builder.or).toHaveBeenCalledWith("ticker.ilike.abcde%,name.ilike.%abcde%");
   });
 
+  it("*는 PostgREST가 %의 별칭으로 취급하므로 함께 제거한다", async () => {
+    await stockSearchQueryOptions("a*b", "ALL").queryFn!({} as never);
+
+    const builder = fromMock.mock.results[0]?.value as { or: ReturnType<typeof vi.fn> };
+    expect(builder.or).toHaveBeenCalledWith("ticker.ilike.ab%,name.ilike.%ab%");
+  });
+
   it("검색어가 비어있으면 쿼리를 호출하지 않고 빈 배열을 반환한다", async () => {
     const result = await stockSearchQueryOptions("   ", "ALL").queryFn!({} as never);
 
