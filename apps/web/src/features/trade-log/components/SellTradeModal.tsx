@@ -4,11 +4,11 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
+import { useTradeLogs } from "@/features/trade-log/hooks";
 import {
-  useTradeLogs,
   useCreateTradeLog,
   type CreateTradeLogItem,
-} from "@/features/trade-log/hooks";
+} from "@/features/trade-log/mutations";
 import { deriveHoldings, type Holding } from "@/features/trade-log/deriveHoldings";
 import {
   SellTradeRow,

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { ActionChip } from "@portraq/ui";
 import { toKrwPrice } from "@portraq/lib/utils";
 import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
-import { useDeleteTradeLog } from "@/features/trade-log/hooks";
+import { useDeleteTradeLog } from "@/features/trade-log/mutations";
 import { EditTradeModal } from "@/features/trade-log/components/EditTradeModal";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 

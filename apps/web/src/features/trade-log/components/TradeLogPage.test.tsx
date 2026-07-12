@@ -19,9 +19,12 @@ vi.mock("@/features/trade-log/hooks", async () => {
   return {
     ...actual,
     useTradeLogs: vi.fn(),
-    useCreateTradeLog: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   };
 });
+
+vi.mock("@/features/trade-log/mutations", () => ({
+  useCreateTradeLog: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+}));
 
 const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
   id: "l1",
