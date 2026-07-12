@@ -1,0 +1,146 @@
+import { renderHook, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  useSavePortfolio,
+  useCreatePortfolio,
+  useDeletePortfolio,
+  useRecordRebalancingExecution,
+} from "@/features/portfolio/mutations";
+import type { PortfolioAsset } from "@portraq/lib/types";
+
+function makeBuilder(result: { data: unknown; error: unknown }) {
+  const builder: Record<string, unknown> = {};
+  builder.select = vi.fn(() => builder);
+  builder.eq = vi.fn(() => builder);
+  builder.delete = vi.fn(() => builder);
+  builder.insert = vi.fn(() => builder);
+  builder.single = vi.fn(() => Promise.resolve(result));
+  return builder;
+}
+
+const fromMock = vi.fn();
+const rpcMock = vi.fn();
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({ from: fromMock, rpc: rpcMock }),
+}));
+
+function renderWithClient<T>(callback: () => T) {
+  const queryClient = new QueryClient();
+  const view = renderHook(callback, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
+  });
+  return { ...view, queryClient };
+}
+
+describe("useSavePortfolio", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("save_portfolio RPC를 이름/메모와 isSlot 제외한 종목으로 호출한다", async () => {
+    const { result } = renderWithClient(() => useSavePortfolio());
+
+    const assets: PortfolioAsset[] = [
+      { ticker: "AAPL", ratio: 70, shares: 0, order: 0 },
+      { ticker: "SLOT", ratio: 30, shares: 0, order: 1, isSlot: true },
+    ];
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        portfolioId: "p1",
+        name: "테스트",
+        memo: null,
+        assets,
+      });
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("save_portfolio", {
+      p_portfolio_id: "p1",
+      p_name: "테스트",
+      p_memo: null,
+      p_assets: [expect.objectContaining({ ticker: "AAPL", ratio: 70 })],
+    });
+  });
+});
+
+describe("useRecordRebalancingExecution", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("record_rebalancing_execution RPC를 확정된 값으로 호출한다", async () => {
+    const { result } = renderWithClient(() =>
+      useRecordRebalancingExecution("p1")
+    );
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        totalBudget: 500000,
+        actions: [
+          { ticker: "AAPL", action: "buy", quantity: 2, pricePerShare: 200 },
+        ],
+        updatedAssets: [{ ticker: "AAPL", shares: 7, currentPrice: 200 }],
+        snapshotAssets: [
+          { ticker: "AAPL", name: "Apple", ratio: 100, shares: 7, pricePerShare: 200, color: "#000" },
+        ],
+      });
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("record_rebalancing_execution", {
+      p_portfolio_id: "p1",
+      p_total_budget: 500000,
+      p_actions: [expect.objectContaining({ ticker: "AAPL", action: "buy" })],
+      p_updated_assets: [expect.objectContaining({ ticker: "AAPL", shares: 7 })],
+      p_snapshot_assets: [expect.objectContaining({ ticker: "AAPL", shares: 7 })],
+    });
+  });
+});
+
+describe("useCreatePortfolio", () => {
+  beforeEach(() => {
+    fromMock.mockReset();
+  });
+
+  it("생성된 포트폴리오의 id를 반환한다", async () => {
+    fromMock.mockReturnValue(
+      makeBuilder({ data: { id: "new-id" }, error: null })
+    );
+
+    const { result } = renderWithClient(() => useCreatePortfolio());
+
+    let id: string | undefined;
+    await act(async () => {
+      id = await result.current.mutateAsync({
+        userId: "u1",
+        name: "새 포트폴리오",
+      });
+    });
+
+    expect(id).toBe("new-id");
+  });
+});
+
+describe("useDeletePortfolio", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("delete_portfolio RPC를 해당 id로 호출한다", async () => {
+    const { result } = renderWithClient(() => useDeletePortfolio());
+
+    await act(async () => {
+      await result.current.mutateAsync("p1");
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("delete_portfolio", {
+      p_portfolio_id: "p1",
+    });
+  });
+});

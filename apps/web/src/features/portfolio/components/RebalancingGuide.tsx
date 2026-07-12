@@ -10,11 +10,8 @@ import {
   type RebalancingAction,
 } from "@portraq/lib/utils";
 import { ErrorState } from "@/components/ErrorState";
-import {
-  useLatestSnapshot,
-  usePortfolio,
-  useRecordRebalancingExecution,
-} from "@/features/portfolio/hooks";
+import { useLatestSnapshot, usePortfolio } from "@/features/portfolio/hooks";
+import { useRecordRebalancingExecution } from "@/features/portfolio/mutations";
 import { buildRebalancingExecutionPayload } from "@/features/portfolio/buildRebalancingExecutionPayload";
 import { deriveActionRows } from "@/features/portfolio/deriveActionRows";
 import { RebalancingGuideHeader } from "@/features/portfolio/components/RebalancingGuideHeader";

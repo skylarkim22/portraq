@@ -10,12 +10,12 @@ import type { Asset, PortfolioAsset } from "@portraq/lib/types";
 import { resolveColor } from "@portraq/lib/utils";
 import { ErrorState } from "@/components/ErrorState";
 import { useUser } from "@/features/auth/hooks";
+import { usePortfolio } from "@/features/portfolio/hooks";
 import {
   useCreatePortfolio,
   useDeletePortfolio,
-  usePortfolio,
   useSavePortfolio,
-} from "@/features/portfolio/hooks";
+} from "@/features/portfolio/mutations";
 import { useTemplate } from "@/features/templates/hooks";
 import { toPortfolioAssets } from "@/features/templates/toPortfolioAssets";
 import { AssetList } from "@/features/portfolio/components/AssetList";
