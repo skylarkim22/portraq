@@ -4,10 +4,9 @@ import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
-import { Card, Input } from "@portraq/ui";
+import { AssetColorBadge, Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-import { AssetColorBadge } from "@/components/AssetColorBadge";
 
 type AssetRowProps = {
   asset: PortfolioAsset;

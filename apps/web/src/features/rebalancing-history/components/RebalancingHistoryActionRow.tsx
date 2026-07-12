@@ -1,6 +1,5 @@
-import { ActionChip, Input } from "@portraq/ui";
+import { ActionChip, AssetColorBadge, Input } from "@portraq/ui";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-import { AssetColorBadge } from "@/components/AssetColorBadge";
 import type { EnrichedActionItem } from "@/features/rebalancing-history/queries";
 
 type RebalancingHistoryActionRowProps = {

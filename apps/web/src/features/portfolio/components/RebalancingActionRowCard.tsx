@@ -1,6 +1,5 @@
-import { ActionChip, Card, Input } from "@portraq/ui";
+import { ActionChip, AssetColorBadge, Card, Input } from "@portraq/ui";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-import { AssetColorBadge } from "@/components/AssetColorBadge";
 import type { RebalancingActionRow } from "@/features/portfolio/deriveActionRows";
 
 type RebalancingActionRowCardProps = {
