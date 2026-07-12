@@ -16,10 +16,13 @@ vi.mock("@/features/rebalancing-history/hooks", async () => {
   return {
     ...actual,
     useRebalancingHistory: vi.fn(),
-    useUpdateExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
-    useDeleteExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   };
 });
+
+vi.mock("@/features/rebalancing-history/mutations", () => ({
+  useUpdateExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+  useDeleteExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+}));
 
 const record = (id: string, executedAt: string): RebalancingHistoryRecord => ({
   id,
