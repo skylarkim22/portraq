@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Toaster } from "sonner";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 
@@ -46,16 +45,6 @@ export default function RootLayout({
     <html lang="ko" className={`${pretendard.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
-        <Toaster
-          position="bottom-center"
-          toastOptions={{
-            unstyled: true,
-            classNames: {
-              toast:
-                "flex items-center gap-2 rounded-xl bg-[#1c1c1e] px-5 py-3 text-[13px] font-semibold text-white shadow-lg",
-            },
-          }}
-        />
       </body>
     </html>
   );
