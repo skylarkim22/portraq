@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { stockSearchQueryOptions, type MarketFilter } from "@/features/stocks/queries";
+import { stockQueries, type MarketFilter } from "@/features/stocks/queries";
 import {
   readRecentSearches,
   withRecentSearch,
@@ -20,7 +20,7 @@ export function useDebouncedValue<T>(value: T, delayMs: number) {
 }
 
 export function useStockSearch(query: string, market: MarketFilter) {
-  return useQuery(stockSearchQueryOptions(query, market));
+  return useQuery(stockQueries.search(query, market));
 }
 
 export function useRecentSearches() {
