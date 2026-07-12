@@ -41,6 +41,9 @@ vi.mock("@/features/portfolio/hooks", () => ({
     isLoading: false,
     isError: false,
   })),
+}));
+
+vi.mock("@/features/portfolio/mutations", () => ({
   useCreatePortfolio: vi.fn(() => ({
     mutateAsync: createMutateAsyncMock,
     isPending: false,

@@ -2,11 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RebalancingGuide } from "@/features/portfolio/components/RebalancingGuide";
-import {
-  usePortfolio,
-  useLatestSnapshot,
-  useRecordRebalancingExecution,
-} from "@/features/portfolio/hooks";
+import { usePortfolio, useLatestSnapshot } from "@/features/portfolio/hooks";
+import { useRecordRebalancingExecution } from "@/features/portfolio/mutations";
 import type { Portfolio } from "@portraq/lib/types";
 
 const krPortfolio: Portfolio = {
@@ -61,6 +58,9 @@ vi.mock("@/features/portfolio/hooks", () => ({
     isError: false,
   })),
   useLatestSnapshot: vi.fn(() => ({ data: [] })),
+}));
+
+vi.mock("@/features/portfolio/mutations", () => ({
   useRecordRebalancingExecution: vi.fn(() => ({
     mutate: mutateMock,
     isPending: false,
