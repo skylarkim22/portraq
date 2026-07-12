@@ -7,7 +7,8 @@ import { Button } from "@portraq/ui";
 import Logo from "@/components/Logo";
 import { NavList } from "@/components/NavList";
 import { UserFooter } from "@/components/UserFooter";
-import { useSignOut, useUser } from "@/features/auth/hooks";
+import { useUser } from "@/features/auth/hooks";
+import { useSignOut } from "@/features/auth/mutations";
 
 export const Sidebar = () => {
   const pathname = usePathname();

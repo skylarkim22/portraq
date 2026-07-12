@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card } from "@portraq/ui";
-import { useSignInWithOAuth } from "@/features/auth/hooks";
+import { useSignInWithOAuth } from "@/features/auth/mutations";
 
 export function LoginForm() {
   const signIn = useSignInWithOAuth();
