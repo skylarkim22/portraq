@@ -143,99 +143,112 @@ src/components/[ComponentName]/
 Supabase 호출은 반드시 `features/[feature]/queries.ts`에 `queryOptions`으로 정의한다.
 컴포넌트에서 Supabase를 직접 호출하지 않는다.
 
-`queries.ts` 파일은 **Query Key Factory → queryOptions** 순서로 작성한다.
+`queries.ts`는 **Query Key와 queryOptions를 하나의 객체**로 묶어서 작성한다.
+`all`은 키 배열만 반환하고, 그 외 항목은 `all()`을 이어붙인 키로 `queryOptions`(또는
+무한 스크롤이면 `infiniteQueryOptions`)를 반환한다.
 
 ```ts
 // features/portfolio/queries.ts
 import { queryOptions } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 
-// 1. Query Key Factory — 키를 한 곳에서 계층 구조로 관리
-export const portfolioKeys = {
-  all: ['portfolios'] as const,
-  lists: () => [...portfolioKeys.all, 'list'] as const,
-  detail: (id: string) => [...portfolioKeys.all, 'detail', id] as const,
-  snapshots: (id: string) => [...portfolioKeys.all, 'snapshots', id] as const,
+export const portfolioQueries = {
+  all: () => ['portfolios'] as const,
+
+  lists: () =>
+    queryOptions({
+      queryKey: [...portfolioQueries.all(), 'list'] as const,
+      queryFn: async () => {
+        const { data, error } = await createClient()
+          .from('portfolios').select('*')
+        if (error) throw error
+        return data
+      },
+      staleTime: 1000 * 60,
+    }),
+
+  detail: (id: string) =>
+    queryOptions({
+      queryKey: [...portfolioQueries.all(), 'detail', id] as const,
+      queryFn: async () => {
+        const { data, error } = await createClient()
+          .from('portfolios')
+          .select('*, portfolio_assets(*)')
+          .eq('id', id)
+          .single()
+        if (error) throw error
+        return data
+      },
+    }),
 }
-
-// 2. queryOptions — 키 팩토리에서 키를 가져와 정의
-export const portfolioListQueryOptions = queryOptions({
-  queryKey: portfolioKeys.lists(),
-  queryFn: async () => {
-    const { data, error } = await createClient()
-      .from('portfolios').select('*')
-    if (error) throw error
-    return data
-  },
-  staleTime: 1000 * 60,
-})
-
-export const portfolioQueryOptions = (id: string) =>
-  queryOptions({
-    queryKey: portfolioKeys.detail(id),
-    queryFn: async () => {
-      const { data, error } = await createClient()
-        .from('portfolios')
-        .select('*, portfolio_assets(*)')
-        .eq('id', id)
-        .single()
-      if (error) throw error
-      return data
-    },
-  })
 ```
+
+`hooks.ts`에는 `useQuery`/`useInfiniteQuery` 훅만 둔다. `useMutation` 훅은 같은 피처 안의
+별도 `mutations.ts`로 분리한다.
 
 ```ts
 // features/portfolio/hooks.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { portfolioListQueryOptions, portfolioQueryOptions, portfolioKeys } from '@/features/portfolio/queries'
+import { useQuery } from '@tanstack/react-query'
+import { portfolioQueries } from '@/features/portfolio/queries'
 
-export function usePortfolioList() {
-  return useQuery(portfolioListQueryOptions)
-}
+export const usePortfolioList = () => useQuery(portfolioQueries.lists())
+export const usePortfolio = (id: string) => useQuery(portfolioQueries.detail(id))
+```
 
-export function usePortfolio(id: string) {
-  return useQuery(portfolioQueryOptions(id))
-}
+```ts
+// features/portfolio/mutations.ts
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
+import { portfolioQueries } from '@/features/portfolio/queries'
 
-export function useSavePortfolio() {
+export const useSavePortfolio = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (payload) => { /* Supabase upsert */ },
     onMutate: async (newItem) => {
-      await queryClient.cancelQueries({ queryKey: portfolioKeys.all })
-      const prev = queryClient.getQueryData(portfolioListQueryOptions.queryKey)
-      queryClient.setQueryData(portfolioListQueryOptions.queryKey, (old: any[]) => [...old, newItem])
+      await queryClient.cancelQueries({ queryKey: portfolioQueries.all() })
+      const listQueryKey = portfolioQueries.lists().queryKey
+      const prev = queryClient.getQueryData(listQueryKey)
+      queryClient.setQueryData(listQueryKey, (old: any[]) => [...old, newItem])
       return { prev }
     },
-    onError: (_, __, ctx) =>
-      queryClient.setQueryData(portfolioListQueryOptions.queryKey, ctx?.prev),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: portfolioKeys.all }),
+    onError: (_, __, ctx) => {
+      queryClient.setQueryData(portfolioQueries.lists().queryKey, ctx?.prev)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: portfolioQueries.all() })
+    },
   })
 }
 ```
 
-### Query Key Factory 무효화 범위
+캐시를 직접 조작할 때, `all()`처럼 키만 반환하는 함수는 그대로 `queryKey`로 쓰고,
+`lists()`/`detail(id)`처럼 `queryOptions`를 반환하는 함수는 `.queryKey`를 붙여 꺼낸다
+(예: `portfolioQueries.detail(id).queryKey`).
+
+### Query 무효화 범위
 
 ```ts
 // 포트폴리오 전체 무효화 (목록 + 상세 + 스냅샷)
-queryClient.invalidateQueries({ queryKey: portfolioKeys.all })
+queryClient.invalidateQueries({ queryKey: portfolioQueries.all() })
 
 // 목록만 무효화
-queryClient.invalidateQueries({ queryKey: portfolioKeys.lists() })
+queryClient.invalidateQueries({ queryKey: portfolioQueries.lists().queryKey })
 
 // 특정 포트폴리오 상세만 무효화
-queryClient.invalidateQueries({ queryKey: portfolioKeys.detail(id) })
+queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey })
 ```
 
-### 피처별 Key Factory 목록
+### 피처별 Query 객체 목록
 
-| 피처 | export 이름 | `all` 키 |
+| 피처 | export 이름 | `all()` 키 |
 |------|-------------|----------|
-| portfolio | `portfolioKeys` | `['portfolios']` |
-| stocks | `stockKeys` | `['stocks']` |
-| trade-log | `tradeLogKeys` | `['trade-logs']` |
+| auth | `authQueries` | `['auth']` |
+| portfolio | `portfolioQueries` | `['portfolios']` |
+| rebalancing-history | `rebalancingHistoryQueries` | `['rebalancing-history']` |
+| stocks | `stockQueries` | `['stocks']` |
+| templates | `templateQueries` | `['templates']` |
+| trade-log | `tradeLogQueries` | `['trade-logs']` |
 
 ## Supabase 데이터베이스
 
