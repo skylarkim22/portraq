@@ -10,31 +10,27 @@ export const stockKeys = {
     [...stockKeys.all, "search", query, market] as const,
 };
 
-// assets.name/ticker의 GIN(to_tsvector('simple', ...)) 인덱스를 타도록 접두어
-// tsquery로 변환한다. 영숫자·한글 외 문자는 제거해 tsquery/PostgREST 구문을
-// 깨뜨릴 수 있는 입력(쉼표, 괄호 등)을 함께 차단한다.
-function toPrefixTsQuery(input: string) {
-  return input
-    .trim()
-    .split(/\s+/)
-    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ""))
-    .filter(Boolean)
-    .map((word) => `${word}:*`)
-    .join(" & ");
-}
+// ilike는 대소문자 구분 없이 매칭한다. 티커는 앞에서부터(접두어)만, 종목명은
+// 단어 중간에 포함된 검색어까지 매칭한다. PostgREST or() 구문(쉼표·괄호)이나
+// LIKE 와일드카드로 오인될 문자는 제거해 필터 구문이 깨지거나 의도치 않은
+// 와일드카드로 동작하지 않게 한다. PostgREST는 URL에 쓸 수 없는 %의 대체
+// 표기로 *도 %와 동일하게 취급하므로 함께 제거한다.
+const toIlikeSearchTerm = (input: string) => {
+  return input.trim().replace(/[%_,()*]/g, "");
+};
 
 export const stockSearchQueryOptions = (query: string, market: MarketFilter) =>
   queryOptions({
     queryKey: stockKeys.search(query, market),
     queryFn: async (): Promise<Asset[]> => {
-      const tsQuery = toPrefixTsQuery(query);
-      if (!tsQuery) return [];
+      const term = toIlikeSearchTerm(query);
+      if (!term) return [];
 
       let request = createClient()
         .from("assets")
         .select("ticker, name, market, color, is_active")
         .eq("is_active", true)
-        .or(`ticker.fts(simple).${tsQuery},name.fts(simple).${tsQuery}`)
+        .or(`ticker.ilike.${term}%,name.ilike.%${term}%`)
         .order("ticker")
         .limit(20);
 

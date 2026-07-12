@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
 import { Button, Card, Input } from "@portraq/ui";
 import type { Asset, Market } from "@portraq/lib/types";
 import { generateCustomTicker, getTickerColor } from "@portraq/lib/utils";
-import { useDebouncedValue, useStockSearch } from "@/features/stocks/hooks";
+import { useDebouncedValue, useRecentSearches, useStockSearch } from "@/features/stocks/hooks";
 import { MARKET_TABS } from "@/features/stocks/constants";
 import type { MarketFilter } from "@/features/stocks/queries";
 
@@ -29,24 +29,53 @@ export function StockSearch({
   const [market, setMarket] = useState<MarketFilter>("ALL");
   const [manualEntry, setManualEntry] = useState(false);
   const [manualMarket, setManualMarket] = useState<Market>("KR");
+  const [focused, setFocused] = useState(false);
   const debouncedQuery = useDebouncedValue(query, 300);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: results, isFetching } = useStockSearch(
     manualEntry ? "" : debouncedQuery,
     market
   );
+  const { recentSearches, addRecentSearch } = useRecentSearches();
 
-  const showDropdown = query.trim().length > 0;
+  const showRecent = query.trim().length === 0 && focused && recentSearches.length > 0;
+  const showDropdown = query.trim().length > 0 || showRecent;
   const noResults = !isFetching && (results?.length ?? 0) === 0;
   const nextCustomTicker = generateCustomTicker(existingTickers);
+
+  useEffect(() => {
+    if (!focused) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setFocused(false);
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFocused(false);
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [focused]);
 
   const handleQueryChange = (value: string) => {
     setQuery(value);
     setManualEntry(false);
   };
 
-  const handleSelect = (asset: Asset) => {
+  const commitSelection = (asset: Asset) => {
+    addRecentSearch({
+      ticker: asset.ticker,
+      name: asset.name,
+      market: asset.market,
+      color: asset.color,
+    });
     onSelect(asset);
+    setFocused(false);
     if (clearQueryOnSelect) setQuery("");
   };
 
@@ -56,24 +85,40 @@ export function StockSearch({
 
     const ticker = nextCustomTicker;
 
-    onSelect({
+    commitSelection({
       ticker,
       name,
       market: manualMarket,
       color: getTickerColor(ticker),
       isActive: true,
     });
-    setQuery("");
     setManualEntry(false);
   };
 
   return (
-    <div className="relative w-full">
+    <div ref={containerRef} className="relative w-full">
+      <div className="mb-2 flex gap-1">
+        {MARKET_TABS.map((tab) => (
+          <Button
+            key={tab.value}
+            type="button"
+            size="sm"
+            className="gap-1"
+            variant={market === tab.value ? "default" : "outline"}
+            onClick={() => setMarket(tab.value)}
+          >
+            <span aria-hidden="true">{tab.icon}</span>
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
+          onFocus={() => setFocused(true)}
           placeholder="티커 또는 종목명 검색 (예: AAPL, 삼성전자)"
           className="bg-muted pl-9 pr-9"
         />
@@ -89,27 +134,42 @@ export function StockSearch({
         )}
       </div>
 
-      <div className="mt-2 flex gap-1">
-        {MARKET_TABS.map((tab) => (
-          <Button
-            key={tab.value}
-            type="button"
-            size="sm"
-            variant={market === tab.value ? "default" : "outline"}
-            onClick={() => setMarket(tab.value)}
-          >
-            {tab.label}
-          </Button>
-        ))}
-      </div>
-
       {showDropdown && (
         <Card className="absolute z-10 mt-2 max-h-80 w-full divide-y divide-border overflow-y-auto p-0">
-          {isFetching && (
+          {showRecent && (
+            <>
+              <p className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                최근 검색
+              </p>
+              {recentSearches.map((asset) => (
+                <button
+                  key={asset.ticker}
+                  type="button"
+                  onClick={() => commitSelection({ ...asset, isActive: true })}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted"
+                >
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    style={{ backgroundColor: asset.color }}
+                  >
+                    {asset.name.slice(0, 1)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-bold">{asset.name}</span>
+                    <span className="block text-sm text-muted-foreground">
+                      {asset.ticker} · {asset.market}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {!showRecent && isFetching && (
             <p className="px-3 py-2 text-sm text-muted-foreground">검색 중...</p>
           )}
 
-          {noResults && !manualEntry && (
+          {!showRecent && noResults && !manualEntry && (
             <div className="flex flex-col gap-2 p-3">
               <p className="text-sm text-muted-foreground">
                 검색 결과가 없습니다.
@@ -127,7 +187,7 @@ export function StockSearch({
             </div>
           )}
 
-          {noResults && manualEntry && (
+          {!showRecent && noResults && manualEntry && (
             <div className="flex flex-col gap-2 p-3">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">
@@ -173,13 +233,14 @@ export function StockSearch({
             </div>
           )}
 
-          {!isFetching &&
+          {!showRecent &&
+            !isFetching &&
             !noResults &&
             results?.map((asset) => (
               <button
                 key={asset.ticker}
                 type="button"
-                onClick={() => handleSelect(asset)}
+                onClick={() => commitSelection(asset)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted"
               >
                 <span
