@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { templateListQueryOptions } from "@/features/templates/queries";
+import { templateQueries } from "@/features/templates/queries";
 
 export const useTemplateList = () => {
-  return useQuery(templateListQueryOptions());
+  return useQuery(templateQueries.lists());
 };
 
 export const useTemplate = (id: string | null) => {
   return useQuery({
-    ...templateListQueryOptions(),
+    ...templateQueries.lists(),
     enabled: id !== null,
     select: (templates) => templates.find((template) => template.id === id),
   });
