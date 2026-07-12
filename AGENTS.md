@@ -259,10 +259,6 @@ queryClient.invalidateQueries({ queryKey: portfolioKeys.detail(id) })
 - `ticker` TEXT PK, `name` TEXT, `market` TEXT (KR/US/ETF), `created_at`, `updated_at`
 - 데이터: KR 2,768개 / ETF 1,145개 / US 4,246개 (총 8,159개, 2026-06-24 기준)
 
-**recent_searches** — 사용자 최근 검색 기록
-- `id` UUID PK, `user_id` UUID (auth.users FK), `ticker` TEXT (stocks FK), `searched_at` TIMESTAMPTZ
-- `(user_id, ticker)` UNIQUE 제약
-
 ### 공통 사항
 - 모든 테이블 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근
 - `stocks`는 누구나 읽기 가능 (SELECT), 쓰기 차단
