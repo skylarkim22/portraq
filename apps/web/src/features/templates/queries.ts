@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { PortfolioTemplate, TemplateAsset } from "@portraq/lib/types";
-import { createClient } from "@/lib/supabase/client";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
+import type { SupabaseClientGetter } from "@/lib/supabase/types";
 
 const DISPLAY_ORDER = [
   "ray-dalio-all-weather",
@@ -13,11 +14,12 @@ const DISPLAY_ORDER = [
 export const templateQueries = {
   all: () => ["templates"] as const,
 
-  lists: () =>
+  lists: (getClient: SupabaseClientGetter = createBrowserClient) =>
     queryOptions({
       queryKey: [...templateQueries.all(), "list"] as const,
       queryFn: async (): Promise<PortfolioTemplate[]> => {
-        const { data, error } = await createClient()
+        const supabase = await getClient();
+        const { data, error } = await supabase
           .from("portfolio_templates")
           .select(
             "id, name, strategy, market, cagr, mdd, description, source_date, assets"
