@@ -226,6 +226,73 @@ export const useSavePortfolio = () => {
 `lists()`/`detail(id)`처럼 `queryOptions`를 반환하는 함수는 `.queryKey`를 붙여 꺼낸다
 (예: `portfolioQueries.detail(id).queryKey`).
 
+### 서버 프리페치(SSR) 패턴
+
+Server Component에서 미리 데이터를 가져와 클라이언트에 그대로 넘겨줘야 하는
+라우트(현재 `/home`, `/portfolio`, `/portfolio/[id]`, `/rebalancing-history`,
+`/templates`)는 아래 패턴을 따른다.
+
+`queries.ts`의 해당 항목은 Supabase 클라이언트를 주입받도록
+`getClient: SupabaseClientGetter = createClient`(브라우저 클라이언트가 기본값)
+파라미터를 받는다. `SupabaseClientGetter`는 `@/lib/supabase/types`에 정의돼 있으며,
+브라우저용 `createClient`(동기)와 서버용 `createClient`(비동기, `cookies()` 사용)
+양쪽을 모두 받을 수 있도록 `() => SupabaseClient | Promise<SupabaseClient>` 타입이다.
+
+```ts
+// features/portfolio/queries.ts
+import { createClient as createBrowserClient } from '@/lib/supabase/client'
+import type { SupabaseClientGetter } from '@/lib/supabase/types'
+
+export const portfolioQueries = {
+  all: () => ['portfolios'] as const,
+
+  lists: (getClient: SupabaseClientGetter = createBrowserClient) =>
+    queryOptions({
+      queryKey: [...portfolioQueries.all(), 'list'] as const,
+      queryFn: async () => {
+        const supabase = await getClient()
+        const { data, error } = await supabase.from('portfolios').select('*')
+        if (error) throw error
+        return data
+      },
+    }),
+}
+```
+
+라우트의 `page.tsx`는 async Server Component로 작성해 `getQueryClient()`
+(`@/lib/getQueryClient`, 서버에서는 매 요청마다 새 인스턴스를 만들고 브라우저에서는
+싱글턴을 재사용)로 얻은 `QueryClient`에 서버용 `createClient`(`@/lib/supabase/server`)를
+주입해 prefetch한 뒤 `<HydrationBoundary>`로 감싼다. 같은 `queryFn`이 클라이언트의
+`useQuery`/`useInfiniteQuery`에서는 인자 없이 호출돼 브라우저 클라이언트 기본값을
+쓰므로 `queryKey`가 항상 동일하게 유지되고 hydration이 정확히 매칭된다.
+
+```ts
+// app/(app)/portfolio/page.tsx
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { PortfolioListPage } from '@/features/portfolio/components/PortfolioListPage'
+import { portfolioQueries } from '@/features/portfolio/queries'
+import { getQueryClient } from '@/lib/getQueryClient'
+import { createClient } from '@/lib/supabase/server'
+
+const PortfolioPage = async () => {
+  const queryClient = getQueryClient()
+  await queryClient.prefetchQuery(portfolioQueries.lists(createClient))
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <PortfolioListPage />
+    </HydrationBoundary>
+  )
+}
+
+export default PortfolioPage
+```
+
+한 라우트에서 여러 쿼리를 prefetch해야 하면 순차 `await` 대신 `Promise.all`로 묶는다.
+아직 어떤 라우트에서도 서버 prefetch되지 않는 피처(`auth`, `stocks`, `trade-log`)는
+`getClient` 파라미터를 추가하지 않는다 — 실제로 Server Component에서 prefetch가
+필요해지는 시점에 이 패턴을 적용한다.
+
 ### Query 무효화 범위
 
 ```ts
