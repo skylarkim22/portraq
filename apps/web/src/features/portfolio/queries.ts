@@ -6,7 +6,8 @@ import type {
   PortfolioAsset,
   SnapshotAsset,
 } from "@portraq/lib/types";
-import { createClient } from "@/lib/supabase/client";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
+import type { SupabaseClientGetter } from "@/lib/supabase/types";
 
 export type PortfolioCardAsset = {
   ticker: string;
@@ -47,11 +48,12 @@ const summarizeExecution = (
 export const portfolioQueries = {
   all: () => ["portfolios"] as const,
 
-  lists: () =>
+  lists: (getClient: SupabaseClientGetter = createBrowserClient) =>
     queryOptions({
       queryKey: [...portfolioQueries.all(), "list"] as const,
       queryFn: async (): Promise<PortfolioSummary[]> => {
-        const { data, error } = await createClient()
+        const supabase = await getClient();
+        const { data, error } = await supabase
           .from("portfolios")
           .select(
             "id, name, updated_at, portfolio_assets(ticker, market, ratio, shares, current_price, color, sort_order), execution_records(executed_at, actions)"
@@ -90,11 +92,12 @@ export const portfolioQueries = {
       staleTime: 1000 * 30,
     }),
 
-  detail: (id: string) =>
+  detail: (id: string, getClient: SupabaseClientGetter = createBrowserClient) =>
     queryOptions({
       queryKey: [...portfolioQueries.all(), "detail", id] as const,
       queryFn: async (): Promise<Portfolio> => {
-        const { data, error } = await createClient()
+        const supabase = await getClient();
+        const { data, error } = await supabase
           .from("portfolios")
           .select(
             "id, name, memo, created_at, updated_at, portfolio_assets(ticker, name, market, ratio, shares, current_price, color, sort_order)"
@@ -129,11 +132,12 @@ export const portfolioQueries = {
       staleTime: 1000 * 30,
     }),
 
-  snapshots: (id: string) =>
+  snapshots: (id: string, getClient: SupabaseClientGetter = createBrowserClient) =>
     queryOptions({
       queryKey: [...portfolioQueries.all(), "snapshots", id] as const,
       queryFn: async (): Promise<SnapshotAsset[]> => {
-        const { data, error } = await createClient()
+        const supabase = await getClient();
+        const { data, error } = await supabase
           .from("portfolio_snapshots")
           .select("assets")
           .eq("portfolio_id", id)

@@ -1,6 +1,7 @@
 import { infiniteQueryOptions } from "@tanstack/react-query";
 import type { ActionItem, SnapshotAsset } from "@portraq/lib/types";
-import { createClient } from "@/lib/supabase/client";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
+import type { SupabaseClientGetter } from "@/lib/supabase/types";
 
 export type RebalancingHistoryFilters = {
   portfolioId: string | null;
@@ -49,7 +50,10 @@ const enrichActions = (
 export const rebalancingHistoryQueries = {
   all: () => ["rebalancing-history"] as const,
 
-  list: (filters: RebalancingHistoryFilters) =>
+  list: (
+    filters: RebalancingHistoryFilters,
+    getClient: SupabaseClientGetter = createBrowserClient
+  ) =>
     infiniteQueryOptions({
       queryKey: [...rebalancingHistoryQueries.all(), "list", filters] as const,
       queryFn: async ({
@@ -57,7 +61,8 @@ export const rebalancingHistoryQueries = {
       }: {
         pageParam: RebalancingHistoryCursor;
       }): Promise<RebalancingHistoryPage> => {
-        let query = createClient()
+        const supabase = await getClient();
+        let query = supabase
           .from("execution_records")
           .select(
             "id, portfolio_id, executed_at, total_budget, actions, portfolios(name), portfolio_snapshots(assets)"
