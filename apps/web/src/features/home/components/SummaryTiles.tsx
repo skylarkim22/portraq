@@ -4,10 +4,13 @@ import { Layers, Wallet } from "lucide-react";
 import { Card } from "@portraq/ui";
 import { usePortfolioList } from "@/features/portfolio/hooks";
 import { deriveHomeSummary } from "@/features/home/deriveHomeSummary";
+import { useCountUp } from "@/features/home/useCountUp";
 
 export const SummaryTiles = () => {
   const { data: portfolios } = usePortfolioList();
   const summary = deriveHomeSummary(portfolios ?? []);
+  const totalValue = useCountUp(summary.totalValue);
+  const portfolioCount = useCountUp(summary.portfolioCount);
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -19,7 +22,7 @@ export const SummaryTiles = () => {
           총 자산
         </div>
         <div className="text-xl font-extrabold tracking-tight text-foreground">
-          {Math.round(summary.totalValue).toLocaleString("ko-KR")}원
+          {Math.round(totalValue).toLocaleString("ko-KR")}원
         </div>
       </Card>
       <Card className="p-4">
@@ -30,7 +33,7 @@ export const SummaryTiles = () => {
           포트폴리오
         </div>
         <div className="text-xl font-extrabold tracking-tight text-foreground">
-          {summary.portfolioCount}개
+          {Math.round(portfolioCount)}개
         </div>
       </Card>
     </div>
