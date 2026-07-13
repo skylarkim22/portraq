@@ -4,11 +4,11 @@ import { portfolioQueries } from "@/features/portfolio/queries";
 import { getQueryClient } from "@/lib/getQueryClient";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function PortfolioEditPage({
+const PortfolioEditPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) {
+}) => {
   const { id } = await params;
   const queryClient = getQueryClient();
 
@@ -19,4 +19,6 @@ export default async function PortfolioEditPage({
       <PortfolioEditor portfolioId={id} />
     </HydrationBoundary>
   );
-}
+};
+
+export default PortfolioEditPage;
