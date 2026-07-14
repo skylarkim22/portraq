@@ -6,8 +6,17 @@ import { authQueries } from "@/features/auth/queries";
 
 const mockUser = { id: "user-1", email: "test@example.com" };
 
+type AuthStateChangeCallback = (
+  event: string,
+  session: { user: typeof mockUser } | null,
+) => void;
+
 const getUserMock = vi.fn();
-const onAuthStateChangeMock = vi.fn(() => ({
+const onAuthStateChangeMock = vi.fn<
+  (callback: AuthStateChangeCallback) => {
+    data: { subscription: { unsubscribe: () => void } };
+  }
+>(() => ({
   data: { subscription: { unsubscribe: vi.fn() } },
 }));
 

@@ -68,9 +68,13 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
         initialPrices[asset.ticker] =
           asset.market !== "US" ? (snapshotPrice ?? 0) : 0;
       }
+      // portfolio/latestSnapshot 로드가 끝나는 시점에 로컬 편집 상태를 최초
+      // 1회만 시드하는 하이드레이션이라 setState-in-effect 경고를 의도적으로 무시한다.
+      /* eslint-disable react-hooks/set-state-in-effect */
       setHoldings(initialHoldings);
       setPrices(initialPrices);
       setHydrated(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [portfolio, latestSnapshot, hydrated]);
 
