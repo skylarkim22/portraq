@@ -17,6 +17,10 @@
     "lint": {
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     "storybook": {
       "cache": false,
       "persistent": true

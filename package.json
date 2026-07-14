@@ -8,6 +8,7 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
     "storybook": "turbo run storybook --filter=@portraq/ui",
     "build-storybook": "turbo run build-storybook --filter=@portraq/ui"
   },
