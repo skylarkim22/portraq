@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   useDeleteExecutionRecord,
   useUpdateExecutionRecord,
-} from "@/features/rebalancing-history/hooks";
+} from "@/features/rebalancing-history/mutations";
 import { recomputeActions } from "@/features/rebalancing-history/recomputeActions";
 import type {
   EnrichedActionItem,

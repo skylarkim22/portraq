@@ -26,7 +26,7 @@ const record = (id: string, portfolioName: string): RebalancingHistoryRecord => 
 describe("RecentHistorySection", () => {
   it("리밸런싱 기록을 포트폴리오명과 함께 보여준다", () => {
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[record("e1", "워런 버핏 전략")]] },
+      data: { pages: [{ records: [record("e1", "워런 버핏 전략")], hasMore: false }] },
       isLoading: false,
     } as unknown as ReturnType<typeof useRebalancingHistory>);
 
@@ -43,7 +43,7 @@ describe("RecentHistorySection", () => {
 
   it("기록이 없으면 아무것도 렌더링하지 않는다", () => {
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[]] },
+      data: { pages: [{ records: [], hasMore: false }] },
       isLoading: false,
     } as unknown as ReturnType<typeof useRebalancingHistory>);
 

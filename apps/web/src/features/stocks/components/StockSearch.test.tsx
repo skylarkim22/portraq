@@ -1,8 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { StockSearch } from "@/features/stocks/components/StockSearch";
+import { readRecentSearches } from "@/features/stocks/recentSearches";
 
 const ASSET_ROWS = [
   { ticker: "005930", name: "삼성전자", market: "KR", color: "#355df9", is_active: true },
@@ -38,6 +40,7 @@ describe("StockSearch", () => {
   beforeEach(() => {
     fromMock.mockReset();
     fromMock.mockImplementation(() => createQueryBuilder());
+    window.localStorage.clear();
   });
 
   it("검색어를 입력하면 결과를 드롭다운에 표시한다", async () => {
@@ -163,6 +166,86 @@ describe("StockSearch", () => {
         market: "US",
         isActive: true,
       })
+    );
+  });
+
+  it("종목 선택 후 검색창에 다시 포커스하면 최근 검색 목록을 보여준다", async () => {
+    const user = userEvent.setup();
+    renderWithClient(<StockSearch onSelect={vi.fn()} />);
+
+    const input = screen.getByPlaceholderText(/티커 또는 종목명/);
+    await user.type(input, "삼성");
+    await waitFor(() => screen.getByText("삼성전자"));
+    await user.click(screen.getByText("삼성전자"));
+
+    expect(screen.queryByText("최근 검색")).not.toBeInTheDocument();
+
+    await user.click(input);
+
+    expect(screen.getByText("최근 검색")).toBeInTheDocument();
+    expect(screen.getByText("삼성전자")).toBeInTheDocument();
+  });
+
+  it("검색창 바깥을 클릭하면 최근 검색 목록이 닫힌다", async () => {
+    const user = userEvent.setup();
+    renderWithClient(
+      <div>
+        <StockSearch onSelect={vi.fn()} />
+        <button type="button">바깥 버튼</button>
+      </div>
+    );
+
+    const input = screen.getByPlaceholderText(/티커 또는 종목명/);
+    await user.type(input, "삼성");
+    await waitFor(() => screen.getByText("삼성전자"));
+    await user.click(screen.getByText("삼성전자"));
+    await user.click(input);
+    expect(screen.getByText("최근 검색")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "바깥 버튼" }));
+
+    expect(screen.queryByText("최근 검색")).not.toBeInTheDocument();
+  });
+
+  it("이미 추가된 종목이어도 최근 검색 목록에는 계속 보인다", async () => {
+    const user = userEvent.setup();
+    renderWithClient(<StockSearch onSelect={vi.fn()} />);
+
+    const input = screen.getByPlaceholderText(/티커 또는 종목명/);
+    await user.type(input, "삼성");
+    await waitFor(() => screen.getByText("삼성전자"));
+    await user.click(screen.getByText("삼성전자"));
+
+    // 방금 선택한 종목이 existingTickers에 반영된 뒤에도(예: 검색창 초기화
+    // 없이 리렌더) 최근 검색 기록 자체는 남아 있어야 한다.
+    cleanup();
+    renderWithClient(
+      <StockSearch onSelect={vi.fn()} existingTickers={["005930"]} />
+    );
+    await user.click(screen.getByPlaceholderText(/티커 또는 종목명/));
+
+    expect(screen.getByText("최근 검색")).toBeInTheDocument();
+    expect(screen.getByText("삼성전자")).toBeInTheDocument();
+  });
+
+  it("onSelect가 같은 이벤트에서 모달을 닫아 즉시 언마운트돼도 최근 검색이 저장된다", async () => {
+    const user = userEvent.setup();
+
+    const ModalHost = () => {
+      const [open, setOpen] = useState(true);
+      if (!open) return null;
+      return <StockSearch onSelect={() => setOpen(false)} />;
+    };
+
+    renderWithClient(<ModalHost />);
+
+    const input = screen.getByPlaceholderText(/티커 또는 종목명/);
+    await user.type(input, "삼성");
+    await waitFor(() => screen.getByText("삼성전자"));
+    await user.click(screen.getByText("삼성전자"));
+
+    expect(readRecentSearches()).toContainEqual(
+      expect.objectContaining({ ticker: "005930" })
     );
   });
 

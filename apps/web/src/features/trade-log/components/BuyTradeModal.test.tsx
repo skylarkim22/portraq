@@ -2,11 +2,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { BuyTradeModal } from "@/features/trade-log/components/BuyTradeModal";
-import { useCreateTradeLog } from "@/features/trade-log/hooks";
+import { useCreateTradeLog } from "@/features/trade-log/mutations";
 
 const mutateMock = vi.fn();
 
-vi.mock("@/features/trade-log/hooks", () => ({
+vi.mock("@/features/trade-log/mutations", () => ({
   useCreateTradeLog: vi.fn(() => ({ mutate: mutateMock, isPending: false })),
 }));
 

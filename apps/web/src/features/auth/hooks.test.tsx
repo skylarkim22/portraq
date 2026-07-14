@@ -1,19 +1,22 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  useUser,
-  useSignOut,
-  useSignInWithOAuth,
-} from "@/features/auth/hooks";
-import { authKeys } from "@/features/auth/queries";
+import { useUser } from "@/features/auth/hooks";
+import { authQueries } from "@/features/auth/queries";
 
 const mockUser = { id: "user-1", email: "test@example.com" };
 
+type AuthStateChangeCallback = (
+  event: string,
+  session: { user: typeof mockUser } | null,
+) => void;
+
 const getUserMock = vi.fn();
-const signOutMock = vi.fn();
-const signInWithOAuthMock = vi.fn();
-const onAuthStateChangeMock = vi.fn(() => ({
+const onAuthStateChangeMock = vi.fn<
+  (callback: AuthStateChangeCallback) => {
+    data: { subscription: { unsubscribe: () => void } };
+  }
+>(() => ({
   data: { subscription: { unsubscribe: vi.fn() } },
 }));
 
@@ -21,8 +24,6 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
       getUser: getUserMock,
-      signOut: signOutMock,
-      signInWithOAuth: signInWithOAuthMock,
       onAuthStateChange: onAuthStateChangeMock,
     },
   }),
@@ -74,46 +75,7 @@ describe("useUser", () => {
       onAuthStateChange("SIGNED_IN", { user: mockUser });
     });
 
-    expect(queryClient.getQueryData(authKeys.user())).toEqual(mockUser);
+    expect(queryClient.getQueryData(authQueries.user().queryKey)).toEqual(mockUser);
     expect(getUserMock).not.toHaveBeenCalled();
-  });
-});
-
-describe("useSignInWithOAuth", () => {
-  beforeEach(() => {
-    signInWithOAuthMock.mockReset();
-  });
-
-  it("provider를 지정해 signInWithOAuth를 호출한다", async () => {
-    signInWithOAuthMock.mockResolvedValue({ error: null });
-
-    const { result } = renderWithClient(() => useSignInWithOAuth());
-
-    await act(async () => {
-      await result.current.mutateAsync("kakao");
-    });
-
-    expect(signInWithOAuthMock).toHaveBeenCalledWith(
-      expect.objectContaining({ provider: "kakao" })
-    );
-  });
-});
-
-describe("useSignOut", () => {
-  beforeEach(() => {
-    signOutMock.mockReset();
-  });
-
-  it("로그아웃을 호출한다", async () => {
-    signOutMock.mockResolvedValue({ error: null });
-
-    const { result } = renderWithClient(() => useSignOut());
-
-    await act(async () => {
-      await result.current.mutateAsync();
-    });
-
-    expect(signOutMock).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 });

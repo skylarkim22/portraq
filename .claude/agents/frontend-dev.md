@@ -207,7 +207,7 @@ export function Button({ variant, size, className, ...props }: ButtonProps) {
 ## Supabase DB 참조
 
 `AGENTS.md`의 Supabase 데이터베이스 섹션을 반드시 참조한다.
-주요 테이블: `portfolios`, `portfolio_assets`, `execution_records`, `portfolio_snapshots`, `stocks`, `recent_searches`
+주요 테이블: `portfolios`, `portfolio_assets`, `execution_records`, `portfolio_snapshots`, `assets`
 모든 테이블은 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근 가능.
 
 ## 에러 핸들링

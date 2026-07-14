@@ -16,10 +16,13 @@ vi.mock("@/features/rebalancing-history/hooks", async () => {
   return {
     ...actual,
     useRebalancingHistory: vi.fn(),
-    useUpdateExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
-    useDeleteExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   };
 });
+
+vi.mock("@/features/rebalancing-history/mutations", () => ({
+  useUpdateExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+  useDeleteExecutionRecord: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+}));
 
 const record = (id: string, executedAt: string): RebalancingHistoryRecord => ({
   id,
@@ -44,10 +47,13 @@ describe("RebalancingHistoryPage", () => {
     vi.mocked(useRebalancingHistory).mockReturnValue({
       data: {
         pages: [
-          [
-            record("e1", "2026-01-15T00:00:00Z"),
-            record("e2", "2025-12-02T00:00:00Z"),
-          ],
+          {
+            records: [
+              record("e1", "2026-01-15T00:00:00Z"),
+              record("e2", "2025-12-02T00:00:00Z"),
+            ],
+            hasMore: false,
+          },
         ],
       },
       isLoading: false,
@@ -61,6 +67,49 @@ describe("RebalancingHistoryPage", () => {
 
     expect(screen.getByText("2026년 1월")).toBeInTheDocument();
     expect(screen.getByText("2025년 12월")).toBeInTheDocument();
+  });
+
+  it("포트폴리오별로 가장 최근 기록에만 삭제 버튼을 보여준다", async () => {
+    const user = userEvent.setup();
+    const recordForPortfolio = (
+      id: string,
+      executedAt: string,
+      portfolioId: string,
+      portfolioName: string
+    ): RebalancingHistoryRecord => ({
+      ...record(id, executedAt),
+      portfolioId,
+      portfolioName,
+    });
+
+    vi.mocked(useRebalancingHistory).mockReturnValue({
+      data: {
+        pages: [
+          {
+            records: [
+              recordForPortfolio("e1", "2026-01-20T00:00:00Z", "p1", "워런 버핏 전략"),
+              recordForPortfolio("e2", "2026-01-15T00:00:00Z", "p2", "레이 달리오 올웨더"),
+              recordForPortfolio("e3", "2026-01-10T00:00:00Z", "p1", "워런 버핏 전략"),
+            ],
+            hasMore: false,
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof useRebalancingHistory>);
+
+    render(<RebalancingHistoryPage />);
+
+    const headers = screen.getAllByRole("button", { name: /워런 버핏 전략|레이 달리오 올웨더/ });
+    for (const header of headers) {
+      await user.click(header);
+    }
+
+    expect(screen.getAllByRole("button", { name: /삭제/ })).toHaveLength(2);
   });
 
   it("로딩 중에는 로딩 문구를 보여준다", () => {
@@ -80,7 +129,7 @@ describe("RebalancingHistoryPage", () => {
 
   it("기록이 없으면 안내 문구를 보여준다", () => {
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[]] },
+      data: { pages: [{ records: [], hasMore: false }] },
       isLoading: false,
       isError: false,
       fetchNextPage: vi.fn(),
@@ -99,7 +148,7 @@ describe("RebalancingHistoryPage", () => {
     const user = userEvent.setup();
     const fetchNextPage = vi.fn();
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[record("e1", "2026-01-15T00:00:00Z")]] },
+      data: { pages: [{ records: [record("e1", "2026-01-15T00:00:00Z")], hasMore: true }] },
       isLoading: false,
       isError: false,
       fetchNextPage,
@@ -119,7 +168,7 @@ describe("RebalancingHistoryPage", () => {
 
   it("hasNextPage가 false면 더보기 버튼을 보여주지 않는다", () => {
     vi.mocked(useRebalancingHistory).mockReturnValue({
-      data: { pages: [[record("e1", "2026-01-15T00:00:00Z")]] },
+      data: { pages: [{ records: [record("e1", "2026-01-15T00:00:00Z")], hasMore: false }] },
       isLoading: false,
       isError: false,
       fetchNextPage: vi.fn(),

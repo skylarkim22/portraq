@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { ActionChip } from "@portraq/ui";
 import { toKrwPrice } from "@portraq/lib/utils";
 import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
-import { useDeleteTradeLog } from "@/features/trade-log/hooks";
+import { useDeleteTradeLog } from "@/features/trade-log/mutations";
 import { EditTradeModal } from "@/features/trade-log/components/EditTradeModal";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
@@ -33,6 +33,8 @@ export const TradeLogCard = ({ log, avgPrice }: TradeLogCardProps) => {
     isBuy || avgPrice === undefined
       ? null
       : calcSellPnl(log, log.market, avgPrice).pnlAfterTax;
+  const priceDiff =
+    isBuy || avgPrice === undefined ? null : priceKrw - avgPrice;
 
   const handleDelete = () => {
     if (!window.confirm("이 거래 기록을 삭제하시겠습니까? 되돌릴 수 없습니다."))
@@ -107,6 +109,34 @@ export const TradeLogCard = ({ log, avgPrice }: TradeLogCardProps) => {
             </div>
           </div>
         </div>
+
+        {priceDiff !== null && avgPrice !== undefined && (
+          <div className="mb-2 grid grid-cols-2 gap-2">
+            <div className="rounded-lg bg-muted/60 px-3 py-2">
+              <div className="text-[10px] font-semibold text-muted-foreground">
+                평균매수가
+              </div>
+              <div className="text-sm font-extrabold text-foreground">
+                {Math.round(avgPrice).toLocaleString("ko-KR")}원
+              </div>
+            </div>
+            <div className="rounded-lg bg-muted/60 px-3 py-2">
+              <div className="text-[10px] font-semibold text-muted-foreground">
+                차액(주당)
+              </div>
+              <div
+                className={`text-sm font-extrabold ${
+                  priceDiff >= 0
+                    ? "text-[var(--portraq-success)]"
+                    : "text-destructive"
+                }`}
+              >
+                {priceDiff >= 0 ? "+" : ""}
+                {Math.round(priceDiff).toLocaleString("ko-KR")}원
+              </div>
+            </div>
+          </div>
+        )}
 
         {pnlAfterTax !== null && (
           <div

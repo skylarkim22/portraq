@@ -9,10 +9,12 @@
   "scripts": {
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@portraq/lib": "workspace:*",
     "@radix-ui/react-select": "^2.3.3",
     "@radix-ui/react-slider": "^1.4.1",
     "@radix-ui/react-slot": "^1.3.0",

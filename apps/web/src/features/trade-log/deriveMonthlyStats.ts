@@ -1,6 +1,6 @@
 import type { Market } from "@portraq/lib/types";
 import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
-import { toAvgPriceMap, type Holding } from "@/features/trade-log/deriveHoldings";
+import { calcAvgPriceAsOf } from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 export type MonthlyStats = {
@@ -15,10 +15,8 @@ export type MonthlyStats = {
 
 export const deriveMonthlyStats = (
   monthLogs: EnrichedTradeLog[],
-  holdings: Holding[]
+  allLogs: EnrichedTradeLog[]
 ): MonthlyStats => {
-  const avgPriceByTicker = toAvgPriceMap(holdings);
-
   let totalBuyAmount = 0;
   let totalSellAmount = 0;
   let totalTax = 0;
@@ -35,7 +33,7 @@ export const deriveMonthlyStats = (
         (buyAmountByMarket.get(row.market) ?? 0) + amount
       );
     } else {
-      const avgPrice = avgPriceByTicker.get(row.ticker) ?? 0;
+      const avgPrice = calcAvgPriceAsOf(allLogs, row.ticker, row.date) ?? 0;
       const { amount, pnlAfterTax } = calcSellPnl(row, row.market, avgPrice);
       totalSellAmount += amount;
       totalTax += row.tax ?? 0;

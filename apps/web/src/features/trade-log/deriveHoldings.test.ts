@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { deriveHoldings, toAvgPriceMap } from "@/features/trade-log/deriveHoldings";
+import {
+  deriveHoldings,
+  toAvgPriceMap,
+  calcAvgPriceAsOf,
+} from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 const log = (overrides: Partial<EnrichedTradeLog>): EnrichedTradeLog => ({
@@ -47,6 +51,55 @@ describe("deriveHoldings", () => {
     ];
 
     expect(deriveHoldings(logs)).toEqual([]);
+  });
+
+  it("asOfDate를 주면 그 시점 이후의 매수 기록은 제외한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({ id: "l1", type: "buy", ticker: "005930", date: "2026-05-10", quantity: 10, price: 70000 }),
+    ];
+
+    expect(deriveHoldings(logs, "2026-04-30")).toEqual([]);
+    expect(deriveHoldings(logs, "2026-05-10")).toMatchObject({
+      0: { ticker: "005930", quantity: 10 },
+    });
+  });
+
+  it("asOfDate를 주면 그 시점 이후의 매도 기록은 보유 수량 차감에서 제외한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({ id: "l1", type: "buy", ticker: "005930", date: "2026-01-01", quantity: 10, price: 70000 }),
+      log({ id: "l2", type: "sell", ticker: "005930", date: "2026-06-01", quantity: 4, price: 90000 }),
+    ];
+
+    expect(deriveHoldings(logs, "2026-03-01")).toMatchObject({ 0: { quantity: 10 } });
+    expect(deriveHoldings(logs, "2026-07-01")).toMatchObject({ 0: { quantity: 6 } });
+  });
+});
+
+describe("calcAvgPriceAsOf", () => {
+  it("기준일 이전 매수 기록만으로 평균단가를 계산한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({ id: "l1", type: "buy", date: "2026-01-01", quantity: 5, price: 200000 }),
+      log({ id: "l2", type: "buy", date: "2026-02-01", quantity: 5, price: 400000 }),
+    ];
+
+    expect(calcAvgPriceAsOf(logs, "AAPL", "2026-01-15")).toBe(200000);
+    expect(calcAvgPriceAsOf(logs, "AAPL", "2026-02-01")).toBe(300000);
+  });
+
+  it("기준일 이전 매수 기록이 없으면 undefined를 반환한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({ id: "l1", type: "buy", date: "2026-02-01", quantity: 5, price: 200000 }),
+    ];
+
+    expect(calcAvgPriceAsOf(logs, "AAPL", "2026-01-15")).toBeUndefined();
+  });
+
+  it("다른 종목의 매수 기록은 제외한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({ id: "l1", type: "buy", ticker: "KO", date: "2026-01-01", quantity: 5, price: 100000 }),
+    ];
+
+    expect(calcAvgPriceAsOf(logs, "AAPL", "2026-01-15")).toBeUndefined();
   });
 });
 

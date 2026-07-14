@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
 import type { Asset } from "@portraq/lib/types";
 import { StockSearch } from "@/features/stocks/components/StockSearch";
-import { useCreateTradeLog } from "@/features/trade-log/hooks";
+import { useCreateTradeLog } from "@/features/trade-log/mutations";
 import { BuyTradeRow, type BuyRowDraft } from "@/features/trade-log/components/BuyTradeRow";
 import { MEMO_MIN_LENGTH } from "@/features/trade-log/constants";
 

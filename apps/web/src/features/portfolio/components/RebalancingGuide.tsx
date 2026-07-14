@@ -10,11 +10,8 @@ import {
   type RebalancingAction,
 } from "@portraq/lib/utils";
 import { ErrorState } from "@/components/ErrorState";
-import {
-  useLatestSnapshot,
-  usePortfolio,
-  useRecordRebalancingExecution,
-} from "@/features/portfolio/hooks";
+import { useLatestSnapshot, usePortfolio } from "@/features/portfolio/hooks";
+import { useRecordRebalancingExecution } from "@/features/portfolio/mutations";
 import { buildRebalancingExecutionPayload } from "@/features/portfolio/buildRebalancingExecutionPayload";
 import { deriveActionRows } from "@/features/portfolio/deriveActionRows";
 import { RebalancingGuideHeader } from "@/features/portfolio/components/RebalancingGuideHeader";
@@ -23,7 +20,8 @@ import { RebalancingHoldingsStep } from "@/features/portfolio/components/Rebalan
 import { RebalancingBudgetStep } from "@/features/portfolio/components/RebalancingBudgetStep";
 import { RebalancingActionStep } from "@/features/portfolio/components/RebalancingActionStep";
 
-const DEFAULT_EXCHANGE_RATE = 1400;
+const DEFAULT_EXCHANGE_RATE = 1500;
+const DEFAULT_SELL_THRESHOLD_PERCENT = 5;
 
 type RebalancingGuideProps = {
   portfolioId: string;
@@ -41,6 +39,9 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [exchangeRate, setExchangeRate] = useState(DEFAULT_EXCHANGE_RATE);
   const [additionalBudget, setAdditionalBudget] = useState(0);
+  const [sellThresholdPercent, setSellThresholdPercent] = useState(
+    DEFAULT_SELL_THRESHOLD_PERCENT
+  );
   const [overrides, setOverrides] = useState<Record<string, number>>({});
 
   const assets = useMemo(
@@ -67,9 +68,13 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
         initialPrices[asset.ticker] =
           asset.market !== "US" ? (snapshotPrice ?? 0) : 0;
       }
+      // portfolio/latestSnapshot 로드가 끝나는 시점에 로컬 편집 상태를 최초
+      // 1회만 시드하는 하이드레이션이라 setState-in-effect 경고를 의도적으로 무시한다.
+      /* eslint-disable react-hooks/set-state-in-effect */
       setHoldings(initialHoldings);
       setPrices(initialPrices);
       setHydrated(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [portfolio, latestSnapshot, hydrated]);
 
@@ -88,8 +93,18 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
       assets,
       holdings: holdingInputs,
       additionalBudget,
+      sellThresholdPercent,
     });
-  }, [step, hasUndeterminedSlot, assets, holdings, prices, exchangeRate, additionalBudget]);
+  }, [
+    step,
+    hasUndeterminedSlot,
+    assets,
+    holdings,
+    prices,
+    exchangeRate,
+    additionalBudget,
+    sellThresholdPercent,
+  ]);
 
   const rows = useMemo(
     () => deriveActionRows(actions, overrides, assets),
@@ -184,6 +199,8 @@ export const RebalancingGuide = ({ portfolioId }: RebalancingGuideProps) => {
             onExchangeRateChange={setExchangeRate}
             additionalBudget={additionalBudget}
             onBudgetChange={setAdditionalBudget}
+            sellThresholdPercent={sellThresholdPercent}
+            onSellThresholdPercentChange={setSellThresholdPercent}
             onPrev={() => setStep(1)}
             onNext={handleGoStep3}
           />

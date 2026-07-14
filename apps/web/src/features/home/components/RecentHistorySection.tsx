@@ -14,7 +14,7 @@ export const RecentHistorySection = () => {
     dateFrom: null,
     dateTo: null,
   });
-  const records = (historyPages?.pages[0] ?? []).slice(0, RECENT_HISTORY_LIMIT);
+  const records = (historyPages?.pages[0]?.records ?? []).slice(0, RECENT_HISTORY_LIMIT);
 
   if (!isLoading && records.length === 0) return null;
 

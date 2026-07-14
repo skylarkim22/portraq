@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: pnpm 설치
+        uses: pnpm/action-setup@v4
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+
+      - name: 린트
+        run: pnpm lint
+
+      - name: 타입 체크
+        run: pnpm typecheck
+
+      - name: 테스트
+        run: pnpm test
+
+      - name: Storybook 빌드
+        run: pnpm build-storybook
+
+      - name: 디스코드 알림 전송
+        if: always()
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ job.status }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          BRANCH: ${{ github.head_ref }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret이 설정되지 않아 알림을 건너뜁니다."
+            exit 0
+          fi
+
+          if [ "$STATUS" = "success" ]; then
+            COLOR=3066993
+            EMOJI="✅"
+          else
+            COLOR=15158332
+            EMOJI="❌"
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg title "$EMOJI CI $STATUS" \
+            --arg desc "[$PR_TITLE]($PR_URL)" \
+            --arg branch "$BRANCH" \
+            --arg actor "$ACTOR" \
+            --arg runUrl "$RUN_URL" \
+            --argjson color "$COLOR" \
+            '{
+              embeds: [{
+                title: $title,
+                description: $desc,
+                color: $color,
+                fields: [
+                  { name: "브랜치", value: $branch, inline: true },
+                  { name: "작성자", value: $actor, inline: true },
+                  { name: "실행 로그", value: $runUrl }
+                ]
+              }]
+            }')
+
+          curl -sf -X POST -H "Content-Type: application/json" \
+            -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"

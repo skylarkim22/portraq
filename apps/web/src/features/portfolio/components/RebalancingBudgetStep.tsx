@@ -15,6 +15,8 @@ type RebalancingBudgetStepProps = {
   onExchangeRateChange: (rate: number) => void;
   additionalBudget: number;
   onBudgetChange: (budget: number) => void;
+  sellThresholdPercent: number;
+  onSellThresholdPercentChange: (threshold: number) => void;
   onPrev: () => void;
   onNext: () => void;
 };
@@ -28,6 +30,8 @@ export const RebalancingBudgetStep = ({
   onExchangeRateChange,
   additionalBudget,
   onBudgetChange,
+  sellThresholdPercent,
+  onSellThresholdPercentChange,
   onPrev,
   onNext,
 }: RebalancingBudgetStepProps) => {
@@ -40,12 +44,29 @@ export const RebalancingBudgetStep = ({
     thousandsSeparator: true,
   });
 
+  const sellThresholdInput = useNumericTextInput({
+    value: sellThresholdPercent,
+    onChange: onSellThresholdPercentChange,
+    min: 0,
+    max: 100,
+    decimalPlaces: 1,
+  });
+
+  const exchangeRateInput = useNumericTextInput({
+    value: exchangeRate,
+    onChange: onExchangeRateChange,
+    min: 1,
+    thousandsSeparator: true,
+  });
+
+  const hasZeroPrice = assets.some((asset) => (prices[asset.ticker] ?? 0) <= 0);
+
   const totalCurrentValue = assets.reduce((sum, asset) => {
     const shares = holdings[asset.ticker] ?? 0;
     const price = toKrwPrice(
       prices[asset.ticker] ?? 0,
       asset.market ?? "KR",
-      exchangeRate
+      exchangeRate,
     );
     return sum + shares * price;
   }, 0);
@@ -54,45 +75,72 @@ export const RebalancingBudgetStep = ({
   return (
     <div className="flex flex-col gap-5 p-6">
       <p className="text-[13px] leading-relaxed text-muted-foreground">
-        이번 달 투자금과 종목별 현재가를 입력하면 매수·매도 주수를 자동으로
-        계산합니다.
+        이번 달 투자금은 저비중 종목 매수에 우선 사용되며, 초과 비중 종목은
+        괴리가 임계값 이상일 때만 매도로 계산됩니다.
       </p>
 
-      <div>
-        <label
-          htmlFor="rebalancing-budget"
-          className="mb-2 block text-[13px] font-extrabold text-foreground"
-        >
-          이번 달 투자금
-        </label>
-        <div className="relative">
-          <Input
-            id="rebalancing-budget"
-            name="rebalancing-budget"
-            type="text"
-            inputMode="numeric"
-            value={budgetInput.text}
-            onFocus={budgetInput.handleFocus}
-            onChange={(e) => budgetInput.handleChange(e.target.value)}
-            onBlur={budgetInput.handleBlur}
-            className="h-11 pr-10 text-lg font-extrabold"
-          />
-          <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-            원
-          </span>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[13px] font-extrabold text-foreground">
+              매도 임계값
+            </span>
+            <span className="text-xs text-muted-foreground">
+              괴리가 이 값 미만이면 매도 없이 유지
+            </span>
+          </div>
+          <div className="relative">
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={sellThresholdInput.text}
+              onFocus={sellThresholdInput.handleFocus}
+              onChange={(e) => sellThresholdInput.handleChange(e.target.value)}
+              onBlur={sellThresholdInput.handleBlur}
+              className="h-11 pr-10 text-right text-lg font-extrabold"
+            />
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+              %
+            </span>
+          </div>
         </div>
-        <div className="mt-2 flex gap-2">
-          {BUDGET_PRESETS.map((preset) => (
-            <Button
-              key={preset}
-              type="button"
-              variant={additionalBudget === preset ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => onBudgetChange(preset)}
-            >
-              {preset / 10_000}만
-            </Button>
-          ))}
+
+        <div>
+          <label
+            htmlFor="rebalancing-budget"
+            className="mb-2 block text-[13px] font-extrabold text-foreground"
+          >
+            이번 달 투자금
+          </label>
+          <div className="relative">
+            <Input
+              id="rebalancing-budget"
+              name="rebalancing-budget"
+              type="text"
+              inputMode="numeric"
+              value={budgetInput.text}
+              onFocus={budgetInput.handleFocus}
+              onChange={(e) => budgetInput.handleChange(e.target.value)}
+              onBlur={budgetInput.handleBlur}
+              className="h-11 pr-10 text-right text-lg font-extrabold"
+            />
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+              원
+            </span>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {BUDGET_PRESETS.map((preset) => (
+              <Button
+                key={preset}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onBudgetChange(additionalBudget + preset)}
+              >
+                +{preset / 10_000}만
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -107,24 +155,25 @@ export const RebalancingBudgetStep = ({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <span className="whitespace-nowrap text-sm text-muted-foreground">
+              $1 =
+            </span>
             <div className="relative flex-1">
               <Input
-                type="number"
-                min={1}
-                step={1}
-                value={exchangeRate || ""}
+                type="text"
+                inputMode="numeric"
+                value={exchangeRateInput.text}
+                onFocus={exchangeRateInput.handleFocus}
                 onChange={(e) =>
-                  onExchangeRateChange(Number(e.target.value) || 0)
+                  exchangeRateInput.handleChange(e.target.value)
                 }
+                onBlur={exchangeRateInput.handleBlur}
                 className="h-10 pr-14 text-base font-extrabold"
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                원/$
+                원
               </span>
             </div>
-            <span className="whitespace-nowrap text-sm text-muted-foreground">
-              $1 = {exchangeRate.toLocaleString("ko-KR")}원
-            </span>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
             실시간 환율이 아닙니다. 매매 시점의 실제 환율을 직접 확인 후
@@ -162,11 +211,22 @@ export const RebalancingBudgetStep = ({
         </span>
       </div>
 
+      {hasZeroPrice && (
+        <p className="text-[11px] font-semibold text-destructive">
+          모든 종목의 현재가를 입력해야 계산할 수 있습니다.
+        </p>
+      )}
+
       <div className="flex gap-3">
         <Button type="button" variant="outline" onClick={onPrev}>
           이전
         </Button>
-        <Button type="button" className="flex-1" onClick={onNext}>
+        <Button
+          type="button"
+          className="flex-1"
+          onClick={onNext}
+          disabled={hasZeroPrice}
+        >
           계산하기
         </Button>
       </div>

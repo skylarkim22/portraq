@@ -1,20 +1,18 @@
 import { TradeLogCard } from "@/features/trade-log/components/TradeLogCard";
-import { toAvgPriceMap, type Holding } from "@/features/trade-log/deriveHoldings";
+import { calcAvgPriceAsOf } from "@/features/trade-log/deriveHoldings";
 import type { EnrichedTradeLog } from "@/features/trade-log/queries";
 
 type TradeLogDayFeedProps = {
   dateLabel: string;
   logs: EnrichedTradeLog[];
-  holdings?: Holding[];
+  allLogs?: EnrichedTradeLog[];
 };
 
 export const TradeLogDayFeed = ({
   dateLabel,
   logs,
-  holdings = [],
+  allLogs = [],
 }: TradeLogDayFeedProps) => {
-  const avgPriceByTicker = toAvgPriceMap(holdings);
-
   return (
     <section>
       <h2 className="mb-3 text-[15px] font-extrabold text-foreground">
@@ -30,7 +28,11 @@ export const TradeLogDayFeed = ({
             <TradeLogCard
               key={log.id}
               log={log}
-              avgPrice={avgPriceByTicker.get(log.ticker)}
+              avgPrice={
+                log.type === "sell"
+                  ? calcAvgPriceAsOf(allLogs, log.ticker, log.date)
+                  : undefined
+              }
             />
           ))
         )}

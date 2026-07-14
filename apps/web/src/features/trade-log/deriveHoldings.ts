@@ -11,7 +11,12 @@ export type Holding = {
 
 // 평균단가는 매수 기록만으로 산출하고, 매도 기록이 생겨도 재계산하지 않는다(PRD 2.6.2).
 // 보유 수량만 매도 수량만큼 차감한다.
-export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
+// asOfDate를 주면 그 날짜 이후의 매수·매도 기록은 집계에서 제외해,
+// "그 시점에 실제로 보유하고 있었는지"를 판단할 수 있다.
+export const deriveHoldings = (
+  rows: EnrichedTradeLog[],
+  asOfDate?: string
+): Holding[] => {
   const buyTotals = new Map<
     string,
     { qty: number; cost: number; name: string; market: Market }
@@ -19,6 +24,8 @@ export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
   const soldQty = new Map<string, number>();
 
   for (const row of rows) {
+    if (asOfDate !== undefined && row.date > asOfDate) continue;
+
     if (row.type === "buy") {
       const entry = buyTotals.get(row.ticker) ?? {
         qty: 0,
@@ -47,3 +54,23 @@ export const deriveHoldings = (rows: EnrichedTradeLog[]): Holding[] => {
 
 export const toAvgPriceMap = (holdings: Holding[]): Map<string, number> =>
   new Map(holdings.map((holding) => [holding.ticker, holding.avgPrice]));
+
+// 과거 매도 기록의 손익을 그 시점 기준으로 보여주기 위해, 매도일 이후에
+// 추가된 매수 기록은 평균단가 계산에서 제외한다.
+export const calcAvgPriceAsOf = (
+  rows: EnrichedTradeLog[],
+  ticker: string,
+  asOfDate: string
+): number | undefined => {
+  let qty = 0;
+  let cost = 0;
+
+  for (const row of rows) {
+    if (row.type === "buy" && row.ticker === ticker && row.date <= asOfDate) {
+      qty += row.quantity;
+      cost += row.quantity * row.price;
+    }
+  }
+
+  return qty > 0 ? cost / qty : undefined;
+};

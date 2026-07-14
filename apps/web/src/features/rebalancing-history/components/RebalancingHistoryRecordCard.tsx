@@ -9,10 +9,12 @@ import { RebalancingHistoryRecordDetail } from "@/features/rebalancing-history/c
 
 type RebalancingHistoryRecordCardProps = {
   record: RebalancingHistoryRecord;
+  canDelete: boolean;
 };
 
 export const RebalancingHistoryRecordCard = ({
   record,
+  canDelete,
 }: RebalancingHistoryRecordCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const editor = useExecutionRecordEditor(record);
@@ -25,7 +27,13 @@ export const RebalancingHistoryRecordCard = ({
         onToggle={() => setExpanded((prev) => !prev)}
       />
 
-      {expanded && <RebalancingHistoryRecordDetail record={record} editor={editor} />}
+      {expanded && (
+        <RebalancingHistoryRecordDetail
+          record={record}
+          editor={editor}
+          canDelete={canDelete}
+        />
+      )}
     </Card>
   );
 };
