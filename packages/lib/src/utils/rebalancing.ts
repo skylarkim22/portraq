@@ -55,7 +55,7 @@ export function calcRebalancingActions(
   );
   const totalBudget = totalCurrentValue + additionalBudget;
 
-  return assets
+  const draft = assets
     .filter((a) => !a.isSlot)
     .map((asset) => {
       const holding = holdingMap.get(asset.ticker);
@@ -75,31 +75,62 @@ export function calcRebalancingActions(
       const deviation = currentRatio - asset.ratio;
 
       let action: ActionType = "hold";
-      let quantity = 0;
 
       if (diff > 0 && quantityRaw >= MIN_SHARES) {
         action = "buy";
-        quantity = Math.floor(quantityRaw);
       } else if (
         diff < 0 &&
         quantityRaw >= MIN_SHARES &&
         deviation >= sellThresholdPercent
       ) {
         action = "sell";
-        quantity = Math.floor(quantityRaw);
       }
+
+      return { asset, price, currentValue, targetValue, diff, currentRatio, action };
+    });
+
+  // 임계값 미만이라 매도하지 않는 초과비중 종목의 여윳값은 실제로는
+  // 회수되지 않는다. 이 값까지 totalBudget에 포함해 매수 목표를 잡으면
+  // 실제 확보 가능한 현금(추가 투자금 + 실제 매도 회수액)보다 매수 지시
+  // 총액이 커지는 문제가 있어, 매수만 가용 현금 한도로 비례 축소한다.
+  // 매도 회수액은 소수점 목표 diff가 아니라, 정수 주식 수로 내림 처리된
+  // 실제 체결 금액 기준이어야 한다. 그렇지 않으면 나눠떨어지지 않는
+  // 가격대에서 가용 현금을 과대평가해 같은 유형의 초과매수가 남는다.
+  const totalSellProceeds = draft
+    .filter((d) => d.action === "sell")
+    .reduce(
+      (sum, d) => sum + Math.floor(Math.abs(d.diff) / d.price) * d.price,
+      0
+    );
+  const totalBuyDemand = draft
+    .filter((d) => d.action === "buy")
+    .reduce((sum, d) => sum + d.diff, 0);
+  const availableForBuy = additionalBudget + totalSellProceeds;
+  const buyScale =
+    totalBuyDemand > 0 && totalBuyDemand > availableForBuy
+      ? availableForBuy / totalBuyDemand
+      : 1;
+
+  return draft.map(
+    ({ asset, price, currentValue, targetValue, diff, currentRatio, action }) => {
+      const finalDiff = action === "buy" ? diff * buyScale : diff;
+      const quantity = price > 0 ? Math.floor(Math.abs(finalDiff) / price) : 0;
+      const finalAction = action === "buy" && quantity < MIN_SHARES ? "hold" : action;
+      const finalTargetValue =
+        finalAction === "buy" ? currentValue + finalDiff : targetValue;
 
       return {
         ticker: asset.ticker,
-        action,
-        quantity,
+        action: finalAction,
+        quantity: finalAction === "hold" ? 0 : quantity,
         pricePerShare: price,
         currentValue,
-        targetValue,
+        targetValue: finalTargetValue,
         currentRatio,
         targetRatio: asset.ratio,
       };
-    });
+    }
+  );
 }
 
 export function toActionItems(actions: RebalancingAction[]): ActionItem[] {
