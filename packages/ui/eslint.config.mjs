@@ -4,7 +4,7 @@ import { baseRules, baseIgnores } from "../../eslint.config.base.mjs";
 export default defineConfig([
   baseRules,
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",

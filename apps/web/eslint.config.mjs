@@ -8,7 +8,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   baseRules,
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
