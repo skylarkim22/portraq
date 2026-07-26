@@ -5,13 +5,13 @@ import type {
   PortfolioAsset,
 } from "../types/index";
 
-export function toKrwPrice(
+export const toKrwPrice = (
   nativePrice: number,
   market: Market,
   exchangeRate: number
-): number {
+): number => {
   return market === "US" ? nativePrice * exchangeRate : nativePrice;
-}
+};
 
 export interface HoldingInput {
   ticker: string;
@@ -39,9 +39,9 @@ export interface RebalancingAction {
 
 const MIN_SHARES = 1;
 
-export function calcRebalancingActions(
+export const calcRebalancingActions = (
   input: RebalancingInput
-): RebalancingAction[] {
+): RebalancingAction[] => {
   const { assets, holdings, additionalBudget, sellThresholdPercent = 0 } =
     input;
 
@@ -131,9 +131,9 @@ export function calcRebalancingActions(
       };
     }
   );
-}
+};
 
-export function toActionItems(actions: RebalancingAction[]): ActionItem[] {
+export const toActionItems = (actions: RebalancingAction[]): ActionItem[] => {
   return actions.map((a) => {
     const quantity = a.action === "sell" ? -a.quantity : a.quantity;
     return {
@@ -143,4 +143,4 @@ export function toActionItems(actions: RebalancingAction[]): ActionItem[] {
       pricePerShare: a.pricePerShare,
     };
   });
-}
+};

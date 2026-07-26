@@ -8,7 +8,7 @@ import {
   type RecentSearchAsset,
 } from "@/features/stocks/recentSearches";
 
-export function useDebouncedValue<T>(value: T, delayMs: number) {
+export const useDebouncedValue = <T,>(value: T, delayMs: number) => {
   const [debounced, setDebounced] = useState(value);
 
   useEffect(() => {
@@ -19,11 +19,11 @@ export function useDebouncedValue<T>(value: T, delayMs: number) {
   return debounced;
 }
 
-export function useStockSearch(query: string, market: MarketFilter) {
+export const useStockSearch = (query: string, market: MarketFilter) => {
   return useQuery(stockQueries.search(query, market));
-}
+};
 
-export function useRecentSearches() {
+export const useRecentSearches = () => {
   // StockSearch는 모달이 열릴 때만 마운트되는 클라이언트 전용 컴포넌트라
   // 서버에서 렌더링될 일이 없으므로, lazy initializer로 곧장 읽어도 hydration
   // 불일치가 생기지 않는다.

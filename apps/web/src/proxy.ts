@@ -4,7 +4,7 @@ import { getSupabaseEnv } from "@/lib/supabase/env";
 
 const PUBLIC_PATHS = ["/", "/login"];
 
-export async function proxy(request: NextRequest) {
+export const proxy = async (request: NextRequest) => {
   let response = NextResponse.next({ request });
 
   const { url: supabaseUrl, anonKey } = getSupabaseEnv();
