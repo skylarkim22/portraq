@@ -20,11 +20,11 @@ type StockSearchProps = {
   clearQueryOnSelect?: boolean;
 };
 
-export function StockSearch({
+export const StockSearch = ({
   onSelect,
   existingTickers = [],
   clearQueryOnSelect = true,
-}: StockSearchProps) {
+}: StockSearchProps) => {
   const [query, setQuery] = useState("");
   const [market, setMarket] = useState<MarketFilter>("ALL");
   const [manualEntry, setManualEntry] = useState(false);

@@ -9,12 +9,12 @@ export interface InfoPopoverProps {
   align?: "left" | "right";
 }
 
-export function InfoPopover({
+export const InfoPopover = ({
   label,
   children,
   className,
   align = "right",
-}: InfoPopoverProps) {
+}: InfoPopoverProps) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

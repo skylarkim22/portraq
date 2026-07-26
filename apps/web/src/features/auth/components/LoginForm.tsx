@@ -3,7 +3,7 @@
 import { Button, Card } from "@portraq/ui";
 import { useSignInWithOAuth } from "@/features/auth/mutations";
 
-export function LoginForm() {
+export const LoginForm = () => {
   const signIn = useSignInWithOAuth();
 
   return (
