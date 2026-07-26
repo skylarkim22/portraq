@@ -90,3 +90,12 @@ EOF
 ```
 
 PR URL을 사용자에게 알려준다.
+
+## 9. 워크트리 정리
+
+PR이 머지된 뒤(또는 더 이상 이 워크트리에서 작업할 필요가 없어진 시점), 메인 작업 디렉토리로 돌아가 워크트리를 정리한다:
+
+```bash
+cd <메인 작업 디렉토리>
+git worktree remove .claude/worktrees/{short-description}
+```

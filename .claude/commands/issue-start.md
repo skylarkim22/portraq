@@ -10,16 +10,19 @@ gh issue view $ARGUMENTS
 
 이슈의 제목, 본문, 서브이슈, 체크리스트를 파악한다.
 
-## 2. 브랜치 생성
+## 2. 워크트리 및 브랜치 생성
 
-이슈 제목을 영문 kebab-case로 요약해 브랜치를 만든다:
+이슈 제목을 영문 kebab-case로 요약해 별도 워크트리에 브랜치를 만든다. 메인 작업 디렉토리에서 `git checkout -b`로 브랜치를 전환하지 않고, `.claude/worktrees/`(gitignore 대상) 아래 격리된 워크트리를 만들어 그 안에서 작업한다:
 
 ```bash
 git checkout develop && git pull
-git checkout -b feat/#$ARGUMENTS-{short-description}
+git worktree add .claude/worktrees/{short-description} -b feat/#$ARGUMENTS-{short-description}
+cd .claude/worktrees/{short-description}
 ```
 
-브랜치명 예시: `feat/#12-portfolio-list-page`
+브랜치명 예시: `feat/#12-portfolio-list-page`, 워크트리 경로 예시: `.claude/worktrees/portfolio-list-page`
+
+이후 개발·테스트·커밋은 모두 이 워크트리 디렉토리 안에서 진행한다.
 
 ## 3. 디자인 목업 확인
 
