@@ -12,13 +12,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ```
 /issue-plan          → 오픈 이슈 분석 및 개발 순서 결정
-/issue-start {이슈번호}    → 브랜치 생성 + 작업 계획 수립
-   ↓ 개발
-/issue-complete      → 테스트 → 코드 리뷰 → 브라우저 검증 → PR 생성
+/issue-start {이슈번호}    → 별도 워크트리에 브랜치 생성 + 작업 계획 수립
+   ↓ 개발 (워크트리 내에서 진행)
+/issue-complete      → 테스트 → 코드 리뷰 → 브라우저 검증 → PR 생성 → 워크트리 정리
 ```
 
 **기본 브랜치**: `develop` (main이 아님)
 **브랜치 네이밍**: `feat/#N-{short-description}` (예: `feat/#12-portfolio-list`)
+**워크트리 격리**: 이슈 작업은 메인 작업 디렉토리에서 `git checkout -b`로 브랜치를 전환하지 않고, `git worktree add`로 `.claude/worktrees/{short-description}`에 별도 워크트리를 만들어 그 안에서 진행한다(`.claude/worktrees/`는 `.gitignore` 대상). 메인 작업 디렉토리는 항상 `develop`에 남아 있어 다른 작업과 브랜치 전환 없이 병행할 수 있다. PR 머지 후 `git worktree remove`로 정리한다.
 **PR 대상**: `develop` 브랜치로 생성 (`--base develop`)
 **PR 본문**: 반드시 `Closes #N` 포함해 이슈 자동 연결
 
