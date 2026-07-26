@@ -11,7 +11,7 @@ const ASSET_ROWS = [
   { ticker: "AAPL", name: "Apple Inc.", market: "US", color: "#e85d4a", is_active: true },
 ];
 
-function createQueryBuilder(data: unknown[] = ASSET_ROWS) {
+const createQueryBuilder = (data: unknown[] = ASSET_ROWS) => {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
@@ -29,7 +29,7 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ from: fromMock }),
 }));
 
-function renderWithClient(ui: React.ReactElement) {
+const renderWithClient = (ui: React.ReactElement) => {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>

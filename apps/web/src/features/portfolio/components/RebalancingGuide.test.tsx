@@ -67,7 +67,7 @@ vi.mock("@/features/portfolio/mutations", () => ({
   })),
 }));
 
-async function goToStep3(user: ReturnType<typeof userEvent.setup>) {
+const goToStep3 = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.type(
     screen.getByRole("textbox", { name: "005930 보유 주수" }),
     "10"

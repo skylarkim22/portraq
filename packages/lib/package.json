@@ -8,12 +8,15 @@
     "./utils": "./src/utils/index.ts"
   },
   "scripts": {
+    "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@typescript-eslint/parser": "^8",
+    "eslint": "^9",
     "typescript": "^5",
     "vitest": "^3"
   },

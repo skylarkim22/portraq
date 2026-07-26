@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { stockQueries } from "@/features/stocks/queries";
 
-function createQueryBuilder() {
+const createQueryBuilder = () => {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);

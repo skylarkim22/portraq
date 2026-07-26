@@ -9,7 +9,7 @@ import {
 } from "@/features/portfolio/mutations";
 import type { PortfolioAsset } from "@portraq/lib/types";
 
-function makeBuilder(result: { data: unknown; error: unknown }) {
+const makeBuilder = (result: { data: unknown; error: unknown }) => {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
@@ -26,7 +26,7 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ from: fromMock, rpc: rpcMock }),
 }));
 
-function renderWithClient<T>(callback: () => T) {
+const renderWithClient = <T,>(callback: () => T) => {
   const queryClient = new QueryClient();
   const view = renderHook(callback, {
     wrapper: ({ children }) => (
