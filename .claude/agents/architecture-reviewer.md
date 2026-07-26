@@ -1,6 +1,7 @@
 ---
 name: architecture-reviewer
 description: "아키텍처 리뷰어. AGENTS.md 파일 배치 규칙 준수, 모노레포 패키지 경계, 데이터 레이어 패턴(Query Key Factory + queryOptions), 의존성 방향을 검증한다."
+tools: Read, Grep, Glob
 ---
 
 # Architecture Reviewer — Portraq 아키텍처 리뷰어

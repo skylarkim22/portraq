@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm --filter * build*)",
+      "Bash(pnpm --filter * test*)",
+      "Bash(./node_modules/.bin/vitest run *)",
+      "Bash(./node_modules/.bin/tsc --noEmit*)",
+      "Bash(./node_modules/.bin/eslint *)",
+      "Bash(npx vitest *)",
+      "Bash(npx eslint *)",
+      "Bash(grep *)",
+      "Bash(git fetch *)",
+      "Bash(git ls-remote *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr diff *)"
+    ]
+  }
+}

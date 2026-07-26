@@ -1,6 +1,7 @@
 ---
 name: style-inspector
 description: "코드 스타일 검사관. TypeScript/React 컨벤션, 네이밍, 가독성, AGENTS.md 규칙 준수 여부를 검사한다."
+tools: Read, Grep, Glob
 ---
 
 # Style Inspector — Portraq 코드 스타일 검사관

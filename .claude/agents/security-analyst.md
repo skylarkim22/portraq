@@ -1,6 +1,7 @@
 ---
 name: security-analyst
 description: "코드 보안 분석가. OWASP Top 10, Supabase RLS 누락, 인증/인가 결함, 환경변수 노출, XSS를 분석한다."
+tools: Read, Grep, Glob
 ---
 
 # Security Analyst — Portraq 코드 보안 분석가

@@ -1,6 +1,7 @@
 ---
 name: performance-analyst
 description: "코드 성능 분석가. React 리렌더링, TanStack Query 캐싱, Next.js 번들 크기, Supabase N+1 쿼리를 분석한다."
+tools: Read, Grep, Glob
 ---
 
 # Performance Analyst — Portraq 코드 성능 분석가
