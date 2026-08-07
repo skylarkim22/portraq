@@ -23,23 +23,7 @@ const LandingNav = () => {
               <a
                 key={label}
                 href={href}
-                style={{
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  color: "#4b5563",
-                  padding: "8px 16px",
-                  borderRadius: 8,
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f9fafb";
-                  e.currentTarget.style.color = "#111827";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "";
-                  e.currentTarget.style.color = "#4b5563";
-                }}
+                className="no-underline font-semibold text-sm text-[#4b5563] px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-[#f9fafb] hover:text-[#111827]"
               >
                 {label}
               </a>
