@@ -1,12 +1,12 @@
 import { ActionChip } from "@portraq/ui";
-import type { JournalEntry } from "@/components/landing/data";
+import type { JournalEntry } from "@/features/landing/data";
 
 type JournalEntryCardProps = {
   entry: JournalEntry;
 };
 
-const JournalEntryCard = ({ entry }: JournalEntryCardProps) => (
-  <div style={{ border: "1.5px solid #f4f4f5", borderRadius: 14, padding: 14 }}>
+export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => (
+  <div style={{ border: "1.5px solid var(--border-faint)", borderRadius: 14, padding: 14 }}>
     <div
       style={{
         display: "flex",
@@ -16,10 +16,10 @@ const JournalEntryCard = ({ entry }: JournalEntryCardProps) => (
       }}
     >
       <ActionChip action={entry.type} />
-      <span style={{ fontSize: 13, fontWeight: 800, color: "#1c1c1e" }}>
+      <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>
         {entry.name}
       </span>
-      <span style={{ fontSize: 12, color: "#9ca3af" }}>{entry.ticker}</span>
+      <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>{entry.ticker}</span>
     </div>
     <div
       style={{
@@ -36,19 +36,19 @@ const JournalEntryCard = ({ entry }: JournalEntryCardProps) => (
       ].map(({ l, v }) => (
         <div
           key={l}
-          style={{ background: "#f8f9fe", borderRadius: 8, padding: "6px 8px" }}
+          style={{ background: "var(--surface-muted)", borderRadius: 8, padding: "6px 8px" }}
         >
           <div
             style={{
               fontSize: 10,
-              color: "#9ca3af",
+              color: "var(--text-subtle)",
               fontWeight: 600,
               marginBottom: 1,
             }}
           >
             {l}
           </div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#1c1c1e" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
             {v}
           </div>
         </div>
@@ -65,25 +65,24 @@ const JournalEntryCard = ({ entry }: JournalEntryCardProps) => (
           marginBottom: 8,
         }}
       >
-        <span style={{ fontSize: 12, color: "#6b6b7b" }}>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
           세금 {entry.tax} · 세후 순손익
         </span>
-        <span style={{ fontSize: 12, fontWeight: 800, color: "#16a34a" }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: "var(--buy)" }}>
           {entry.netPnl}
         </span>
       </div>
     )}
     <div
       style={{
-        border: "1px solid #ebebef",
+        border: "1px solid var(--border-subtle)",
         borderRadius: 8,
         background: "rgba(255,255,255,0.6)",
         padding: "8px 12px",
       }}
     >
-      <p style={{ fontSize: 12, color: "#6b6b7b", margin: 0 }}>{entry.memo}</p>
+      <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>{entry.memo}</p>
     </div>
   </div>
 );
 
-export default JournalEntryCard;

@@ -32,6 +32,17 @@
   --sell: #dc2626;
   --sell-tint: #fef2f2;
   --sell-border: #fecaca;
+
+  /* 중립 색상 (텍스트/보더/서피스) */
+  --ink: #1c1c1e;
+  --ink-soft: #4b5563;
+  --text-muted: #6b6b7b;
+  --text-subtle: #9ca3af;
+  --surface-muted: #f8f9fe;
+  --border-subtle: #ebebef;
+  --border-faint: #f4f4f5;
+  --primary-tint: #eef2ff;
+  --primary-border: #c7d5fd;
 }
 
 @theme inline {
@@ -60,6 +71,15 @@
   --color-sell: var(--sell);
   --color-sell-tint: var(--sell-tint);
   --color-sell-border: var(--sell-border);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-surface-muted: var(--surface-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-faint: var(--border-faint);
+  --color-primary-tint: var(--primary-tint);
+  --color-primary-border: var(--primary-border);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

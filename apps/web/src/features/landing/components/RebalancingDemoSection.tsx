@@ -1,5 +1,7 @@
 import { RefreshCw, ShieldCheck, TrendingUp, Wallet } from "lucide-react";
 import { ActionChip } from "@portraq/ui";
+import { SectionHeading } from "@/features/landing/components/SectionHeading";
+import { SectionLabel } from "@/features/landing/components/SectionLabel";
 
 const rebalancingFeatures = [
   {
@@ -19,7 +21,7 @@ const rebalancingFeatures = [
 const rebalancingActions = [
   {
     t: "AAPL",
-    dot: "#355df9",
+    dot: "var(--portraq-primary)",
     from: 38,
     to: 42,
     chip: <ActionChip action="buy">매수 +2주</ActionChip>,
@@ -51,7 +53,7 @@ const rebalancingActions = [
   },
 ];
 
-const RebalancingDemoSection = () => (
+export const RebalancingDemoSection = () => (
   <section
     className="py-24 md:py-32"
     style={{ background: "linear-gradient(135deg,#1c1c2e,#0f0f1e)" }}
@@ -59,31 +61,17 @@ const RebalancingDemoSection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="reveal">
-          <span
-            className="section-label"
-            style={{
-              display: "inline-flex",
-              marginBottom: 16,
-              background: "rgba(53,93,249,0.2)",
-              color: "#8fa8fb",
-            }}
-          >
-            <RefreshCw size={12} /> 매달 실행하는 리밸런싱
-          </span>
-          <h2
-            style={{
-              fontSize: "clamp(1.8rem,3.5vw,2.6rem)",
-              fontWeight: 800,
-              letterSpacing: "-0.04em",
-              color: "#fff",
-              lineHeight: 1.2,
-              marginBottom: 16,
-            }}
+          <SectionLabel icon={<RefreshCw size={12} />} dark>
+            매달 실행하는 리밸런싱
+          </SectionLabel>
+          <SectionHeading
+            dark
+            style={{ fontSize: "clamp(1.8rem,3.5vw,2.6rem)", marginBottom: 16 }}
           >
             목표 비율과 실제 비율의
             <br />
             괴리를 정확히 계산
-          </h2>
+          </SectionHeading>
           <p
             style={{
               fontSize: 16,
@@ -228,4 +216,3 @@ const RebalancingDemoSection = () => (
   </section>
 );
 
-export default RebalancingDemoSection;

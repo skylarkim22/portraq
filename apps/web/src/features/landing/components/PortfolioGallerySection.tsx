@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { ArrowRight, PlusCircle, Users } from "lucide-react";
-import { portfolios } from "@/components/landing/data";
+import { portfolios } from "@/features/landing/data";
+import { SectionHeading } from "@/features/landing/components/SectionHeading";
+import { SectionLabel } from "@/features/landing/components/SectionLabel";
 
-const PortfolioGallerySection = () => {
+export const PortfolioGallerySection = () => {
   const [openCardId, setOpenCardId] = useState<string | null>(null);
 
   const toggleCard = (id: string) =>
@@ -14,29 +16,16 @@ const PortfolioGallerySection = () => {
     <section id="portfolios" className="py-24 md:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 reveal">
-          <span
-            className="section-label"
-            style={{ display: "inline-flex", marginBottom: 16 }}
-          >
-            <Users size={12} /> 대가 포트폴리오
-          </span>
-          <h2
-            style={{
-              fontSize: "clamp(2rem,4vw,2.8rem)",
-              fontWeight: 800,
-              letterSpacing: "-0.04em",
-              color: "#1c1c1e",
-              lineHeight: 1.15,
-            }}
-          >
+          <SectionLabel icon={<Users size={12} />}>대가 포트폴리오</SectionLabel>
+          <SectionHeading>
             검증된 투자 전략을
             <br />
             골라서 시작하세요
-          </h2>
+          </SectionHeading>
           <p
             style={{
               fontSize: 16,
-              color: "#6b6b7b",
+              color: "var(--text-muted)",
               marginTop: 14,
               lineHeight: 1.7,
             }}
@@ -52,12 +41,25 @@ const PortfolioGallerySection = () => {
               className="card"
               style={{
                 padding: 0,
-                cursor: "pointer",
-                borderColor: openCardId === p.id ? "#355df9" : undefined,
+                borderColor:
+                  openCardId === p.id ? "var(--portraq-primary)" : undefined,
               }}
-              onClick={() => toggleCard(p.id)}
             >
-              <div style={{ padding: 24 }}>
+              <button
+                type="button"
+                onClick={() => toggleCard(p.id)}
+                aria-expanded={openCardId === p.id}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: 24,
+                  textAlign: "left",
+                  background: "transparent",
+                  border: 0,
+                  font: "inherit",
+                  cursor: "pointer",
+                }}
+              >
                 <div
                   className="flex items-start justify-between"
                   style={{ marginBottom: 16 }}
@@ -67,13 +69,13 @@ const PortfolioGallerySection = () => {
                       style={{
                         fontSize: 17,
                         fontWeight: 800,
-                        color: "#1c1c1e",
+                        color: "var(--ink)",
                         marginBottom: 4,
                       }}
                     >
                       {p.name}
                     </div>
-                    <div style={{ fontSize: 13, color: "#6b6b7b" }}>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
                       {p.subtitle}
                     </div>
                   </div>
@@ -99,7 +101,7 @@ const PortfolioGallerySection = () => {
                     <div
                       style={{
                         fontSize: 10,
-                        color: "#6b6b7b",
+                        color: "var(--text-muted)",
                         fontWeight: 600,
                         marginBottom: 2,
                       }}
@@ -107,7 +109,7 @@ const PortfolioGallerySection = () => {
                       CAGR 10Y
                     </div>
                     <div
-                      style={{ fontSize: 18, fontWeight: 800, color: "#16a34a" }}
+                      style={{ fontSize: 18, fontWeight: 800, color: "var(--buy)" }}
                     >
                       {p.cagr}
                     </div>
@@ -116,7 +118,7 @@ const PortfolioGallerySection = () => {
                     <div
                       style={{
                         fontSize: 10,
-                        color: "#6b6b7b",
+                        color: "var(--text-muted)",
                         fontWeight: 600,
                         marginBottom: 2,
                       }}
@@ -127,19 +129,19 @@ const PortfolioGallerySection = () => {
                       style={{
                         fontSize: 18,
                         fontWeight: 800,
-                        color: p.mddGreen ? "#16a34a" : "#dc2626",
+                        color: p.mddGreen ? "var(--buy)" : "var(--sell)",
                       }}
                     >
                       {p.mdd}
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
               {openCardId === p.id && (
                 <div
                   style={{
                     padding: "0 24px 24px",
-                    borderTop: "1.5px solid #f4f4f5",
+                    borderTop: "1.5px solid var(--border-faint)",
                     animation:
                       "slideDown 0.3s cubic-bezier(0.16,1,0.3,1) forwards",
                   }}
@@ -148,7 +150,7 @@ const PortfolioGallerySection = () => {
                     style={{
                       paddingTop: 16,
                       fontSize: 13,
-                      color: "#6b6b7b",
+                      color: "var(--text-muted)",
                       lineHeight: 1.7,
                       marginBottom: 16,
                     }}
@@ -172,13 +174,16 @@ const PortfolioGallerySection = () => {
             </div>
           ))}
 
-          <div
+          <a
+            href="/login"
             className="card"
             style={{
+              display: "block",
               padding: 0,
               cursor: "pointer",
+              textDecoration: "none",
               borderStyle: "dashed",
-              borderColor: "#c7d5fd",
+              borderColor: "var(--primary-border)",
             }}
           >
             <div
@@ -197,38 +202,38 @@ const PortfolioGallerySection = () => {
                 style={{
                   width: 52,
                   height: 52,
-                  background: "#eef2ff",
+                  background: "var(--primary-tint)",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <PlusCircle size={26} color="#355df9" />
+                <PlusCircle size={26} color="var(--portraq-primary)" />
               </div>
               <div>
                 <div
                   style={{
                     fontSize: 16,
                     fontWeight: 800,
-                    color: "#355df9",
+                    color: "var(--portraq-primary)",
                     marginBottom: 4,
                   }}
                 >
                   직접 구성하기
                 </div>
-                <div style={{ fontSize: 13, color: "#6b6b7b" }}>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
                   빈 포트폴리오에서 내 전략으로 시작
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </div>
         <p
           style={{
             textAlign: "center",
             fontSize: 12,
-            color: "#9ca3af",
+            color: "var(--text-subtle)",
             marginTop: 20,
           }}
         >
@@ -240,4 +245,3 @@ const PortfolioGallerySection = () => {
   );
 };
 
-export default PortfolioGallerySection;

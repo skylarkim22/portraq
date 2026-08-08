@@ -1,5 +1,7 @@
 import { MapPin } from "lucide-react";
 import { ActionChip } from "@portraq/ui";
+import { SectionHeading } from "@/features/landing/components/SectionHeading";
+import { SectionLabel } from "@/features/landing/components/SectionLabel";
 
 const steps = [
   {
@@ -21,7 +23,7 @@ const steps = [
     extra: (
       <div className="input-mock" style={{ marginTop: 16 }}>
         <span style={{ fontSize: 13 }}>이번 달 투자금</span>
-        <span style={{ fontWeight: 800, color: "#355df9", fontSize: 14 }}>
+        <span style={{ fontWeight: 800, color: "var(--portraq-primary)", fontSize: 14 }}>
           50만원
         </span>
       </div>
@@ -41,29 +43,16 @@ const steps = [
   },
 ];
 
-const HowItWorksSection = () => (
-  <section id="howto" className="py-24 md:py-32" style={{ background: "#f8f9fe" }}>
+export const HowItWorksSection = () => (
+  <section id="howto" className="py-24 md:py-32" style={{ background: "var(--surface-muted)" }}>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-16 reveal">
-        <span
-          className="section-label"
-          style={{ display: "inline-flex", marginBottom: 16 }}
-        >
-          <MapPin size={12} /> 사용법
-        </span>
-        <h2
-          style={{
-            fontSize: "clamp(2rem,4vw,2.8rem)",
-            fontWeight: 800,
-            letterSpacing: "-0.04em",
-            color: "#1c1c1e",
-            lineHeight: 1.15,
-          }}
-        >
+        <SectionLabel icon={<MapPin size={12} />}>사용법</SectionLabel>
+        <SectionHeading>
           3단계로 시작하는
           <br />
           적립식 투자
-        </h2>
+        </SectionHeading>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 reveal">
         {steps.map(({ n, title, desc, extra }) => (
@@ -72,7 +61,7 @@ const HowItWorksSection = () => (
             style={{
               padding: 32,
               background: "#fff",
-              border: "1.5px solid #ebebef",
+              border: "1.5px solid var(--border-subtle)",
               borderRadius: 20,
             }}
           >
@@ -80,7 +69,7 @@ const HowItWorksSection = () => (
               style={{
                 width: 40,
                 height: 40,
-                background: "#355df9",
+                background: "var(--portraq-primary)",
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
@@ -97,14 +86,14 @@ const HowItWorksSection = () => (
               style={{
                 fontSize: 19,
                 fontWeight: 800,
-                color: "#1c1c1e",
+                color: "var(--ink)",
                 marginBottom: 10,
                 letterSpacing: "-0.02em",
               }}
             >
               {title}
             </h3>
-            <p style={{ fontSize: 14, color: "#6b6b7b", lineHeight: 1.7 }}>
+            <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.7 }}>
               {desc}
             </p>
             {extra}
@@ -115,4 +104,3 @@ const HowItWorksSection = () => (
   </section>
 );
 
-export default HowItWorksSection;

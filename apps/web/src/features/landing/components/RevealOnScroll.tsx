@@ -9,7 +9,7 @@ const REVEAL_ROOT_MARGIN = "0px 0px -60px 0px";
  * `.reveal` 요소가 뷰포트에 들어오면 `.visible`을 붙여 페이드인시킨다.
  * 랜딩 페이지 전역에 흩어진 요소를 document 기준으로 관찰하므로 렌더링은 없다.
  */
-const RevealOnScroll = () => {
+export const RevealOnScroll = () => {
   useEffect(() => {
     const elements = document.querySelectorAll(".reveal");
     const observer = new IntersectionObserver(
@@ -26,4 +26,3 @@ const RevealOnScroll = () => {
   return null;
 };
 
-export default RevealOnScroll;

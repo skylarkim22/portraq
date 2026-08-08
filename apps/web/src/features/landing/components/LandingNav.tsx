@@ -1,5 +1,5 @@
 import Logo from "@/components/Logo";
-import NavAuthButton from "@/components/landing/NavAuthButton";
+import { NavAuthButton } from "@/features/landing/components/NavAuthButton";
 
 const navLinks = [
   { href: "#features", label: "기능" },
@@ -7,7 +7,7 @@ const navLinks = [
   { href: "#howto", label: "사용법" },
 ];
 
-const LandingNav = () => (
+export const LandingNav = () => (
   <header className="nav-glass sticky top-0 z-40">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between h-16">
@@ -17,7 +17,7 @@ const LandingNav = () => (
             <a
               key={label}
               href={href}
-              className="no-underline font-semibold text-sm text-[#4b5563] px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-[#f9fafb] hover:text-[#111827]"
+              className="no-underline font-semibold text-sm text-[var(--ink-soft)] px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-[#f9fafb] hover:text-[#111827]"
             >
               {label}
             </a>
@@ -29,4 +29,3 @@ const LandingNav = () => (
   </header>
 );
 
-export default LandingNav;

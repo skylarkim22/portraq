@@ -1,57 +1,53 @@
 import { Calculator, Calendar, TrendingDown, TrendingUp } from "lucide-react";
-import { calDays, journalDots, journalEntries } from "@/components/landing/data";
-import JournalEntryCard from "@/components/landing/JournalEntryCard";
+import { calDays, journalDots, journalEntries } from "@/features/landing/data";
+import { JournalEntryCard } from "@/features/landing/components/JournalEntryCard";
+import { SectionHeading } from "@/features/landing/components/SectionHeading";
+import { SectionLabel } from "@/features/landing/components/SectionLabel";
 
 const TODAY = 25;
 
 const journalFeatures = [
   {
-    icon: <TrendingUp size={18} color="#16a34a" />,
+    icon: <TrendingUp size={18} color="var(--buy)" />,
     bg: "#f0fdf4",
     title: "매수 기록",
     desc: "종목·수량·가격 입력 후 이유 메모",
   },
   {
-    icon: <TrendingDown size={18} color="#dc2626" />,
+    icon: <TrendingDown size={18} color="var(--sell)" />,
     bg: "#fef2f2",
     title: "매도 기록",
     desc: "보유 종목 기반 선택, 평균단가 손익 자동 계산",
   },
   {
-    icon: <Calculator size={18} color="#355df9" />,
-    bg: "#eef2ff",
+    icon: <Calculator size={18} color="var(--portraq-primary)" />,
+    bg: "var(--primary-tint)",
     title: "월별 통계",
     desc: "순손익·거래 횟수·시장 비중 요약",
   },
 ];
 
 const monthlyStats = [
-  { l: "총 매수금액", v: "2,891,000원", c: "#1c1c1e" },
-  { l: "총 매도금액", v: "1,719,000원", c: "#1c1c1e" },
-  { l: "세금 합계", v: "25,556원", c: "#6b6b7b" },
-  { l: "순손익", v: "+139,444원", c: "#16a34a" },
+  { l: "총 매수금액", v: "2,891,000원", c: "var(--ink)" },
+  { l: "총 매도금액", v: "1,719,000원", c: "var(--ink)" },
+  { l: "세금 합계", v: "25,556원", c: "var(--text-muted)" },
+  { l: "순손익", v: "+139,444원", c: "var(--buy)" },
 ];
 
-const TradeJournalSection = () => (
+export const TradeJournalSection = () => (
   <section
     className="py-24 md:py-32"
-    style={{ borderTop: "1.5px solid #ebebef", background: "#f8f9fe" }}
+    style={{ borderTop: "1.5px solid var(--border-subtle)", background: "var(--surface-muted)" }}
   >
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
         <div className="reveal">
-          <span
-            className="section-label"
-            style={{ display: "inline-flex", marginBottom: 16 }}
-          >
-            <Calendar size={12} /> 달력으로 보는 투자 흐름
-          </span>
-          <h2
+          <SectionLabel icon={<Calendar size={12} />}>
+            달력으로 보는 투자 흐름
+          </SectionLabel>
+          <SectionHeading
             style={{
               fontSize: "clamp(1.8rem,3.5vw,2.6rem)",
-              fontWeight: 800,
-              letterSpacing: "-0.04em",
-              color: "#1c1c1e",
               lineHeight: 1.2,
               marginBottom: 16,
             }}
@@ -59,11 +55,11 @@ const TradeJournalSection = () => (
             월별 매매 기록을
             <br />
             한눈에 확인하세요
-          </h2>
+          </SectionHeading>
           <p
             style={{
               fontSize: 16,
-              color: "#6b6b7b",
+              color: "var(--text-muted)",
               lineHeight: 1.75,
               marginBottom: 28,
             }}
@@ -90,11 +86,11 @@ const TradeJournalSection = () => (
                 </div>
                 <div>
                   <div
-                    style={{ fontSize: 14, fontWeight: 700, color: "#1c1c1e" }}
+                    style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}
                   >
                     {title}
                   </div>
-                  <div style={{ fontSize: 13, color: "#6b6b7b" }}>{desc}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{desc}</div>
                 </div>
               </div>
             ))}
@@ -121,7 +117,7 @@ const TradeJournalSection = () => (
               }}
             >
               <span
-                style={{ fontSize: 15, fontWeight: 800, color: "#1c1c1e" }}
+                style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)" }}
               >
                 2026년 6월
               </span>
@@ -131,7 +127,7 @@ const TradeJournalSection = () => (
                   gap: 12,
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#6b6b7b",
+                  color: "var(--text-muted)",
                 }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -141,7 +137,7 @@ const TradeJournalSection = () => (
                       width: 7,
                       height: 7,
                       borderRadius: "50%",
-                      background: "#16a34a",
+                      background: "var(--buy)",
                     }}
                   />
                   매수
@@ -153,7 +149,7 @@ const TradeJournalSection = () => (
                       width: 7,
                       height: 7,
                       borderRadius: "50%",
-                      background: "#dc2626",
+                      background: "var(--sell)",
                     }}
                   />
                   매도
@@ -175,7 +171,7 @@ const TradeJournalSection = () => (
                   style={{
                     textAlign: "center",
                     fontSize: 11,
-                    color: "#9ca3af",
+                    color: "var(--text-subtle)",
                     fontWeight: 600,
                     paddingBottom: 6,
                   }}
@@ -212,14 +208,14 @@ const TradeJournalSection = () => (
                           style={{
                             fontSize: 13,
                             fontWeight: isToday ? 800 : 500,
-                            color: isToday ? "#355df9" : "#1c1c1e",
+                            color: isToday ? "var(--portraq-primary)" : "var(--ink)",
                             width: 28,
                             height: 32,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: "50%",
-                            background: isToday ? "#eef2ff" : "transparent",
+                            background: isToday ? "var(--primary-tint)" : "transparent",
                           }}
                         >
                           {day}
@@ -238,7 +234,7 @@ const TradeJournalSection = () => (
                                 width: 6,
                                 height: 6,
                                 borderRadius: "50%",
-                                background: "#16a34a",
+                                background: "var(--buy)",
                                 display: "inline-block",
                               }}
                             />
@@ -249,7 +245,7 @@ const TradeJournalSection = () => (
                                 width: 6,
                                 height: 6,
                                 borderRadius: "50%",
-                                background: "#dc2626",
+                                background: "var(--sell)",
                                 display: "inline-block",
                               }}
                             />
@@ -267,14 +263,14 @@ const TradeJournalSection = () => (
               style={{
                 marginTop: 20,
                 paddingTop: 20,
-                borderTop: "1.5px solid #f4f4f5",
+                borderTop: "1.5px solid var(--border-faint)",
               }}
             >
               <div
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#6b6b7b",
+                  color: "var(--text-muted)",
                   marginBottom: 12,
                   letterSpacing: "0.05em",
                   textTransform: "uppercase",
@@ -293,7 +289,7 @@ const TradeJournalSection = () => (
                   <div
                     key={l}
                     style={{
-                      background: "#f8f9fe",
+                      background: "var(--surface-muted)",
                       borderRadius: 10,
                       padding: "10px 12px",
                     }}
@@ -301,7 +297,7 @@ const TradeJournalSection = () => (
                     <div
                       style={{
                         fontSize: 11,
-                        color: "#9ca3af",
+                        color: "var(--text-subtle)",
                         fontWeight: 600,
                         marginBottom: 3,
                       }}
@@ -326,12 +322,12 @@ const TradeJournalSection = () => (
                 }}
               >
                 <span
-                  style={{ fontSize: 13, fontWeight: 700, color: "#1c1c1e" }}
+                  style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}
                 >
                   순수익률
                 </span>
                 <span
-                  style={{ fontSize: 18, fontWeight: 800, color: "#16a34a" }}
+                  style={{ fontSize: 18, fontWeight: 800, color: "var(--buy)" }}
                 >
                   +8.1%
                 </span>
@@ -341,7 +337,7 @@ const TradeJournalSection = () => (
 
           {/* Date detail mockup — June 25 */}
           <div
-            className="border-[1.5px] border-[#ebebef] transition-all duration-[0.4s] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[3px] hover:border-[#c7d5fd] hover:shadow-[0_12px_40px_rgba(53,93,249,0.09),0_2px_8px_rgba(0,0,0,0.04)]"
+            className="border-[1.5px] border-[var(--border-subtle)] transition-all duration-[0.4s] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[3px] hover:border-[var(--primary-border)] hover:shadow-[0_12px_40px_rgba(53,93,249,0.09),0_2px_8px_rgba(0,0,0,0.04)]"
             style={{ borderRadius: 20, padding: 20, background: "#fff" }}
           >
             <div
@@ -351,14 +347,14 @@ const TradeJournalSection = () => (
                 gap: 8,
                 marginBottom: 16,
                 paddingBottom: 14,
-                borderBottom: "1.5px solid #f4f4f5",
+                borderBottom: "1.5px solid var(--border-faint)",
               }}
             >
               <span
                 style={{
                   fontSize: 14,
                   fontWeight: 800,
-                  color: "#1c1c1e",
+                  color: "var(--ink)",
                   letterSpacing: "-0.02em",
                 }}
               >
@@ -366,8 +362,11 @@ const TradeJournalSection = () => (
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {journalEntries[TODAY].map((entry, i) => (
-                <JournalEntryCard key={i} entry={entry} />
+              {journalEntries[TODAY].map((entry) => (
+                <JournalEntryCard
+                  key={`${entry.type}-${entry.ticker}`}
+                  entry={entry}
+                />
               ))}
             </div>
           </div>
@@ -377,4 +376,3 @@ const TradeJournalSection = () => (
   </section>
 );
 
-export default TradeJournalSection;
