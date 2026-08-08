@@ -1,16 +1,18 @@
 import { Award, BookOpen, LayoutGrid, RefreshCw } from "lucide-react";
 import { ActionChip } from "@portraq/ui";
-import { journalEntries } from "@/components/landing/data";
-import JournalEntryCard from "@/components/landing/JournalEntryCard";
+import { journalEntries } from "@/features/landing/data";
+import { JournalEntryCard } from "@/features/landing/components/JournalEntryCard";
+import { SectionHeading } from "@/features/landing/components/SectionHeading";
+import { SectionLabel } from "@/features/landing/components/SectionLabel";
 
 const bentoPortfolios = [
   {
     name: "워런 버핏",
     cagr: "+10.4%",
     bar: [
-      { f: 42, bg: "#355df9" },
+      { f: 42, bg: "var(--portraq-primary)" },
       { f: 28, bg: "#6b8ffb" },
-      { f: 30, bg: "#ebebef" },
+      { f: 30, bg: "var(--border-subtle)" },
     ],
   },
   {
@@ -20,15 +22,15 @@ const bentoPortfolios = [
       { f: 30, bg: "#7c3aed" },
       { f: 40, bg: "#a78bfa" },
       { f: 15, bg: "#f59e0b" },
-      { f: 15, bg: "#ebebef" },
+      { f: 15, bg: "var(--border-subtle)" },
     ],
   },
   {
     name: "캐시 우드",
     cagr: "+13.5%",
     bar: [
-      { f: 43, bg: "#dc2626" },
-      { f: 57, bg: "#ebebef" },
+      { f: 43, bg: "var(--sell)" },
+      { f: 57, bg: "var(--border-subtle)" },
     ],
   },
   {
@@ -41,29 +43,16 @@ const bentoPortfolios = [
   },
 ];
 
-const FeaturesSection = () => (
-  <section id="features" className="py-24 md:py-32" style={{ background: "#f8f9fe" }}>
+export const FeaturesSection = () => (
+  <section id="features" className="py-24 md:py-32" style={{ background: "var(--surface-muted)" }}>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-16 reveal">
-        <span
-          className="section-label"
-          style={{ display: "inline-flex", marginBottom: 16 }}
-        >
-          <LayoutGrid size={12} /> 핵심 기능
-        </span>
-        <h2
-          style={{
-            fontSize: "clamp(2rem,4vw,2.8rem)",
-            fontWeight: 800,
-            letterSpacing: "-0.04em",
-            color: "#1c1c1e",
-            lineHeight: 1.15,
-          }}
-        >
+        <SectionLabel icon={<LayoutGrid size={12} />}>핵심 기능</SectionLabel>
+        <SectionHeading>
           투자에 필요한 모든 것,
           <br />
           하나의 앱에서
-        </h2>
+        </SectionHeading>
       </div>
 
       <div
@@ -80,17 +69,14 @@ const FeaturesSection = () => (
         >
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1">
-              <span
-                className="section-label"
-                style={{ display: "inline-flex", marginBottom: 16 }}
-              >
-                <Award size={12} /> 대가 포트폴리오
-              </span>
+              <SectionLabel icon={<Award size={12} />}>
+                대가 포트폴리오
+              </SectionLabel>
               <h3
                 style={{
                   fontSize: 22,
                   fontWeight: 800,
-                  color: "#1c1c1e",
+                  color: "var(--ink)",
                   marginBottom: 12,
                   letterSpacing: "-0.02em",
                 }}
@@ -102,7 +88,7 @@ const FeaturesSection = () => (
               <p
                 style={{
                   fontSize: 15,
-                  color: "#6b6b7b",
+                  color: "var(--text-muted)",
                   lineHeight: 1.7,
                   maxWidth: "38ch",
                 }}
@@ -128,7 +114,7 @@ const FeaturesSection = () => (
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#6b6b7b",
+                      color: "var(--text-muted)",
                       marginBottom: 8,
                     }}
                   >
@@ -144,7 +130,7 @@ const FeaturesSection = () => (
                     ))}
                   </div>
                   <div
-                    style={{ fontSize: 13, fontWeight: 800, color: "#16a34a" }}
+                    style={{ fontSize: 13, fontWeight: 800, color: "var(--buy)" }}
                   >
                     {p.cagr} CAGR
                   </div>
@@ -164,7 +150,7 @@ const FeaturesSection = () => (
               style={{
                 width: 48,
                 height: 48,
-                background: "#eef2ff",
+                background: "var(--primary-tint)",
                 borderRadius: 14,
                 display: "flex",
                 alignItems: "center",
@@ -172,14 +158,14 @@ const FeaturesSection = () => (
                 flexShrink: 0,
               }}
             >
-              <RefreshCw size={24} color="#355df9" />
+              <RefreshCw size={24} color="var(--portraq-primary)" />
             </div>
             <div className="flex-1">
               <h3
                 style={{
                   fontSize: 18,
                   fontWeight: 800,
-                  color: "#1c1c1e",
+                  color: "var(--ink)",
                   marginBottom: 8,
                   letterSpacing: "-0.02em",
                 }}
@@ -189,7 +175,7 @@ const FeaturesSection = () => (
               <p
                 style={{
                   fontSize: 14,
-                  color: "#6b6b7b",
+                  color: "var(--text-muted)",
                   lineHeight: 1.65,
                   marginBottom: 14,
                 }}
@@ -213,17 +199,14 @@ const FeaturesSection = () => (
         >
           <div className="flex flex-col md:flex-row gap-8 md:items-start">
             <div style={{ flex: "0 0 auto", maxWidth: 360 }}>
-              <span
-                className="section-label"
-                style={{ display: "inline-flex", marginBottom: 16 }}
-              >
-                <BookOpen size={12} /> 매매 일지
-              </span>
+              <SectionLabel icon={<BookOpen size={12} />}>
+                매매 일지
+              </SectionLabel>
               <h3
                 style={{
                   fontSize: 22,
                   fontWeight: 800,
-                  color: "#1c1c1e",
+                  color: "var(--ink)",
                   marginBottom: 12,
                   letterSpacing: "-0.02em",
                 }}
@@ -232,7 +215,7 @@ const FeaturesSection = () => (
                 <br />
                 기록으로 남기세요
               </h3>
-              <p style={{ fontSize: 15, color: "#6b6b7b", lineHeight: 1.7 }}>
+              <p style={{ fontSize: 15, color: "var(--text-muted)", lineHeight: 1.7 }}>
                 왜 샀고, 왜 팔았는지. 종목·수량·가격과 함께 이유를 적어두면
                 시간이 지나도 내 판단을 돌아볼 수 있습니다.
               </p>
@@ -249,4 +232,3 @@ const FeaturesSection = () => (
   </section>
 );
 
-export default FeaturesSection;

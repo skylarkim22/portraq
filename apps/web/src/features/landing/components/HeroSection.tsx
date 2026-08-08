@@ -1,11 +1,14 @@
-"use client";
-
+import { Fragment } from "react";
 import { ArrowRight, CheckCircle, Star } from "lucide-react";
 import { ActionChip } from "@portraq/ui";
-import { portfolios } from "@/components/landing/data";
+import { portfolios } from "@/features/landing/data";
+import { SectionLabel } from "@/features/landing/components/SectionLabel";
+
+const heroPortfolio =
+  portfolios.find((p) => p.id === "buffett") ?? portfolios[0];
 
 const heroHoldings = [
-  { t: "AAPL", n: "Apple", p: "42%", c: "#355df9" },
+  { t: "AAPL", n: "Apple", p: "42%", c: "var(--portraq-primary)" },
   { t: "BRK.B", n: "Berkshire", p: "28%", c: "#6b8ffb" },
   { t: "BAC", n: "Bank of America", p: "12%", c: "#93c5fd" },
   { t: "KO", n: "Coca-Cola", p: "10%", c: "#f59e0b" },
@@ -13,12 +16,12 @@ const heroHoldings = [
 ];
 
 const heroStats = [
-  { l: "CAGR (10Y)", v: "+10.4%", c: "#16a34a" },
-  { l: "최대낙폭 MDD", v: "-32.7%", c: "#dc2626" },
-  { l: "월 투자금", v: "50만원", c: "#1c1c1e" },
+  { l: "CAGR (10Y)", v: "+10.4%", c: "var(--buy)" },
+  { l: "최대낙폭 MDD", v: "-32.7%", c: "var(--sell)" },
+  { l: "월 투자금", v: "50만원", c: "var(--ink)" },
 ];
 
-const HeroSection = () => {
+export const HeroSection = () => {
   return (
     <section
       className="hero-bg flex items-center pt-8 pb-16 md:py-0"
@@ -35,28 +38,31 @@ const HeroSection = () => {
               animation: "fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) forwards",
             }}
           >
-            <span className="section-label" style={{ width: "fit-content" }}>
-              <Star size={12} fill="currentColor" /> 적립식 투자 포트폴리오 관리
-            </span>
+            <SectionLabel
+              icon={<Star size={12} fill="currentColor" />}
+              style={{ marginBottom: 0, width: "fit-content" }}
+            >
+              적립식 투자 포트폴리오 관리
+            </SectionLabel>
             <h1
               style={{
                 fontSize: "clamp(2.4rem,5vw,3.6rem)",
                 fontWeight: 800,
                 lineHeight: 1.12,
                 letterSpacing: "-0.04em",
-                color: "#1c1c1e",
+                color: "var(--ink)",
                 margin: 0,
               }}
             >
               대가의 전략으로
               <br />
-              <span style={{ color: "#355df9" }}>매달 적립</span>하세요
+              <span style={{ color: "var(--portraq-primary)" }}>매달 적립</span>하세요
             </h1>
             <p
               style={{
                 fontSize: 17,
                 lineHeight: 1.75,
-                color: "#6b6b7b",
+                color: "var(--text-muted)",
                 maxWidth: "46ch",
                 margin: 0,
               }}
@@ -78,9 +84,9 @@ const HeroSection = () => {
                 <div
                   key={t}
                   className="flex items-center gap-2"
-                  style={{ color: "#6b6b7b", fontSize: 13, fontWeight: 600 }}
+                  style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 600 }}
                 >
-                  <CheckCircle size={16} color="#16a34a" /> {t}
+                  <CheckCircle size={16} color="var(--buy)" /> {t}
                 </div>
               ))}
             </div>
@@ -97,7 +103,7 @@ const HeroSection = () => {
                 top: -24,
                 zIndex: 10,
                 background: "#fff",
-                border: "1.5px solid #ebebef",
+                border: "1.5px solid var(--border-subtle)",
                 borderRadius: 12,
                 padding: "12px 16px",
                 boxShadow: "0 8px 24px rgba(53,93,249,0.12)",
@@ -107,7 +113,7 @@ const HeroSection = () => {
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: "#6b6b7b",
+                  color: "var(--text-muted)",
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
                   marginBottom: 2,
@@ -115,10 +121,10 @@ const HeroSection = () => {
               >
                 연평균 수익률
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#16a34a" }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--buy)" }}>
                 +10.4%
               </div>
-              <div style={{ fontSize: 11, color: "#6b6b7b" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 워런 버핏 · 10년 CAGR
               </div>
             </div>
@@ -132,7 +138,7 @@ const HeroSection = () => {
                 right: -8,
                 zIndex: 10,
                 background: "#fff",
-                border: "1.5px solid #ebebef",
+                border: "1.5px solid var(--border-subtle)",
                 borderRadius: 12,
                 padding: "12px 16px",
                 boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
@@ -142,7 +148,7 @@ const HeroSection = () => {
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: "#6b6b7b",
+                  color: "var(--text-muted)",
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
                   marginBottom: 2,
@@ -172,7 +178,7 @@ const HeroSection = () => {
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#6b6b7b",
+                      color: "var(--text-muted)",
                       letterSpacing: "0.05em",
                       textTransform: "uppercase",
                       marginBottom: 3,
@@ -181,7 +187,7 @@ const HeroSection = () => {
                     대가 포트폴리오
                   </div>
                   <div
-                    style={{ fontSize: 17, fontWeight: 800, color: "#1c1c1e" }}
+                    style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)" }}
                   >
                     워런 버핏 전략
                   </div>
@@ -192,7 +198,7 @@ const HeroSection = () => {
                 </div>
               </div>
               <div className="ratio-bar" style={{ marginBottom: 12 }}>
-                {portfolios[0].ratioBar.map((s, i) => (
+                {heroPortfolio.ratioBar.map((s, i) => (
                   <div
                     key={i}
                     className="ratio-seg"
@@ -216,13 +222,13 @@ const HeroSection = () => {
                         style={{
                           fontSize: 13,
                           fontWeight: h.n ? 700 : 600,
-                          color: h.n ? "#1c1c1e" : "#6b6b7b",
+                          color: h.n ? "var(--ink)" : "var(--text-muted)",
                         }}
                       >
                         {h.t}
                       </span>
                       {h.n && (
-                        <span style={{ fontSize: 12, color: "#6b6b7b" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
                           {h.n}
                         </span>
                       )}
@@ -231,7 +237,7 @@ const HeroSection = () => {
                       style={{
                         fontSize: 13,
                         fontWeight: 700,
-                        color: h.n ? "#1c1c1e" : "#6b6b7b",
+                        color: h.n ? "var(--ink)" : "var(--text-muted)",
                       }}
                     >
                       {h.p}
@@ -242,18 +248,18 @@ const HeroSection = () => {
               <div
                 className="flex justify-between"
                 style={{
-                  background: "#f8f9fe",
+                  background: "var(--surface-muted)",
                   borderRadius: 12,
                   padding: "14px 16px",
                 }}
               >
                 {heroStats.map((s, i, arr) => (
-                  <span key={s.l} style={{ display: "contents" }}>
+                  <Fragment key={s.l}>
                     <div className="text-center">
                       <div
                         style={{
                           fontSize: 11,
-                          color: "#6b6b7b",
+                          color: "var(--text-muted)",
                           fontWeight: 600,
                           marginBottom: 2,
                         }}
@@ -267,9 +273,11 @@ const HeroSection = () => {
                       </div>
                     </div>
                     {i < arr.length - 1 && (
-                      <div style={{ width: 1, background: "#ebebef" }} />
+                      <div
+                        style={{ width: 1, background: "var(--border-subtle)" }}
+                      />
                     )}
-                  </span>
+                  </Fragment>
                 ))}
               </div>
             </div>
@@ -280,4 +288,3 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;

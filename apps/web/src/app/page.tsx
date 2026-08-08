@@ -1,13 +1,13 @@
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import FinalCtaSection from "@/components/landing/FinalCtaSection";
-import HeroSection from "@/components/landing/HeroSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import LandingFooter from "@/components/landing/LandingFooter";
-import LandingNav from "@/components/landing/LandingNav";
-import PortfolioGallerySection from "@/components/landing/PortfolioGallerySection";
-import RebalancingDemoSection from "@/components/landing/RebalancingDemoSection";
-import RevealOnScroll from "@/components/landing/RevealOnScroll";
-import TradeJournalSection from "@/components/landing/TradeJournalSection";
+import { FeaturesSection } from "@/features/landing/components/FeaturesSection";
+import { FinalCtaSection } from "@/features/landing/components/FinalCtaSection";
+import { HeroSection } from "@/features/landing/components/HeroSection";
+import { HowItWorksSection } from "@/features/landing/components/HowItWorksSection";
+import { LandingFooter } from "@/features/landing/components/LandingFooter";
+import { LandingNav } from "@/features/landing/components/LandingNav";
+import { PortfolioGallerySection } from "@/features/landing/components/PortfolioGallerySection";
+import { RebalancingDemoSection } from "@/features/landing/components/RebalancingDemoSection";
+import { RevealOnScroll } from "@/features/landing/components/RevealOnScroll";
+import { TradeJournalSection } from "@/features/landing/components/TradeJournalSection";
 
 export default function Home() {
   return (
