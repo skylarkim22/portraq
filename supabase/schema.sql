@@ -18,6 +18,8 @@ $$ LANGUAGE plpgsql;
 -- assets (종목 마스터, PRD 5.2)
 -- 검색·자동완성 소스. 현재가 등 실시간 데이터는 API에서 직접 fetch.
 -- color: 티커 해시 기반 고정 색상 (seed.sql에서 일괄 계산·삽입)
+-- dividend_frequency / dividend_months: 배당 스케줄. 무배당 종목은 NULL.
+--   dividend_months는 배당기준일 기준 지급 월 (예: 분기배당 {3,6,9,12})
 -- ============================================================
 CREATE TABLE assets (
   ticker    TEXT        PRIMARY KEY,
@@ -25,6 +27,13 @@ CREATE TABLE assets (
   market    TEXT        NOT NULL CHECK (market IN ('KR', 'US')),
   color     TEXT,                          -- seed 완료 후 NOT NULL로 변경됨
   is_active BOOLEAN     NOT NULL DEFAULT true,
+  dividend_frequency TEXT
+    CHECK (dividend_frequency IN ('monthly', 'quarterly', 'semiannual', 'annual')),
+  dividend_months SMALLINT[]
+    CHECK (
+      dividend_months IS NULL
+      OR dividend_months <@ ARRAY[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]::smallint[]
+    ),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
