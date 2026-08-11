@@ -2,12 +2,17 @@ export type Market = "KR" | "US";
 
 export type ActionType = "buy" | "sell" | "hold";
 
+export type DividendFrequency = "monthly" | "quarterly" | "semiannual" | "annual";
+
 export interface Asset {
   ticker: string;
   name: string;
   market: Market;
   color: string;
   isActive: boolean;
+  // 배당 스케줄. 무배당 종목은 null. dividendMonths는 배당기준일 기준 지급 월.
+  dividendFrequency: DividendFrequency | null;
+  dividendMonths: number[] | null;
 }
 
 export interface PortfolioAsset {

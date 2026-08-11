@@ -91,6 +91,8 @@ export const StockSearch = ({
       market: manualMarket,
       color: getTickerColor(ticker),
       isActive: true,
+      dividendFrequency: null,
+      dividendMonths: null,
     });
     setManualEntry(false);
   };
@@ -145,7 +147,14 @@ export const StockSearch = ({
                 <button
                   key={asset.ticker}
                   type="button"
-                  onClick={() => commitSelection({ ...asset, isActive: true })}
+                  onClick={() =>
+                    commitSelection({
+                      ...asset,
+                      isActive: true,
+                      dividendFrequency: null,
+                      dividendMonths: null,
+                    })
+                  }
                   className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted"
                 >
                   <span
