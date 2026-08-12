@@ -53,3 +53,6 @@ supabase/.temp
 
 # turborepo
 .turbo/
+
+# 백필 스크립트 생성물
+scripts/output/
