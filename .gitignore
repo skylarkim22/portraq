@@ -56,3 +56,5 @@ supabase/.temp
 
 # 백필 스크립트 생성물
 scripts/output/
+scripts/input/*
+!scripts/input/etf-distributions.json
