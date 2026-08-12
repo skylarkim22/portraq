@@ -56,8 +56,11 @@ const REPRT_CODE_ANNUAL = "11011"; // 사업보고서
 // 조회할 사업연도: 최근 연도부터. 최신 사업보고서가 아직 없으면 이전 연도로 폴백.
 const currentYear = new Date().getFullYear();
 const BSNS_YEARS = [currentYear - 1, currentYear - 2];
-const CONCURRENCY = 4; // DART 부하 배려
-const REQUEST_DELAY_MS = 60; // 요청 간 소폭 지연
+// DART 는 버스트에 민감해 IP 단위로 연결을 끊는다(ECONNRESET). 낮은 동시성 +
+// 넉넉한 지연 + 재시도로 안전하게 수집한다.
+const CONCURRENCY = 2;
+const REQUEST_DELAY_MS = 200; // 요청 간 지연
+const MAX_RETRIES = 4; // 네트워크 오류·5xx·429 재시도 횟수
 
 // ── CLI 인자 ──────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -66,6 +69,9 @@ const getArg = (name) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const limit = getArg("--limit") ? Number(getArg("--limit")) : Infinity;
+// --resume: 이전 리포트에서 성공(에러 없음)한 종목은 재사용하고, 에러난 종목만
+// 다시 조회한다. IP 차단으로 중단된 실행을 이어받을 때 사용.
+const resume = args.includes("--resume");
 const outSqlPath = resolve(getArg("--out") ?? join(REPO_ROOT, "scripts/output/kr-dividends.sql"));
 const outReportPath = join(dirname(outSqlPath), "kr-dividends-report.json");
 
@@ -98,6 +104,24 @@ if (!DART_KEY) {
 // ── 유틸 ──────────────────────────────────────────────────────
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// 네트워크 오류(fetch failed/ECONNRESET)·5xx·429 는 지수 백오프로 재시도한다.
+const fetchWithRetry = async (url) => {
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    try {
+      const res = await fetch(url);
+      if (res.status === 429 || res.status >= 500) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (e) {
+      lastErr = e;
+      if (attempt === MAX_RETRIES) break;
+      const backoff = Math.min(500 * 2 ** attempt, 8000) + Math.random() * 300;
+      await sleep(backoff);
+    }
+  }
+  throw lastErr;
+};
+
 // "1,444" / "-" / "" 같은 값을 숫자로. 파싱 불가·미배당은 0.
 const parseNumber = (value) => {
   if (value == null) return 0;
@@ -126,7 +150,7 @@ const readKrTickers = () => {
 // ── 2. corpCode.xml 다운로드 → stock_code ↔ corp_code 매핑 ─────
 const buildCorpCodeMap = async () => {
   console.log("· corpCode.xml 다운로드 중...");
-  const res = await fetch(`${DART_BASE}/corpCode.xml?crtfc_key=${DART_KEY}`);
+  const res = await fetchWithRetry(`${DART_BASE}/corpCode.xml?crtfc_key=${DART_KEY}`);
   if (!res.ok) throw new Error(`corpCode 다운로드 실패: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
 
@@ -176,7 +200,7 @@ const fetchDividend = async (corpCode) => {
     const url =
       `${DART_BASE}/alotMatter.json?crtfc_key=${DART_KEY}` +
       `&corp_code=${corpCode}&bsns_year=${year}&reprt_code=${REPRT_CODE_ANNUAL}`;
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) throw new Error(`alotMatter HTTP ${res.status}`);
     const json = await res.json();
 
@@ -203,7 +227,6 @@ const runPool = async (items, worker, concurrency) => {
     while (cursor < items.length) {
       const i = cursor++;
       results[i] = await worker(items[i], i);
-      if (REQUEST_DELAY_MS) await sleep(REQUEST_DELAY_MS);
     }
   });
   await Promise.all(runners);
@@ -245,12 +268,26 @@ const main = async () => {
   const tickers = Number.isFinite(limit) ? allTickers.slice(0, limit) : allTickers;
   console.log(`· KR 티커 ${allTickers.length}개 중 ${tickers.length}개 처리`);
 
+  // --resume: 이전 성공분 로드 (에러 없는 결과만 재사용)
+  const prior = new Map();
+  if (resume && existsSync(outReportPath)) {
+    for (const x of JSON.parse(readFileSync(outReportPath, "utf8"))) {
+      if (!x.error) prior.set(x.ticker, x);
+    }
+    console.log(`· resume: 이전 리포트에서 ${prior.size}건 재사용, 나머지만 재조회`);
+  }
+
   const corpMap = await buildCorpCodeMap();
 
   let processed = 0;
   const report = await runPool(
     tickers,
     async ({ ticker, name }) => {
+      if (prior.has(ticker)) {
+        processed += 1;
+        return prior.get(ticker);
+      }
+      if (REQUEST_DELAY_MS) await sleep(REQUEST_DELAY_MS); // 실제 조회 시에만 지연
       const corp = lookupCorp(corpMap, ticker);
       const corpCode = corp?.corpCode ?? null;
       let dividend = null;
