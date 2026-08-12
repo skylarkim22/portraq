@@ -58,3 +58,4 @@ supabase/.temp
 scripts/output/
 scripts/input/*
 !scripts/input/etf-distributions.json
+!scripts/input/seibro-etf-distributions-raw.json
