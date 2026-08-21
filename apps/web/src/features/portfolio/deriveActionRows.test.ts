@@ -69,4 +69,15 @@ describe("deriveActionRows", () => {
     expect(rows[0].currentShares).toBe(2000 / 200);
     expect(rows[0].targetShares).toBe(3000 / 200);
   });
+
+  it("커스텀 종목(isCustom)이면 자산 목록의 isCustom을 그대로 전달한다", () => {
+    const customAssets: PortfolioAsset[] = [
+      { ticker: "custom-uuid-1", name: "비상장 펀드", color: "#123456", ratio: 100, shares: 5, order: 0, isCustom: true },
+    ];
+    const customAction: RebalancingAction = { ...buyAction, ticker: "custom-uuid-1" };
+
+    const rows = deriveActionRows([customAction], {}, customAssets);
+
+    expect(rows[0].isCustom).toBe(true);
+  });
 });

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useTradeLogs } from "@/features/trade-log/hooks";
 import {
   useCreateTradeLog,
@@ -70,6 +71,7 @@ export const SellTradeModal = ({ defaultDate, onClose }: SellTradeModalProps) =>
       exchangeRate: row.market === "US" ? row.exchangeRate : undefined,
       name: row.name,
       market: row.market,
+      isCustom: row.isCustom,
     }));
 
     createTradeLog.mutate(
@@ -137,7 +139,7 @@ export const SellTradeModal = ({ defaultDate, onClose }: SellTradeModalProps) =>
                   <div className="text-[13px] font-extrabold text-foreground">
                     {holding.name}{" "}
                     <span className="text-[11px] font-semibold text-muted-foreground">
-                      {holding.ticker}
+                      {formatAssetTicker(holding.ticker, holding.isCustom)}
                     </span>
                   </div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">

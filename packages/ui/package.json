@@ -9,6 +9,7 @@
   "scripts": {
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -38,7 +39,9 @@
     "@testing-library/user-event": "^14",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@typescript-eslint/parser": "^8",
     "@vitejs/plugin-react": "^4",
+    "eslint": "^9",
     "jsdom": "^26",
     "storybook": "8.6.18",
     "tailwindcss": "^4",

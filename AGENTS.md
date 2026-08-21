@@ -12,13 +12,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ```
 /issue-plan          → 오픈 이슈 분석 및 개발 순서 결정
-/issue-start {이슈번호}    → 브랜치 생성 + 작업 계획 수립
-   ↓ 개발
-/issue-complete      → 테스트 → 코드 리뷰 → 브라우저 검증 → PR 생성
+/issue-start {이슈번호}    → 별도 워크트리에 브랜치 생성 + 작업 계획 수립
+   ↓ 개발 (워크트리 내에서 진행)
+/issue-complete      → 테스트 → 코드 리뷰 → 브라우저 검증 → PR 생성 → 워크트리 정리
 ```
 
 **기본 브랜치**: `develop` (main이 아님)
 **브랜치 네이밍**: `feat/#N-{short-description}` (예: `feat/#12-portfolio-list`)
+**워크트리 격리**: 이슈 작업은 메인 작업 디렉토리에서 `git checkout -b`로 브랜치를 전환하지 않고, `git worktree add`로 `.claude/worktrees/{short-description}`에 별도 워크트리를 만들어 그 안에서 진행한다(`.claude/worktrees/`는 `.gitignore` 대상). 메인 작업 디렉토리는 항상 `develop`에 남아 있어 다른 작업과 브랜치 전환 없이 병행할 수 있다. PR 머지 후 `git worktree remove`로 정리한다.
 **PR 대상**: `develop` 브랜치로 생성 (`--base develop`)
 **PR 본문**: 반드시 `Closes #N` 포함해 이슈 자동 연결
 
@@ -114,6 +115,89 @@ type StockSearchProps = {
 ```
 
 다른 파일에서 재사용해야 하는 Props(예: `packages/ui`의 디자인 시스템 컴포넌트)는 기존대로 `interface` + export를 유지한다.
+
+## 코드 품질 원칙 (Frontend Fundamentals 기반)
+
+[Frontend Fundamentals](https://frontend-fundamentals.com/code-quality/code/)가 제시하는 "변경하기 쉬운 코드"의 4가지 기준을 따른다. 네 기준은 서로 트레이드오프 관계이므로(예: 응집도를 높이려 추상화하면 가독성이 떨어질 수 있음) 상황에 맞게 우선순위를 판단한다.
+
+### 가독성 (Readability)
+
+매직 넘버·복잡한 조건에는 이름을 붙인다.
+
+```ts
+// ❌ 지양
+await delay(300);
+
+// ✅ 지향
+const ANIMATION_DELAY_MS = 300;
+await delay(ANIMATION_DELAY_MS);
+```
+
+```ts
+// ❌ 지양
+const matched = products.filter((p) =>
+  p.categories.some((c) => c.id === targetId && p.prices.some((price) => price >= min && price <= max))
+);
+
+// ✅ 지향
+const matched = products.filter((p) => {
+  const isSameCategory = p.categories.some((c) => c.id === targetId);
+  const isPriceInRange = p.prices.some((price) => price >= min && price <= max);
+  return isSameCategory && isPriceInRange;
+});
+```
+
+중첩 삼항 연산자 대신 if문으로 위에서 아래로 읽히게 한다.
+
+```ts
+// ❌ 지양
+const status = a && b ? "BOTH" : a || b ? (a ? "A" : "B") : "NONE";
+
+// ✅ 지향
+const status = (() => {
+  if (a && b) return "BOTH";
+  if (a) return "A";
+  if (b) return "B";
+  return "NONE";
+})();
+```
+
+한 함수·훅이 여러 종류의 맥락을 동시에 다루지 않도록 쪼갠다. 예: 페이지의 쿼리 파라미터 5개를 한 훅(`usePageState`)에서 관리하지 않고 `useCardIdQueryParam`처럼 파라미터별로 분리한다 — 관련 없는 값이 바뀌어도 리렌더되지 않고, 이름만으로 역할을 알 수 있다.
+
+### 예측 가능성 (Predictability)
+
+같은 종류의 함수·훅은 반환 타입을 통일한다. `features/[feature]/hooks.ts`의 `useX` 훅들은 전부 TanStack Query 객체(`useQuery`/`useMutation` 리턴값)를 그대로 반환하거나 전부 `.data`만 반환하는 식으로 통일하고, 섞어 쓰지 않는다.
+
+함수 이름·파라미터·반환 타입에 드러나지 않는 부수 효과(로깅 등)를 함수 안에 숨기지 않는다. 로깅·트래킹은 호출부에서 명시적으로 처리한다.
+
+```ts
+// ❌ 지양 — fetchBalance라는 이름만 보고는 로깅이 실행되는지 알 수 없음
+async function fetchBalance() {
+  const balance = await http.get<number>("...");
+  logging.log("balance_fetched");
+  return balance;
+}
+
+// ✅ 지향
+async function fetchBalance() {
+  return http.get<number>("...");
+}
+// 호출부
+const balance = await fetchBalance();
+logging.log("balance_fetched");
+```
+
+### 응집도 (Cohesion)
+
+함께 수정되는 파일은 같은 디렉토리에 둔다 — `features/[feature]/` 구조가 이미 이 원칙을 따른다. 매직 넘버·상수는 사용처와 가까운 파일에 선언하고, 여러 피처에서 공유해야 할 때만 `packages/lib`로 올린다.
+
+### 결합도 (Coupling)
+
+하나의 훅·함수·컴포넌트는 하나의 책임만 갖는다. 여러 쿼리 파라미터를 한 훅이 다 관리하기보다, 파라미터별로 분리해 수정 영향 범위를 좁힌다.
+
+여러 곳에서 비슷해 보인다는 이유만으로 성급하게 공통 훅·컴포넌트로 묶지 않는다. 페이지마다 로깅 값·닫기 동작·문구가 달라질 여지가 있다면, 공통화 대신 중복을 허용하는 편이 결합도를 낮춘다 — 한 페이지의 요구사항 변경이 다른 페이지에 영향을 주지 않는다.
+
+Props Drilling이 깊어지면(3단계 이상) `children` 조합 패턴으로 중간 컴포넌트를 건너뛰거나, 필요시 Context로 전환한다.
 
 ## packages/ui 컴포넌트 작성 규칙
 
@@ -325,7 +409,16 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `id` UUID PK, `user_id` UUID (auth.users FK), `name` TEXT, `monthly_budget` NUMERIC, `template_id` TEXT, `created_at`, `updated_at`
 
 **portfolio_assets** — 포트폴리오 내 종목
-- `id` UUID PK, `portfolio_id` UUID (portfolios FK), `ticker` TEXT, `name` TEXT, `market` TEXT (KR/US/ETF), `ratio` NUMERIC (0~100), `shares` NUMERIC, `current_price` NUMERIC, `color` TEXT (hex), `sort_order` INTEGER, `memo` TEXT
+- `id` UUID PK, `portfolio_id` UUID (portfolios FK), `asset_ticker` TEXT NULL (`assets` FK), `custom_asset_id` UUID NULL (`custom_assets` FK), `ratio` NUMERIC (0~100), `shares` NUMERIC, `current_price` NUMERIC, `sort_order` INTEGER
+- `asset_ticker`/`custom_asset_id`는 exclusive arc(정확히 하나만 채워짐) — "카탈로그 종목" vs "직접 추가한 커스텀 종목"을 구분한다. `name`/`market`/`color`는 컬럼으로 보관하지 않고 `assets`/`custom_assets` 중 채워진 쪽과 JOIN해서 읽는다
+
+**custom_assets** — 유저별 "직접 추가" 종목 (검색에 없는 종목을 이름·시장만 입력해 등록)
+- `id` UUID PK, `user_id` UUID (auth.users FK), `name` TEXT, `market` TEXT (KR/US), `color` TEXT (hex), `created_at`
+- `assets`(공개 카탈로그)와 별도 테이블 — service-role 배치가 `assets` 전체를 훑는 자리라 유저별 비공개 데이터를 섞지 않는다. RLS는 본인 것만 접근 가능(공개 읽기 아님)
+
+**trade_logs** — 매매 일지 (1행 = 1종목 거래)
+- `id` UUID PK, `user_id` UUID (auth.users FK), `type` TEXT (buy/sell), `date` DATE, `asset_ticker` TEXT NULL (`assets` FK), `custom_asset_id` UUID NULL (`custom_assets` FK), `quantity` NUMERIC, `price` NUMERIC, `tax` NUMERIC, `exchange_rate` NUMERIC, `memo` TEXT, `created_at`
+- `asset_ticker`/`custom_asset_id`는 `portfolio_assets`와 동일한 exclusive arc 패턴
 
 **execution_records** — 저장 시 생성되는 실행 기록
 - `id` UUID PK, `portfolio_id` UUID (portfolios FK), `executed_at` TIMESTAMPTZ, `total_budget` NUMERIC, `actions` JSONB, `memo` TEXT

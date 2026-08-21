@@ -7,18 +7,18 @@ const COLOR_PALETTE = [
 
 export const DEFAULT_ASSET_COLOR = COLOR_PALETTE[0];
 
-export function getTickerColor(ticker: string): string {
+export const getTickerColor = (ticker: string): string => {
   const hash = ticker
     .split("")
     .reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return COLOR_PALETTE[hash % COLOR_PALETTE.length];
-}
+};
 
-export function resolveColor(
+export const resolveColor = (
   existingColor: string | undefined,
   ticker: string,
   usedColors: string[] = []
-): string {
+): string => {
   if (existingColor) return existingColor;
 
   const base = getTickerColor(ticker);

@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { Input } from "@portraq/ui";
 import type { Market } from "@portraq/lib/types";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
 import type { Holding } from "@/features/trade-log/deriveHoldings";
@@ -15,6 +16,7 @@ export type SellRowDraft = {
   price: number;
   exchangeRate: number;
   tax: number;
+  isCustom?: boolean;
 };
 
 export const toSellRowDraft = (holding: Holding, defaultFx: number): SellRowDraft => ({
@@ -27,6 +29,7 @@ export const toSellRowDraft = (holding: Holding, defaultFx: number): SellRowDraf
   price: holding.market === "US" ? Math.round(holding.avgPrice / defaultFx) : holding.avgPrice,
   exchangeRate: defaultFx,
   tax: 0,
+  isCustom: holding.isCustom,
 });
 
 type SellTradeRowProps = {
@@ -69,7 +72,8 @@ export const SellTradeRow = ({ row, onChange, onRemove }: SellTradeRowProps) => 
       <div className="mb-2 flex items-center justify-between">
         <div>
           <div className="text-[13px] font-extrabold text-foreground">
-            {row.ticker} <span className="text-[11px] font-semibold text-muted-foreground">{row.name}</span>
+            {formatAssetTicker(row.ticker, row.isCustom)}{" "}
+            <span className="text-[11px] font-semibold text-muted-foreground">{row.name}</span>
           </div>
           <div className="mt-0.5 text-[11px] text-muted-foreground">
             평균단가 {Math.round(row.avgPrice).toLocaleString("ko-KR")}원 (원화 환산) 기준으로 손익이 계산됩니다

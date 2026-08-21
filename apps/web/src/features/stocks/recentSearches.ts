@@ -1,6 +1,9 @@
 import type { Asset } from "@portraq/lib/types";
 
-export type RecentSearchAsset = Pick<Asset, "ticker" | "name" | "market" | "color">;
+export type RecentSearchAsset = Pick<
+  Asset,
+  "ticker" | "name" | "market" | "color" | "isCustom"
+>;
 
 const STORAGE_KEY = "portraq:recent-searches";
 const MAX_RECENT_SEARCHES = 5;

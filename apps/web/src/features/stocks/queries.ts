@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { Asset, Market } from "@portraq/lib/types";
+import type { Asset, DividendFrequency, Market } from "@portraq/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
 export type MarketFilter = Market | "ALL";
@@ -25,7 +25,7 @@ export const stockQueries = {
 
         let request = createClient()
           .from("assets")
-          .select("ticker, name, market, color, is_active")
+          .select("ticker, name, market, color, is_active, dividend_frequency, dividend_months")
           .eq("is_active", true)
           .or(`ticker.ilike.${term}%,name.ilike.%${term}%`)
           .order("ticker")
@@ -44,6 +44,8 @@ export const stockQueries = {
           market: row.market as Market,
           color: row.color,
           isActive: row.is_active,
+          dividendFrequency: row.dividend_frequency as DividendFrequency | null,
+          dividendMonths: row.dividend_months,
         }));
       },
       enabled: query.trim().length > 0,

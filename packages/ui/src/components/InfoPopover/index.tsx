@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { Info } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -9,12 +11,12 @@ export interface InfoPopoverProps {
   align?: "left" | "right";
 }
 
-export function InfoPopover({
+export const InfoPopover = ({
   label,
   children,
   className,
   align = "right",
-}: InfoPopoverProps) {
+}: InfoPopoverProps) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

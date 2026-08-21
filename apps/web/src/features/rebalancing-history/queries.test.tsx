@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useRebalancingHistory } from "@/features/rebalancing-history/hooks";
 
-function makeBuilder(result: { data: unknown; error: unknown }) {
+const makeBuilder = (result: { data: unknown; error: unknown }) => {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.order = vi.fn(() => builder);
@@ -22,7 +22,7 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ from: fromMock }),
 }));
 
-function renderWithClient<T>(callback: () => T) {
+const renderWithClient = <T,>(callback: () => T) => {
   const queryClient = new QueryClient();
   return renderHook(callback, {
     wrapper: ({ children }) => (
@@ -41,14 +41,14 @@ const baseRow = {
     { ticker: "TSLA", action: "sell", quantity: -1, pricePerShare: 220 },
   ],
   portfolios: { name: "워런 버핏 전략" },
-  portfolio_snapshots: [
-    {
-      assets: [
-        { ticker: "AAPL", name: "Apple", ratio: 60, shares: 3, pricePerShare: 200, color: "#355df9" },
-        { ticker: "TSLA", name: "Tesla", ratio: 40, shares: 0, pricePerShare: 220, color: "#e85d4a" },
-      ],
-    },
-  ],
+  // portfolio_snapshots.execution_record_id에 UNIQUE 제약이 있어(1:1 관계)
+  // PostgREST가 배열이 아닌 단일 객체로 embed를 반환한다.
+  portfolio_snapshots: {
+    assets: [
+      { ticker: "AAPL", name: "Apple", ratio: 60, shares: 3, pricePerShare: 200, color: "#355df9" },
+      { ticker: "TSLA", name: "Tesla", ratio: 40, shares: 0, pricePerShare: 220, color: "#e85d4a" },
+    ],
+  },
 };
 
 describe("useRebalancingHistory", () => {

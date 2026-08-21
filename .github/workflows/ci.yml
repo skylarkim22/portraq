@@ -35,6 +35,9 @@ jobs:
       - name: 린트
         run: pnpm lint
 
+      - name: 의존성 경계 검사
+        run: pnpm depcheck
+
       - name: 타입 체크
         run: pnpm typecheck
 

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { usePortfolio, useLatestSnapshot } from "@/features/portfolio/hooks";
 
-function makeBuilder(result: { data: unknown; error: unknown }) {
+const makeBuilder = (result: { data: unknown; error: unknown }) => {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
@@ -21,7 +21,7 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ from: fromMock }),
 }));
 
-function renderWithClient<T>(callback: () => T) {
+const renderWithClient = <T,>(callback: () => T) => {
   const queryClient = new QueryClient();
   const view = renderHook(callback, {
     wrapper: ({ children }) => (
@@ -47,24 +47,24 @@ describe("usePortfolio", () => {
           updated_at: "2026-01-01",
           portfolio_assets: [
             {
-              ticker: "MSFT",
-              name: "Microsoft",
-              market: "US",
+              asset_ticker: "MSFT",
+              custom_asset_id: null,
               ratio: 30,
               shares: 0,
               current_price: 0,
-              color: "#000",
               sort_order: 1,
+              assets: { name: "Microsoft", market: "US", color: "#000" },
+              custom_assets: null,
             },
             {
-              ticker: "AAPL",
-              name: "Apple",
-              market: "US",
+              asset_ticker: "AAPL",
+              custom_asset_id: null,
               ratio: 70,
               shares: 0,
               current_price: 0,
-              color: "#111",
               sort_order: 0,
+              assets: { name: "Apple", market: "US", color: "#111" },
+              custom_assets: null,
             },
           ],
         },

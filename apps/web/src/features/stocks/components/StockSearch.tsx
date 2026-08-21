@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button, Card, Input } from "@portraq/ui";
 import type { Asset, Market } from "@portraq/lib/types";
-import { generateCustomTicker, getTickerColor } from "@portraq/lib/utils";
+import { formatAssetTicker } from "@portraq/lib/utils";
+import { useUser } from "@/features/auth/hooks";
 import { useDebouncedValue, useRecentSearches, useStockSearch } from "@/features/stocks/hooks";
 import { MARKET_TABS } from "@/features/stocks/constants";
+import { useCreateCustomAsset } from "@/features/stocks/mutations";
 import type { MarketFilter } from "@/features/stocks/queries";
 
 const MANUAL_MARKET_OPTIONS: { label: string; value: Market }[] = [
@@ -16,15 +19,13 @@ const MANUAL_MARKET_OPTIONS: { label: string; value: Market }[] = [
 
 type StockSearchProps = {
   onSelect: (asset: Asset) => void;
-  existingTickers?: string[];
   clearQueryOnSelect?: boolean;
 };
 
-export function StockSearch({
+export const StockSearch = ({
   onSelect,
-  existingTickers = [],
   clearQueryOnSelect = true,
-}: StockSearchProps) {
+}: StockSearchProps) => {
   const [query, setQuery] = useState("");
   const [market, setMarket] = useState<MarketFilter>("ALL");
   const [manualEntry, setManualEntry] = useState(false);
@@ -38,11 +39,12 @@ export function StockSearch({
     market
   );
   const { recentSearches, addRecentSearch } = useRecentSearches();
+  const { data: user } = useUser();
+  const createCustomAsset = useCreateCustomAsset();
 
   const showRecent = query.trim().length === 0 && focused && recentSearches.length > 0;
   const showDropdown = query.trim().length > 0 || showRecent;
   const noResults = !isFetching && (results?.length ?? 0) === 0;
-  const nextCustomTicker = generateCustomTicker(existingTickers);
 
   useEffect(() => {
     if (!focused) return;
@@ -73,26 +75,28 @@ export function StockSearch({
       name: asset.name,
       market: asset.market,
       color: asset.color,
+      isCustom: asset.isCustom,
     });
     onSelect(asset);
     setFocused(false);
     if (clearQueryOnSelect) setQuery("");
   };
 
-  const handleManualAdd = () => {
+  const handleManualAdd = async () => {
     const name = query.trim();
-    if (!name) return;
+    if (!name || !user) return;
 
-    const ticker = nextCustomTicker;
-
-    commitSelection({
-      ticker,
-      name,
-      market: manualMarket,
-      color: getTickerColor(ticker),
-      isActive: true,
-    });
-    setManualEntry(false);
+    try {
+      const asset = await createCustomAsset.mutateAsync({
+        userId: user.id,
+        name,
+        market: manualMarket,
+      });
+      commitSelection(asset);
+      setManualEntry(false);
+    } catch {
+      toast.error("종목 추가에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
 
   return (
@@ -145,7 +149,14 @@ export function StockSearch({
                 <button
                   key={asset.ticker}
                   type="button"
-                  onClick={() => commitSelection({ ...asset, isActive: true })}
+                  onClick={() =>
+                    commitSelection({
+                      ...asset,
+                      isActive: true,
+                      dividendFrequency: null,
+                      dividendMonths: null,
+                    })
+                  }
                   className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted"
                 >
                   <span
@@ -157,7 +168,7 @@ export function StockSearch({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-bold">{asset.name}</span>
                     <span className="block text-sm text-muted-foreground">
-                      {asset.ticker} · {asset.market}
+                      {formatAssetTicker(asset.ticker, asset.isCustom)} · {asset.market}
                     </span>
                   </span>
                 </button>
@@ -199,14 +210,6 @@ export function StockSearch({
                   className="h-9"
                 />
               </div>
-              <div className="flex items-center justify-between rounded-md bg-muted px-2.5 py-2">
-                <span className="text-xs font-semibold text-muted-foreground">
-                  자동 부여 티커
-                </span>
-                <span className="text-xs font-bold text-foreground">
-                  {nextCustomTicker}
-                </span>
-              </div>
               <div className="flex gap-1">
                 {MANUAL_MARKET_OPTIONS.map((option) => (
                   <Button
@@ -225,10 +228,10 @@ export function StockSearch({
                 type="button"
                 size="sm"
                 className="mt-1 w-full"
-                disabled={!query.trim()}
+                disabled={!query.trim() || !user || createCustomAsset.isPending}
                 onClick={handleManualAdd}
               >
-                추가
+                {createCustomAsset.isPending ? "추가 중..." : "추가"}
               </Button>
             </div>
           )}

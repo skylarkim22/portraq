@@ -6,6 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { AssetColorBadge, Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 
 type AssetRowProps = {
@@ -71,7 +72,7 @@ export const AssetRow = memo(({ asset, onRatioChange, onRemove, onFillSlot }: As
                 {asset.name ?? asset.ticker}
               </div>
               <div className="truncate text-xs text-muted-foreground">
-                {asset.ticker} · {asset.market ?? "KR"}
+                {formatAssetTicker(asset.ticker, asset.isCustom)} · {asset.market ?? "KR"}
               </div>
             </div>
           </>

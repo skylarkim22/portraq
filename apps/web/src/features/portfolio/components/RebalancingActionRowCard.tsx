@@ -1,4 +1,5 @@
 import { ActionChip, AssetColorBadge, Card, Input } from "@portraq/ui";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import type { RebalancingActionRow } from "@/features/portfolio/deriveActionRows";
 
@@ -35,7 +36,7 @@ export const RebalancingActionRowCard = ({
         <div className="line-clamp-2 text-sm font-extrabold text-foreground">
           {row.name}{" "}
           <span className="font-medium text-muted-foreground">
-            {row.ticker}
+            {formatAssetTicker(row.ticker, row.isCustom)}
           </span>
         </div>
         <div className="text-xs text-muted-foreground">

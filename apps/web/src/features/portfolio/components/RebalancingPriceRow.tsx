@@ -1,6 +1,6 @@
 import { AssetColorBadge, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
-import { toKrwPrice } from "@portraq/lib/utils";
+import { formatAssetTicker, toKrwPrice } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 
 type RebalancingPriceRowProps = {
@@ -36,7 +36,7 @@ export const RebalancingPriceRow = ({
             {asset.name ?? asset.ticker}
           </div>
           <div className="truncate text-xs text-muted-foreground">
-            {asset.ticker} · {market}
+            {formatAssetTicker(asset.ticker, asset.isCustom)} · {market}
           </div>
         </div>
         <div className="relative w-32 shrink-0">

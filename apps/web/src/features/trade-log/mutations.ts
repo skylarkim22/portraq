@@ -12,6 +12,7 @@ export type CreateTradeLogItem = {
   exchangeRate?: number;
   name: string;
   market: Market;
+  isCustom?: boolean;
 };
 
 export type CreateTradeLogInput = {
@@ -27,28 +28,30 @@ export const useCreateTradeLog = () => {
 
   return useMutation({
     mutationFn: async (input: CreateTradeLogInput) => {
+      input.items.forEach((item) =>
+        tradeLogSchema.parse({
+          type: input.type,
+          date: input.date,
+          ticker: item.ticker,
+          quantity: item.quantity,
+          price: item.price,
+          tax: item.tax,
+          exchangeRate: item.exchangeRate,
+          memo: input.memo,
+        })
+      );
+
       const rows = input.items.map((item) => ({
         type: input.type,
         date: input.date,
-        ticker: item.ticker,
+        asset_ticker: item.isCustom ? null : item.ticker,
+        custom_asset_id: item.isCustom ? item.ticker : null,
         quantity: item.quantity,
         price: item.price,
         tax: item.tax,
         exchange_rate: item.exchangeRate,
         memo: input.memo,
       }));
-      rows.forEach((row) =>
-        tradeLogSchema.parse({
-          type: row.type,
-          date: row.date,
-          ticker: row.ticker,
-          quantity: row.quantity,
-          price: row.price,
-          tax: row.tax,
-          exchangeRate: row.exchange_rate,
-          memo: row.memo,
-        })
-      );
 
       const supabase = createClient();
       const {
@@ -81,6 +84,7 @@ export const useCreateTradeLog = () => {
         createdAt: new Date().toISOString(),
         name: item.name,
         market: item.market,
+        isCustom: item.isCustom,
       }));
 
       queryClient.setQueryData<EnrichedTradeLog[]>(listQueryKey, (old) =>

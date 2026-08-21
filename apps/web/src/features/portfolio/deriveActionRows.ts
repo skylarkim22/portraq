@@ -12,6 +12,7 @@ export type RebalancingActionRow = {
   pricePerShare: number;
   quantity: number;
   action: ActionType;
+  isCustom?: boolean;
 };
 
 const deriveAction = (quantity: number): ActionType => {
@@ -37,6 +38,7 @@ export const deriveActionRows = (
       ticker: action.ticker,
       name: asset?.name,
       color: asset?.color,
+      isCustom: asset?.isCustom,
       currentShares:
         action.pricePerShare > 0
           ? action.currentValue / action.pricePerShare

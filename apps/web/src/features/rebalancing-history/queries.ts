@@ -12,6 +12,7 @@ export type RebalancingHistoryFilters = {
 export type EnrichedActionItem = ActionItem & {
   name: string;
   color: string;
+  isCustom?: boolean;
 };
 
 export type RebalancingHistoryRecord = {
@@ -43,6 +44,7 @@ const enrichActions = (
       ...action,
       name: asset?.name ?? action.ticker,
       color: asset?.color ?? "",
+      isCustom: asset?.isCustom,
     };
   });
 };
@@ -103,8 +105,10 @@ export const rebalancingHistoryQueries = {
 
         const records = rows.map((row) => {
           const portfolio = row.portfolios as unknown as { name: string } | null;
-          const snapshots = row.portfolio_snapshots as unknown as
-            | { assets: SnapshotAsset[] }[]
+          // portfolio_snapshots.execution_record_id에 UNIQUE 제약이 있어(1:1
+          // 관계) PostgREST가 배열이 아닌 단일 객체로 embed를 반환한다.
+          const snapshot = row.portfolio_snapshots as unknown as
+            | { assets: SnapshotAsset[] }
             | null;
 
           return {
@@ -115,7 +119,7 @@ export const rebalancingHistoryQueries = {
             totalBudget: row.total_budget,
             actions: enrichActions(
               row.actions as ActionItem[],
-              snapshots?.[0]?.assets ?? []
+              snapshot?.assets ?? []
             ),
           };
         });

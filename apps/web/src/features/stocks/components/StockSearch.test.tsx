@@ -11,7 +11,7 @@ const ASSET_ROWS = [
   { ticker: "AAPL", name: "Apple Inc.", market: "US", color: "#e85d4a", is_active: true },
 ];
 
-function createQueryBuilder(data: unknown[] = ASSET_ROWS) {
+const createQueryBuilder = (data: unknown[] = ASSET_ROWS) => {
   const builder: Record<string, unknown> = {};
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
@@ -29,7 +29,24 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ from: fromMock }),
 }));
 
-function renderWithClient(ui: React.ReactElement) {
+vi.mock("@/features/auth/hooks", () => ({
+  useUser: vi.fn(() => ({ data: { id: "user-1" }, isLoading: false })),
+}));
+
+const createCustomAssetMutateAsyncMock = vi.fn();
+
+vi.mock("@/features/stocks/mutations", () => ({
+  useCreateCustomAsset: vi.fn(() => ({
+    mutateAsync: createCustomAssetMutateAsyncMock,
+    isPending: false,
+  })),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+const renderWithClient = (ui: React.ReactElement) => {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
@@ -40,6 +57,7 @@ describe("StockSearch", () => {
   beforeEach(() => {
     fromMock.mockReset();
     fromMock.mockImplementation(() => createQueryBuilder());
+    createCustomAssetMutateAsyncMock.mockReset();
     window.localStorage.clear();
   });
 
@@ -139,8 +157,18 @@ describe("StockSearch", () => {
     );
   });
 
-  it("직접 추가하기를 누르면 종목명·시장으로 자동 부여된 티커와 함께 onSelect를 호출한다", async () => {
+  it("직접 추가하기를 누르면 useCreateCustomAsset을 호출하고 그 결과로 onSelect를 호출한다", async () => {
     fromMock.mockImplementation(() => createQueryBuilder([]));
+    createCustomAssetMutateAsyncMock.mockResolvedValue({
+      ticker: "custom-uuid-1",
+      name: "나만의펀드",
+      market: "US",
+      color: "#123456",
+      isActive: true,
+      dividendFrequency: null,
+      dividendMonths: null,
+      isCustom: true,
+    });
     const user = userEvent.setup();
     const handleSelect = vi.fn();
     renderWithClient(<StockSearch onSelect={handleSelect} />);
@@ -154,19 +182,49 @@ describe("StockSearch", () => {
     );
     await user.click(screen.getByRole("button", { name: /직접 추가하기/ }));
 
-    expect(screen.getByText("CUSTOM_1")).toBeInTheDocument();
-
     await user.click(screen.getByRole("button", { name: "직접 추가 시장 미국" }));
     await user.click(screen.getByRole("button", { name: "추가" }));
 
-    expect(handleSelect).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ticker: "CUSTOM_1",
-        name: "나만의펀드",
-        market: "US",
-        isActive: true,
-      })
+    expect(createCustomAssetMutateAsyncMock).toHaveBeenCalledWith({
+      userId: "user-1",
+      name: "나만의펀드",
+      market: "US",
+    });
+
+    await waitFor(() =>
+      expect(handleSelect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ticker: "custom-uuid-1",
+          name: "나만의펀드",
+          market: "US",
+          isActive: true,
+          isCustom: true,
+        })
+      )
     );
+  });
+
+  it("직접 추가 중 서버 에러가 나면 에러 토스트를 보여주고 onSelect를 호출하지 않는다", async () => {
+    fromMock.mockImplementation(() => createQueryBuilder([]));
+    createCustomAssetMutateAsyncMock.mockRejectedValue(new Error("insert failed"));
+    const user = userEvent.setup();
+    const handleSelect = vi.fn();
+    renderWithClient(<StockSearch onSelect={handleSelect} />);
+
+    await user.type(
+      screen.getByPlaceholderText(/티커 또는 종목명/),
+      "나만의펀드"
+    );
+    await waitFor(() =>
+      screen.getByRole("button", { name: /직접 추가하기/ })
+    );
+    await user.click(screen.getByRole("button", { name: /직접 추가하기/ }));
+    await user.click(screen.getByRole("button", { name: "추가" }));
+
+    await waitFor(() =>
+      expect(createCustomAssetMutateAsyncMock).toHaveBeenCalled()
+    );
+    expect(handleSelect).not.toHaveBeenCalled();
   });
 
   it("종목 선택 후 검색창에 다시 포커스하면 최근 검색 목록을 보여준다", async () => {
@@ -216,12 +274,10 @@ describe("StockSearch", () => {
     await waitFor(() => screen.getByText("삼성전자"));
     await user.click(screen.getByText("삼성전자"));
 
-    // 방금 선택한 종목이 existingTickers에 반영된 뒤에도(예: 검색창 초기화
-    // 없이 리렌더) 최근 검색 기록 자체는 남아 있어야 한다.
+    // 방금 선택한 종목으로 다시 렌더링해도(예: 검색창 초기화 없이 리렌더)
+    // 최근 검색 기록 자체는 남아 있어야 한다.
     cleanup();
-    renderWithClient(
-      <StockSearch onSelect={vi.fn()} existingTickers={["005930"]} />
-    );
+    renderWithClient(<StockSearch onSelect={vi.fn()} />);
     await user.click(screen.getByPlaceholderText(/티커 또는 종목명/));
 
     expect(screen.getByText("최근 검색")).toBeInTheDocument();
@@ -249,29 +305,4 @@ describe("StockSearch", () => {
     );
   });
 
-  it("이미 커스텀 티커가 있으면 다음 번호를 이어서 부여한다", async () => {
-    fromMock.mockImplementation(() => createQueryBuilder([]));
-    const user = userEvent.setup();
-    const handleSelect = vi.fn();
-    renderWithClient(
-      <StockSearch
-        onSelect={handleSelect}
-        existingTickers={["CUSTOM_1", "CUSTOM_2"]}
-      />
-    );
-
-    await user.type(
-      screen.getByPlaceholderText(/티커 또는 종목명/),
-      "나만의펀드 2호"
-    );
-    await waitFor(() =>
-      screen.getByRole("button", { name: /직접 추가하기/ })
-    );
-    await user.click(screen.getByRole("button", { name: /직접 추가하기/ }));
-    await user.click(screen.getByRole("button", { name: "추가" }));
-
-    expect(handleSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ ticker: "CUSTOM_3" })
-    );
-  });
 });

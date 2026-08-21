@@ -1,4 +1,5 @@
 import { ActionChip, AssetColorBadge, Input } from "@portraq/ui";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import type { EnrichedActionItem } from "@/features/rebalancing-history/queries";
 
@@ -38,7 +39,7 @@ export const RebalancingHistoryActionRow = ({
             {action.name}
           </div>
           <div className="truncate text-xs text-muted-foreground">
-            {action.ticker}
+            {formatAssetTicker(action.ticker, action.isCustom)}
           </div>
         </div>
       </div>

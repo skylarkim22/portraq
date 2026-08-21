@@ -4,15 +4,22 @@
   "private": true,
   "packageManager": "pnpm@11.1.1",
   "scripts": {
+    "prepare": "husky",
     "dev": "turbo run dev --filter=@portraq/web",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "storybook": "turbo run storybook --filter=@portraq/ui",
-    "build-storybook": "turbo run build-storybook --filter=@portraq/ui"
+    "build-storybook": "turbo run build-storybook --filter=@portraq/ui",
+    "depcheck": "depcruise apps/web/src packages/ui/src packages/lib/src --config .dependency-cruiser.cjs",
+    "backfill:kr-dividends": "node scripts/backfill-kr-dividends.mjs"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^8",
+    "dependency-cruiser": "^18.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
     "turbo": "^2"
   }
 }

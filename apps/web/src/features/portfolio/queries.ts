@@ -16,7 +16,17 @@ export type PortfolioCardAsset = {
   shares: number;
   currentPrice: number;
   color: string;
+  isCustom?: boolean;
 };
+
+// asset_ticker/custom_asset_id는 exclusive arc라 assets(...)/custom_assets(...)
+// 중 채워진 쪽 하나만 실제로 존재한다. Supabase 클라이언트가 Database 타입 없이
+// 쓰이는 이 프로젝트에서는 to-one 관계도 배열 타입으로 추론되므로(실제 런타임
+// 응답은 단일 객체) 여기서 실제 형태로 캐스팅해 흡수한다.
+type AssetJoinInfo = { name: string; market: string; color: string };
+
+const pickAssetInfo = (catalogAsset: unknown, customAsset: unknown): AssetJoinInfo =>
+  (catalogAsset ?? customAsset) as unknown as AssetJoinInfo;
 
 export type PortfolioCardExecutionSummary = {
   buyCount: number;
@@ -56,7 +66,7 @@ export const portfolioQueries = {
         const { data, error } = await supabase
           .from("portfolios")
           .select(
-            "id, name, updated_at, portfolio_assets(ticker, market, ratio, shares, current_price, color, sort_order), execution_records(executed_at, actions)"
+            "id, name, updated_at, portfolio_assets(asset_ticker, custom_asset_id, ratio, shares, current_price, sort_order, assets(name, market, color), custom_assets(name, market, color)), execution_records(executed_at, actions)"
           )
           .order("updated_at", { ascending: false })
           .order("executed_at", { referencedTable: "execution_records", ascending: false })
@@ -67,14 +77,18 @@ export const portfolioQueries = {
         return data.map((row) => {
           const assets: PortfolioCardAsset[] = row.portfolio_assets
             .sort((a, b) => a.sort_order - b.sort_order)
-            .map((asset) => ({
-              ticker: asset.ticker,
-              market: asset.market as Market,
-              ratio: asset.ratio,
-              shares: asset.shares,
-              currentPrice: asset.current_price,
-              color: asset.color,
-            }));
+            .map((asset) => {
+              const info = pickAssetInfo(asset.assets, asset.custom_assets);
+              return {
+                ticker: asset.asset_ticker ?? asset.custom_asset_id,
+                market: info.market as Market,
+                ratio: asset.ratio,
+                shares: asset.shares,
+                currentPrice: asset.current_price,
+                color: info.color,
+                isCustom: asset.custom_asset_id !== null,
+              };
+            });
 
           const latestExecution = row.execution_records[0]
             ? summarizeExecution(row.execution_records[0].actions as ActionItem[])
@@ -100,7 +114,7 @@ export const portfolioQueries = {
         const { data, error } = await supabase
           .from("portfolios")
           .select(
-            "id, name, memo, created_at, updated_at, portfolio_assets(ticker, name, market, ratio, shares, current_price, color, sort_order)"
+            "id, name, memo, created_at, updated_at, portfolio_assets(asset_ticker, custom_asset_id, ratio, shares, current_price, sort_order, assets(name, market, color), custom_assets(name, market, color))"
           )
           .eq("id", id)
           .single();
@@ -109,16 +123,20 @@ export const portfolioQueries = {
 
         const assets: PortfolioAsset[] = data.portfolio_assets
           .sort((a, b) => a.sort_order - b.sort_order)
-          .map((row) => ({
-            ticker: row.ticker,
-            name: row.name,
-            market: row.market as Market,
-            color: row.color,
-            ratio: row.ratio,
-            shares: row.shares,
-            currentPrice: row.current_price,
-            order: row.sort_order,
-          }));
+          .map((row) => {
+            const info = pickAssetInfo(row.assets, row.custom_assets);
+            return {
+              ticker: row.asset_ticker ?? row.custom_asset_id,
+              name: info.name,
+              market: info.market as Market,
+              color: info.color,
+              ratio: row.ratio,
+              shares: row.shares,
+              currentPrice: row.current_price,
+              order: row.sort_order,
+              isCustom: row.custom_asset_id !== null,
+            };
+          });
 
         return {
           id: data.id,

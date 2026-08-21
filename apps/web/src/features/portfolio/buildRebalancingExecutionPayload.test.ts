@@ -73,4 +73,34 @@ describe("buildRebalancingExecutionPayload", () => {
     expect(bnd.shares).toBe(4);
     expect(bnd.pricePerShare).toBe(0);
   });
+
+  it("커스텀 종목의 isCustom을 snapshotAssets/updatedAssets에 전달한다 (actions는 자산 단위 정보라 중복 저장하지 않음)", () => {
+    const customRows: RebalancingActionRow[] = [
+      {
+        ticker: "custom-uuid-1",
+        name: "비상장 펀드",
+        color: "#123456",
+        currentShares: 3,
+        targetShares: 5,
+        currentRatio: 30,
+        targetRatio: 50,
+        pricePerShare: 10000,
+        quantity: 2,
+        action: "buy",
+        isCustom: true,
+      },
+    ];
+    const customAssets: PortfolioAsset[] = [
+      { ticker: "custom-uuid-1", name: "비상장 펀드", color: "#123456", ratio: 50, shares: 3, order: 0, isCustom: true },
+    ];
+
+    const { actions, snapshotAssets, updatedAssets } = buildRebalancingExecutionPayload(
+      customRows,
+      customAssets
+    );
+
+    expect(actions[0]).not.toHaveProperty("isCustom");
+    expect(snapshotAssets[0].isCustom).toBe(true);
+    expect(updatedAssets[0].isCustom).toBe(true);
+  });
 });

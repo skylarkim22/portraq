@@ -9,7 +9,7 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ from: fromMock }),
 }));
 
-function renderWithClient<T>(callback: () => T) {
+const renderWithClient = <T,>(callback: () => T) => {
   const queryClient = new QueryClient();
   return renderHook(callback, {
     wrapper: ({ children }) => (

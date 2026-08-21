@@ -10,16 +10,19 @@ gh issue view $ARGUMENTS
 
 이슈의 제목, 본문, 서브이슈, 체크리스트를 파악한다.
 
-## 2. 브랜치 생성
+## 2. 워크트리 및 브랜치 생성
 
-이슈 제목을 영문 kebab-case로 요약해 브랜치를 만든다:
+이슈 제목을 영문 kebab-case로 요약해 별도 워크트리에 브랜치를 만든다. 메인 작업 디렉토리에서 `git checkout -b`로 브랜치를 전환하지 않고, `.claude/worktrees/`(gitignore 대상) 아래 격리된 워크트리를 만들어 그 안에서 작업한다:
 
 ```bash
 git checkout develop && git pull
-git checkout -b feat/#$ARGUMENTS-{short-description}
+git worktree add .claude/worktrees/{short-description} -b feat/#$ARGUMENTS-{short-description}
+cd .claude/worktrees/{short-description}
 ```
 
-브랜치명 예시: `feat/#12-portfolio-list-page`
+브랜치명 예시: `feat/#12-portfolio-list-page`, 워크트리 경로 예시: `.claude/worktrees/portfolio-list-page`
+
+이후 개발·테스트·커밋은 모두 이 워크트리 디렉토리 안에서 진행한다.
 
 ## 3. 디자인 목업 확인
 
@@ -39,14 +42,16 @@ git checkout -b feat/#$ARGUMENTS-{short-description}
 
 목업의 색상·컴포넌트 클래스(`.card`, `.badge`, `.btn-primary` 등)·인터랙션을 실제 구현의 기준으로 삼는다. `docs/design/`은 Portraq 디자인과 무관한(Wanted 디자인 시스템) 참고자료이므로 사용하지 않는다.
 
+이슈에 포함된 화면이 기존 목업 9개 중 어디에도 해당하지 않으면(완전히 새로운 화면), `ux-designer` 에이전트를 호출해 신규 목업 또는 텍스트 와이어프레임 명세를 먼저 만든다. 기존 화면에 컴포넌트를 추가/수정하는 정도면 이 단계를 건너뛴다.
+
 ## 4. 작업 계획 수립
 
 AGENTS.md의 파일 배치 규칙을 기준으로 다음을 정리해서 사용자에게 보여준다:
 
 - **생성·수정할 파일 목록** (경로 포함)
-- **참고한 목업 파일과 반영할 디자인 요소**
+- **참고한 목업 파일(또는 ux-designer 산출물)과 반영할 디자인 요소**
 - **packages/ui 컴포넌트 추가 여부** → test + story 필요 여부
-- **DB 쿼리 필요 여부** → features/[feature]/queries.ts 작성 여부
+- **DB 쿼리 필요 여부** → `features/[feature]/queries.ts`/`mutations.ts` 작성 여부. 필요하면 `backend-dev`가 먼저 작성하고 `frontend-dev`가 `hooks.ts`·컴포넌트로 이어받는 순서임을 계획에 명시한다
 - **예상 작업 범위** (간략히)
 
-계획을 보여준 후 사용자 확인을 받고 개발을 시작한다.
+계획을 보여준 후 사용자 확인을 받고 개발을 시작한다. DB 쿼리가 필요한 작업은 `backend-dev` → `frontend-dev` 순서로 진행한다.
