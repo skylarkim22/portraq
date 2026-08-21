@@ -238,7 +238,7 @@ CREATE POLICY "users can manage own execution records"
 CREATE TABLE portfolio_snapshots (
   id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   portfolio_id        UUID        NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
-  execution_record_id UUID        NOT NULL REFERENCES execution_records(id) ON DELETE CASCADE,
+  execution_record_id UUID        NOT NULL UNIQUE REFERENCES execution_records(id) ON DELETE CASCADE,
   saved_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   assets              JSONB       NOT NULL DEFAULT '[]',
   total_value         NUMERIC,
