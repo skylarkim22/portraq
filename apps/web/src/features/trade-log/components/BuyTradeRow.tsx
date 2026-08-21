@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { Input } from "@portraq/ui";
 import type { Market } from "@portraq/lib/types";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { MARKET_BADGE_CLASS } from "@/features/trade-log/constants";
 
@@ -11,6 +12,7 @@ export type BuyRowDraft = {
   market: Market;
   quantity: number;
   price: number;
+  isCustom?: boolean;
 };
 
 type BuyTradeRowProps = {
@@ -48,7 +50,9 @@ export const BuyTradeRow = ({
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-extrabold text-foreground">{row.name}</span>
-          <span className="text-xs text-muted-foreground">{row.ticker}</span>
+          <span className="text-xs text-muted-foreground">
+            {formatAssetTicker(row.ticker, row.isCustom)}
+          </span>
           <span
             className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${MARKET_BADGE_CLASS[row.market]}`}
           >

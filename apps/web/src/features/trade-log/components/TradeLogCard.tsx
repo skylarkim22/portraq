@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ActionChip } from "@portraq/ui";
-import { toKrwPrice } from "@portraq/lib/utils";
+import { formatAssetTicker, toKrwPrice } from "@portraq/lib/utils";
 import { calcSellPnl } from "@/features/trade-log/calcSellPnl";
 import { useDeleteTradeLog } from "@/features/trade-log/mutations";
 import { EditTradeModal } from "@/features/trade-log/components/EditTradeModal";
@@ -60,7 +60,7 @@ export const TradeLogCard = ({ log, avgPrice }: TradeLogCardProps) => {
               {log.name}
             </span>
             <span className="truncate text-xs text-muted-foreground">
-              {log.ticker}
+              {formatAssetTicker(log.ticker, log.isCustom)}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-1">

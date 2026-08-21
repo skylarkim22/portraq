@@ -5,7 +5,6 @@ import type {
   PortfolioAsset,
   SnapshotAsset,
 } from "@portraq/lib/types";
-import { DEFAULT_ASSET_COLOR } from "@portraq/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { portfolioQueries } from "@/features/portfolio/queries";
 
@@ -43,13 +42,11 @@ export const useSavePortfolio = () => {
       const assets = input.assets
         .filter((asset) => !asset.isSlot)
         .map((asset) => ({
-          ticker: asset.ticker,
-          name: asset.name ?? asset.ticker,
-          market: asset.market ?? "KR",
+          assetTicker: asset.isCustom ? null : asset.ticker,
+          customAssetId: asset.isCustom ? asset.ticker : null,
           ratio: asset.ratio,
           shares: asset.shares,
           currentPrice: asset.currentPrice ?? 0,
-          color: asset.color ?? DEFAULT_ASSET_COLOR,
           order: asset.order,
         }));
 
@@ -115,6 +112,7 @@ type UpdatedAsset = {
   ticker: string;
   shares: number;
   currentPrice: number;
+  isCustom?: boolean;
 };
 
 type RecordRebalancingExecutionInput = {
@@ -130,13 +128,20 @@ export const useRecordRebalancingExecution = (portfolioId: string) => {
 
   return useMutation({
     mutationFn: async (input: RecordRebalancingExecutionInput) => {
+      const updatedAssets = input.updatedAssets.map((asset) => ({
+        assetTicker: asset.isCustom ? null : asset.ticker,
+        customAssetId: asset.isCustom ? asset.ticker : null,
+        shares: asset.shares,
+        currentPrice: asset.currentPrice,
+      }));
+
       const { error } = await createClient().rpc(
         "record_rebalancing_execution",
         {
           p_portfolio_id: portfolioId,
           p_total_budget: input.totalBudget,
           p_actions: input.actions,
-          p_updated_assets: input.updatedAssets,
+          p_updated_assets: updatedAssets,
           p_snapshot_assets: input.snapshotAssets,
         }
       );

@@ -7,6 +7,17 @@ export type EnrichedTradeLog = TradeLog & {
   market: Market;
 };
 
+// asset_ticker/custom_asset_id는 exclusive arc라 assets(...)/custom_assets(...)
+// 중 채워진 쪽 하나만 실제로 존재한다. Supabase 클라이언트가 Database 타입 없이
+// 쓰이는 이 프로젝트에서는 to-one 관계도 배열 타입으로 추론되므로(실제 런타임
+// 응답은 단일 객체) 여기서 실제 형태로 캐스팅해 흡수한다.
+type AssetJoinInfo = { name: string; market: string };
+
+const pickAssetInfo = (
+  catalogAsset: unknown,
+  customAsset: unknown
+): AssetJoinInfo | null => (catalogAsset ?? customAsset) as unknown as AssetJoinInfo | null;
+
 export const tradeLogQueries = {
   all: () => ["trade-logs"] as const,
 
@@ -16,48 +27,34 @@ export const tradeLogQueries = {
       queryFn: async (): Promise<EnrichedTradeLog[]> => {
         const { data, error } = await createClient()
           .from("trade_logs")
-          .select("id, user_id, type, date, ticker, quantity, price, tax, exchange_rate, memo, created_at")
+          .select(
+            "id, user_id, type, date, asset_ticker, custom_asset_id, quantity, price, tax, exchange_rate, memo, created_at, assets(name, market), custom_assets(name, market)"
+          )
           .order("date", { ascending: false })
           .order("created_at", { ascending: false });
         if (error) throw error;
 
-        const tickers = Array.from(new Set(data.map((row) => row.ticker)));
-
-        const assetByTicker = new Map<string, { name: string; market: Market }>();
-
-        if (tickers.length > 0) {
-          const { data: assets, error: assetsError } = await createClient()
-            .from("assets")
-            .select("ticker, name, market")
-            .in("ticker", tickers);
-          if (assetsError) throw assetsError;
-
-          assets.forEach((asset) => {
-            assetByTicker.set(asset.ticker, {
-              name: asset.name,
-              market: asset.market as Market,
-            });
-          });
-        }
-
         return data.map((row) => {
-          const asset = assetByTicker.get(row.ticker);
+          const info = pickAssetInfo(row.assets, row.custom_assets);
+          const ticker = row.asset_ticker ?? row.custom_asset_id;
           return {
             id: row.id,
             userId: row.user_id,
             type: row.type as "buy" | "sell",
             date: row.date,
-            ticker: row.ticker,
+            ticker,
             quantity: row.quantity,
             price: row.price,
             tax: row.tax,
             exchangeRate: row.exchange_rate,
             memo: row.memo,
             createdAt: row.created_at,
-            name: asset?.name ?? row.ticker,
-            market: asset?.market ?? "KR",
+            name: info?.name ?? ticker,
+            market: (info?.market as Market) ?? "KR",
+            isCustom: row.custom_asset_id !== null,
           };
         });
       },
+      staleTime: 1000 * 30,
     }),
 };

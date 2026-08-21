@@ -73,6 +73,24 @@ describe("deriveHoldings", () => {
     expect(deriveHoldings(logs, "2026-03-01")).toMatchObject({ 0: { quantity: 10 } });
     expect(deriveHoldings(logs, "2026-07-01")).toMatchObject({ 0: { quantity: 6 } });
   });
+
+  it("커스텀 종목(isCustom)의 매수 기록에서 isCustom을 그대로 보유분에 전달한다", () => {
+    const logs: EnrichedTradeLog[] = [
+      log({
+        id: "l1",
+        type: "buy",
+        ticker: "custom-uuid-1",
+        name: "비상장 펀드",
+        quantity: 3,
+        price: 10000,
+        isCustom: true,
+      }),
+    ];
+
+    const [holding] = deriveHoldings(logs);
+
+    expect(holding).toMatchObject({ ticker: "custom-uuid-1", isCustom: true });
+  });
 });
 
 describe("calcAvgPriceAsOf", () => {

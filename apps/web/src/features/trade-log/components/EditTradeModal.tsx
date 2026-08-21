@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { useUpdateTradeLog } from "@/features/trade-log/mutations";
 import { MEMO_MIN_LENGTH } from "@/features/trade-log/constants";
@@ -111,7 +112,9 @@ export const EditTradeModal = ({ log, onClose }: EditTradeModalProps) => {
 
           <div className="mb-4 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-2.5">
             <span className="text-sm font-extrabold text-foreground">{log.name}</span>
-            <span className="text-xs text-muted-foreground">{log.ticker}</span>
+            <span className="text-xs text-muted-foreground">
+              {formatAssetTicker(log.ticker, log.isCustom)}
+            </span>
           </div>
 
           <div className={`mb-4 grid gap-2 ${isUsSell ? "grid-cols-3" : "grid-cols-2"}`}>

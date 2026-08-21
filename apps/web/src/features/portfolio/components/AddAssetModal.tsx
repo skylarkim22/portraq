@@ -6,13 +6,11 @@ import { StockSearch } from "@/features/stocks/components/StockSearch";
 type AddAssetModalProps = {
   onClose: () => void;
   onSelect: (asset: Asset) => void;
-  existingTickers?: string[];
 };
 
 export const AddAssetModal = ({
   onClose,
   onSelect,
-  existingTickers,
 }: AddAssetModalProps) => {
   return (
     <div
@@ -37,7 +35,7 @@ export const AddAssetModal = ({
             <X size={22} />
           </Button>
         </div>
-        <StockSearch onSelect={onSelect} existingTickers={existingTickers} />
+        <StockSearch onSelect={onSelect} />
       </div>
     </div>
   );

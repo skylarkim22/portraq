@@ -1,5 +1,6 @@
 import { AssetColorBadge, Card, Input } from "@portraq/ui";
 import type { PortfolioAsset } from "@portraq/lib/types";
+import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 
 type RebalancingHoldingsRowProps = {
@@ -27,7 +28,7 @@ export const RebalancingHoldingsRow = ({
           {asset.name ?? asset.ticker}
         </div>
         <div className="truncate text-xs text-muted-foreground">
-          {asset.ticker} · 목표 {asset.ratio}%
+          {formatAssetTicker(asset.ticker, asset.isCustom)} · 목표 {asset.ratio}%
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">

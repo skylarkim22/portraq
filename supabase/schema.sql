@@ -102,21 +102,50 @@ CREATE POLICY "users can manage own portfolios"
   WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
+-- custom_assets (유저별 "직접 추가" 종목)
+-- 종목 검색 결과가 없을 때 사용자가 이름·시장만 입력해 등록하는 종목.
+-- assets(공개 카탈로그)와는 별도 테이블로 분리한다 — assets는
+-- service-role 배치(배당/종가 적재 등)가 테이블 전체를 훑는 자리라,
+-- 유저별 비공개 데이터를 섞으면 그런 배치마다 필터링을 빠뜨리지
+-- 않아야 하는 부담이 생긴다. assets처럼 공개 읽기가 아니라 본인
+-- 것만 접근 가능하다.
+-- ============================================================
+CREATE TABLE custom_assets (
+  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name       TEXT        NOT NULL CHECK (char_length(name) <= 100),
+  market     TEXT        NOT NULL CHECK (market IN ('KR', 'US')),
+  color      TEXT        NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_custom_assets_user_id ON custom_assets(user_id);
+
+ALTER TABLE custom_assets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users can manage own custom assets"
+  ON custom_assets FOR ALL
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+-- ============================================================
 -- portfolio_assets (PRD 5.1 PortfolioAsset)
+-- asset_ticker/custom_asset_id는 exclusive arc — 정확히 하나만
+-- 채워진다("카탈로그 종목" vs "커스텀 종목"). name/market/color는
+-- assets/custom_assets 중 채워진 쪽과 JOIN해서 읽는다(중복 저장 안 함).
 -- ============================================================
 CREATE TABLE portfolio_assets (
-  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  portfolio_id  UUID        NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
-  ticker        TEXT        NOT NULL,
-  name          TEXT        NOT NULL,
-  market        TEXT        NOT NULL CHECK (market IN ('KR', 'US')),
-  ratio         NUMERIC     NOT NULL DEFAULT 0 CHECK (ratio >= 0 AND ratio <= 100),
-  shares        NUMERIC     NOT NULL DEFAULT 0,
-  current_price NUMERIC     NOT NULL DEFAULT 0,
-  color         TEXT        NOT NULL,
-  sort_order    INTEGER     NOT NULL DEFAULT 0,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  portfolio_id    UUID        NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
+  asset_ticker    TEXT        NULL REFERENCES assets(ticker),
+  custom_asset_id UUID        NULL REFERENCES custom_assets(id) ON DELETE CASCADE,
+  ratio           NUMERIC     NOT NULL DEFAULT 0 CHECK (ratio >= 0 AND ratio <= 100),
+  shares          NUMERIC     NOT NULL DEFAULT 0,
+  current_price   NUMERIC     NOT NULL DEFAULT 0,
+  sort_order      INTEGER     NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT portfolio_assets_asset_reference_check
+    CHECK ((asset_ticker IS NOT NULL) != (custom_asset_id IS NOT NULL))
 );
 
 CREATE TRIGGER trg_portfolio_assets_updated_at
@@ -124,8 +153,12 @@ CREATE TRIGGER trg_portfolio_assets_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE INDEX idx_portfolio_assets_portfolio ON portfolio_assets(portfolio_id);
+CREATE INDEX idx_portfolio_assets_asset_ticker ON portfolio_assets(asset_ticker);
+CREATE INDEX idx_portfolio_assets_custom_asset_id ON portfolio_assets(custom_asset_id);
 
 ALTER TABLE portfolio_assets ENABLE ROW LEVEL SECURITY;
+-- custom_asset_id는 존재만 검증하는 FK라 다른 유저의 custom_assets.id를
+-- 그대로 참조해도 통과한다. WITH CHECK에서 소유권까지 검증한다.
 CREATE POLICY "users can manage own portfolio assets"
   ON portfolio_assets FOR ALL
   USING (
@@ -140,6 +173,14 @@ CREATE POLICY "users can manage own portfolio assets"
       SELECT 1 FROM portfolios
       WHERE portfolios.id = portfolio_assets.portfolio_id
         AND portfolios.user_id = auth.uid()
+    )
+    AND (
+      custom_asset_id IS NULL
+      OR EXISTS (
+        SELECT 1 FROM custom_assets ca
+        WHERE ca.id = portfolio_assets.custom_asset_id
+          AND ca.user_id = auth.uid()
+      )
     )
   );
 
@@ -174,17 +215,15 @@ BEGIN
   DELETE FROM portfolio_assets WHERE portfolio_id = p_portfolio_id;
 
   INSERT INTO portfolio_assets (
-    portfolio_id, ticker, name, market, ratio, shares, current_price, color, sort_order
+    portfolio_id, asset_ticker, custom_asset_id, ratio, shares, current_price, sort_order
   )
   SELECT
     p_portfolio_id,
-    asset->>'ticker',
-    asset->>'name',
-    asset->>'market',
+    asset->>'assetTicker',
+    (asset->>'customAssetId')::uuid,
     (asset->>'ratio')::numeric,
     (asset->>'shares')::numeric,
     (asset->>'currentPrice')::numeric,
-    asset->>'color',
     (asset->>'order')::integer
   FROM jsonb_array_elements(p_assets) AS asset;
 END;
@@ -298,7 +337,11 @@ BEGIN
       current_price = (u->>'currentPrice')::numeric
   FROM jsonb_array_elements(p_updated_assets) AS u
   WHERE pa.portfolio_id = p_portfolio_id
-    AND pa.ticker = u->>'ticker';
+    AND (
+      (u->>'assetTicker' IS NOT NULL AND pa.asset_ticker = u->>'assetTicker')
+      OR
+      (u->>'customAssetId' IS NOT NULL AND pa.custom_asset_id = (u->>'customAssetId')::uuid)
+    );
 
   INSERT INTO execution_records (portfolio_id, total_budget, actions)
   VALUES (p_portfolio_id, p_total_budget, p_actions)
@@ -375,29 +418,45 @@ CREATE POLICY "templates are publicly readable"
 -- trade_logs (매매 일지, PRD 5.8)
 -- 1행 = 1종목 거래. 한 번에 여러 종목을 등록해도 종목마다 독립된 행으로
 -- 저장되어, 날짜·메모·수량·가격을 종목별로 개별 수정·삭제할 수 있다.
+-- asset_ticker/custom_asset_id는 portfolio_assets와 동일한 exclusive
+-- arc 패턴.
 -- ============================================================
 CREATE TABLE trade_logs (
-  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  type          TEXT        NOT NULL CHECK (type IN ('buy', 'sell')),
-  date          DATE        NOT NULL DEFAULT CURRENT_DATE,
-  ticker        TEXT        NOT NULL,
-  quantity      NUMERIC     NOT NULL CHECK (quantity > 0),
-  price         NUMERIC     NOT NULL CHECK (price > 0),
-  tax           NUMERIC     CHECK (tax >= 0),
-  exchange_rate NUMERIC     CHECK (exchange_rate > 0),
-  memo          TEXT        CHECK (char_length(memo) <= 1000),
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type            TEXT        NOT NULL CHECK (type IN ('buy', 'sell')),
+  date            DATE        NOT NULL DEFAULT CURRENT_DATE,
+  asset_ticker    TEXT        NULL REFERENCES assets(ticker),
+  custom_asset_id UUID        NULL REFERENCES custom_assets(id) ON DELETE CASCADE,
+  quantity        NUMERIC     NOT NULL CHECK (quantity > 0),
+  price           NUMERIC     NOT NULL CHECK (price > 0),
+  tax             NUMERIC     CHECK (tax >= 0),
+  exchange_rate   NUMERIC     CHECK (exchange_rate > 0),
+  memo            TEXT        CHECK (char_length(memo) <= 1000),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT trade_logs_asset_reference_check
+    CHECK ((asset_ticker IS NOT NULL) != (custom_asset_id IS NOT NULL))
 );
 
 CREATE INDEX idx_trade_logs_user_date ON trade_logs(user_id, date DESC);
-CREATE INDEX idx_trade_logs_user_ticker ON trade_logs(user_id, ticker);
+CREATE INDEX idx_trade_logs_asset_ticker ON trade_logs(asset_ticker);
+CREATE INDEX idx_trade_logs_custom_asset_id ON trade_logs(custom_asset_id);
 
 ALTER TABLE trade_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users can manage own trade logs"
   ON trade_logs FOR ALL
   USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (
+    auth.uid() = user_id
+    AND (
+      custom_asset_id IS NULL
+      OR EXISTS (
+        SELECT 1 FROM custom_assets ca
+        WHERE ca.id = trade_logs.custom_asset_id
+          AND ca.user_id = auth.uid()
+      )
+    )
+  );
 
 -- ============================================================
 -- 대가 포트폴리오 템플릿 데이터 (PRD 2.1)

@@ -48,6 +48,13 @@ describe("useSavePortfolio", () => {
     const assets: PortfolioAsset[] = [
       { ticker: "AAPL", ratio: 70, shares: 0, order: 0 },
       { ticker: "SLOT", ratio: 30, shares: 0, order: 1, isSlot: true },
+      {
+        ticker: "custom-1",
+        ratio: 0,
+        shares: 0,
+        order: 2,
+        isCustom: true,
+      },
     ];
 
     await act(async () => {
@@ -63,7 +70,18 @@ describe("useSavePortfolio", () => {
       p_portfolio_id: "p1",
       p_name: "테스트",
       p_memo: null,
-      p_assets: [expect.objectContaining({ ticker: "AAPL", ratio: 70 })],
+      p_assets: [
+        expect.objectContaining({
+          assetTicker: "AAPL",
+          customAssetId: null,
+          ratio: 70,
+        }),
+        expect.objectContaining({
+          assetTicker: null,
+          customAssetId: "custom-1",
+          ratio: 0,
+        }),
+      ],
     });
   });
 });
@@ -85,7 +103,10 @@ describe("useRecordRebalancingExecution", () => {
         actions: [
           { ticker: "AAPL", action: "buy", quantity: 2, pricePerShare: 200 },
         ],
-        updatedAssets: [{ ticker: "AAPL", shares: 7, currentPrice: 200 }],
+        updatedAssets: [
+          { ticker: "AAPL", shares: 7, currentPrice: 200 },
+          { ticker: "custom-1", shares: 3, currentPrice: 100, isCustom: true },
+        ],
         snapshotAssets: [
           { ticker: "AAPL", name: "Apple", ratio: 100, shares: 7, pricePerShare: 200, color: "#000" },
         ],
@@ -96,7 +117,10 @@ describe("useRecordRebalancingExecution", () => {
       p_portfolio_id: "p1",
       p_total_budget: 500000,
       p_actions: [expect.objectContaining({ ticker: "AAPL", action: "buy" })],
-      p_updated_assets: [expect.objectContaining({ ticker: "AAPL", shares: 7 })],
+      p_updated_assets: [
+        expect.objectContaining({ assetTicker: "AAPL", customAssetId: null, shares: 7 }),
+        expect.objectContaining({ assetTicker: null, customAssetId: "custom-1", shares: 3 }),
+      ],
       p_snapshot_assets: [expect.objectContaining({ ticker: "AAPL", shares: 7 })],
     });
   });

@@ -33,6 +33,7 @@ export const BuyTradeModal = ({ defaultDate, onClose }: BuyTradeModalProps) => {
         market: asset.market,
         quantity: 1,
         price: 0,
+        isCustom: asset.isCustom,
       },
     ]);
   };
@@ -110,10 +111,7 @@ export const BuyTradeModal = ({ defaultDate, onClose }: BuyTradeModalProps) => {
             종목 검색
           </label>
           <div className="mb-5">
-            <StockSearch
-              onSelect={handleSelectAsset}
-              existingTickers={rows.map((row) => row.ticker)}
-            />
+            <StockSearch onSelect={handleSelectAsset} />
           </div>
 
           <label className="mb-2 block text-xs font-bold text-muted-foreground">

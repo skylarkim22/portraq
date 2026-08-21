@@ -5,6 +5,7 @@ type UpdatedAsset = {
   ticker: string;
   shares: number;
   currentPrice: number;
+  isCustom?: boolean;
 };
 
 export type RebalancingExecutionPayload = {
@@ -18,11 +19,13 @@ export const buildRebalancingExecutionPayload = (
   assets: PortfolioAsset[]
 ): RebalancingExecutionPayload => {
   const rowByTicker = new Map(rows.map((row) => [row.ticker, row]));
+  const assetByTicker = new Map(assets.map((asset) => [asset.ticker, asset]));
 
   const updatedAssets: UpdatedAsset[] = rows.map((row) => ({
     ticker: row.ticker,
     shares: row.currentShares + row.quantity,
     currentPrice: row.pricePerShare,
+    isCustom: assetByTicker.get(row.ticker)?.isCustom,
   }));
 
   const snapshotAssets: SnapshotAsset[] = assets.map((asset) => {
@@ -34,6 +37,7 @@ export const buildRebalancingExecutionPayload = (
       shares: row ? row.currentShares + row.quantity : asset.shares,
       pricePerShare: row?.pricePerShare ?? 0,
       color: asset.color ?? "",
+      isCustom: asset.isCustom,
     };
   });
 

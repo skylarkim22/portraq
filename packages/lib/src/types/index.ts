@@ -13,6 +13,8 @@ export interface Asset {
   // 배당 스케줄. 무배당 종목은 null. dividendMonths는 배당기준일 기준 지급 월.
   dividendFrequency: DividendFrequency | null;
   dividendMonths: number[] | null;
+  // 카탈로그(assets)가 아닌 사용자가 직접 추가한 종목(custom_assets)이면 true.
+  isCustom?: boolean;
 }
 
 export interface PortfolioAsset {
@@ -20,7 +22,11 @@ export interface PortfolioAsset {
   ratio: number;
   shares: number;
   order: number;
+  // 아직 미확정이라 저장하지 않는 슬롯이면 true.
   isSlot?: boolean;
+  // 확정됐고 저장은 하지만 카탈로그(assets) 종목이 아니라 custom_assets
+  // 종목이면 true. 이 경우 ticker에는 assets.ticker 대신 custom_assets.id가 담긴다.
+  isCustom?: boolean;
   name?: string;
   market?: Market;
   color?: string;
@@ -58,6 +64,7 @@ export interface SnapshotAsset {
   shares: number;
   pricePerShare: number;
   color: string;
+  isCustom?: boolean;
 }
 
 export interface PortfolioSnapshot {
@@ -79,6 +86,9 @@ export interface TradeLog {
   exchangeRate?: number | null;
   memo: string | null;
   createdAt: string;
+  // 카탈로그(assets)가 아닌 사용자가 직접 추가한 종목(custom_assets)이면 true.
+  // 이 경우 ticker에는 assets.ticker 대신 custom_assets.id가 담긴다.
+  isCustom?: boolean;
 }
 
 export type TemplateStrategy = "passive" | "value" | "quant" | "asset-allocation" | "growth";
