@@ -42,14 +42,16 @@ cd .claude/worktrees/{short-description}
 
 목업의 색상·컴포넌트 클래스(`.card`, `.badge`, `.btn-primary` 등)·인터랙션을 실제 구현의 기준으로 삼는다. `docs/design/`은 Portraq 디자인과 무관한(Wanted 디자인 시스템) 참고자료이므로 사용하지 않는다.
 
+이슈에 포함된 화면이 기존 목업 9개 중 어디에도 해당하지 않으면(완전히 새로운 화면), `ux-designer` 에이전트를 호출해 신규 목업 또는 텍스트 와이어프레임 명세를 먼저 만든다. 기존 화면에 컴포넌트를 추가/수정하는 정도면 이 단계를 건너뛴다.
+
 ## 4. 작업 계획 수립
 
 AGENTS.md의 파일 배치 규칙을 기준으로 다음을 정리해서 사용자에게 보여준다:
 
 - **생성·수정할 파일 목록** (경로 포함)
-- **참고한 목업 파일과 반영할 디자인 요소**
+- **참고한 목업 파일(또는 ux-designer 산출물)과 반영할 디자인 요소**
 - **packages/ui 컴포넌트 추가 여부** → test + story 필요 여부
-- **DB 쿼리 필요 여부** → features/[feature]/queries.ts 작성 여부
+- **DB 쿼리 필요 여부** → `features/[feature]/queries.ts`/`mutations.ts` 작성 여부. 필요하면 `backend-dev`가 먼저 작성하고 `frontend-dev`가 `hooks.ts`·컴포넌트로 이어받는 순서임을 계획에 명시한다
 - **예상 작업 범위** (간략히)
 
-계획을 보여준 후 사용자 확인을 받고 개발을 시작한다.
+계획을 보여준 후 사용자 확인을 받고 개발을 시작한다. DB 쿼리가 필요한 작업은 `backend-dev` → `frontend-dev` 순서로 진행한다.

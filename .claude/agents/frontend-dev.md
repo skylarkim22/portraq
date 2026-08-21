@@ -39,104 +39,30 @@ src/
 
 피처 예시: `portfolio`, `stocks`, `trade-log`
 
-## 데이터 레이어 패턴 (필수)
+## 데이터 레이어 — backend-dev와의 경계
 
-Supabase 호출은 반드시 `features/[feature]/queries.ts`에 작성한다.
-컴포넌트에서 Supabase를 직접 호출하지 않는다.
+`features/[feature]/queries.ts`(Query Key + queryOptions)와 `mutations.ts`(useMutation)는
+**backend-dev가 소유**한다. 이 에이전트는 Supabase를 직접 호출하지 않고, 컴포넌트에서도
+Supabase를 직접 호출하지 않는다.
 
-`queries.ts`는 **Query Key Factory → queryOptions** 순서로 작성한다.
-
-```ts
-// features/portfolio/queries.ts
-import { queryOptions } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
-
-// 1. Query Key Factory — 키를 계층 구조로 중앙 관리
-export const portfolioKeys = {
-  all: ['portfolios'] as const,
-  lists: () => [...portfolioKeys.all, 'list'] as const,
-  detail: (id: string) => [...portfolioKeys.all, 'detail', id] as const,
-  snapshots: (id: string) => [...portfolioKeys.all, 'snapshots', id] as const,
-}
-
-// 2. queryOptions — 키 팩토리에서 키를 가져와 정의
-export const portfolioListQueryOptions = queryOptions({
-  queryKey: portfolioKeys.lists(),
-  queryFn: async () => {
-    const { data, error } = await createClient()
-      .from('portfolios').select('*')
-    if (error) throw error
-    return data
-  },
-  staleTime: 1000 * 60,
-})
-
-export const portfolioQueryOptions = (id: string) =>
-  queryOptions({
-    queryKey: portfolioKeys.detail(id),
-    queryFn: async () => {
-      const { data, error } = await createClient()
-        .from('portfolios')
-        .select('*, portfolio_assets(*)')
-        .eq('id', id)
-        .single()
-      if (error) throw error
-      return data
-    },
-  })
-```
+이 에이전트가 작성하는 것은 `hooks.ts`뿐이다 — backend-dev가 만든 `queries.ts`의
+`queryOptions`를 그대로 `useQuery`에 감싸는 얇은 파일이다.
 
 ```ts
 // features/portfolio/hooks.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { portfolioListQueryOptions, portfolioQueryOptions, portfolioKeys } from './queries'
+import { useQuery } from '@tanstack/react-query'
+import { portfolioQueries } from '@/features/portfolio/queries'
 
-export function usePortfolioList() {
-  return useQuery(portfolioListQueryOptions)
-}
-
-export function usePortfolio(id: string) {
-  return useQuery(portfolioQueryOptions(id))
-}
-
-export function useSavePortfolio() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (payload) => { /* Supabase upsert */ },
-    onMutate: async (newItem) => {
-      await queryClient.cancelQueries({ queryKey: portfolioKeys.all })
-      const prev = queryClient.getQueryData(portfolioListQueryOptions.queryKey)
-      queryClient.setQueryData(portfolioListQueryOptions.queryKey, (old: any[]) => [...old, newItem])
-      return { prev }
-    },
-    onError: (_, __, ctx) =>
-      queryClient.setQueryData(portfolioListQueryOptions.queryKey, ctx?.prev),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: portfolioKeys.all }),
-  })
-}
+export const usePortfolioList = () => useQuery(portfolioQueries.lists())
+export const usePortfolio = (id: string) => useQuery(portfolioQueries.detail(id))
 ```
 
-### 무효화 범위 선택 기준
+캐시를 컴포넌트/이벤트 핸들러에서 직접 조작해야 할 때는 backend-dev가 정의한 Query 객체의
+키를 그대로 가져다 쓴다 (`portfolioQueries.all()`, `portfolioQueries.lists().queryKey` 등).
+새 쿼리·뮤테이션이 필요하면 직접 작성하지 말고 backend-dev에게 요청한다.
 
-```ts
-// 저장/수정/삭제 후 — 관련 데이터 전체 갱신
-queryClient.invalidateQueries({ queryKey: portfolioKeys.all })
-
-// 목록에만 영향을 주는 변경
-queryClient.invalidateQueries({ queryKey: portfolioKeys.lists() })
-
-// 특정 항목만 갱신
-queryClient.invalidateQueries({ queryKey: portfolioKeys.detail(id) })
-```
-
-### 피처별 Key Factory 네이밍
-
-| 피처 | Key Factory | `all` 키 |
-|------|-------------|----------|
-| portfolio | `portfolioKeys` | `['portfolios']` |
-| stocks | `stockKeys` | `['stocks']` |
-| trade-log | `tradeLogKeys` | `['trade-logs']` |
+피처별 Query 객체 이름은 AGENTS.md의 "피처별 Query 객체 목록" 표를 따른다
+(`portfolioQueries`, `stockQueries`, `tradeLogQueries` 등).
 
 ## 상태관리 전략
 
@@ -215,3 +141,10 @@ export function Button({ variant, size, className, ...props }: ButtonProps) {
 - Supabase 쿼리 에러: `if (error) throw error` 후 TanStack Query가 처리
 - 401/403: Supabase Auth 미들웨어가 처리 (`middleware.ts`)
 - 폼 에러: React Hook Form fieldState로 필드별 표시
+
+## 팀 통신 프로토콜
+
+- **ux-designer로부터**: 목업 파일 경로 또는 텍스트 와이어프레임 명세, 재사용할 클래스 목록 전달받음
+- **backend-dev로부터**: `queries.ts`/`mutations.ts`의 export 이름과 반환 타입 전달받음 (직접 작성하지 않음)
+- **qa-tester에게**: 구현 완료된 화면 목록 전달, 발견된 🔴/🟡 이슈를 되돌려받아 수정
+- `/issue-start` 4단계 계획에서 backend-dev가 먼저 `queries.ts`/`mutations.ts`를 준비한 뒤, 이 에이전트가 `hooks.ts`와 컴포넌트를 붙인다
