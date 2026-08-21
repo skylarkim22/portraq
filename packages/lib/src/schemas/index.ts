@@ -6,6 +6,7 @@ export const portfolioAssetSchema = z.object({
   shares: z.number().min(0),
   order: z.number().int().min(0),
   isSlot: z.boolean().optional(),
+  isCustom: z.boolean().optional(),
 });
 
 export const portfolioSchema = z.object({

@@ -409,7 +409,16 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `id` UUID PK, `user_id` UUID (auth.users FK), `name` TEXT, `monthly_budget` NUMERIC, `template_id` TEXT, `created_at`, `updated_at`
 
 **portfolio_assets** — 포트폴리오 내 종목
-- `id` UUID PK, `portfolio_id` UUID (portfolios FK), `ticker` TEXT, `name` TEXT, `market` TEXT (KR/US/ETF), `ratio` NUMERIC (0~100), `shares` NUMERIC, `current_price` NUMERIC, `color` TEXT (hex), `sort_order` INTEGER, `memo` TEXT
+- `id` UUID PK, `portfolio_id` UUID (portfolios FK), `asset_ticker` TEXT NULL (`assets` FK), `custom_asset_id` UUID NULL (`custom_assets` FK), `ratio` NUMERIC (0~100), `shares` NUMERIC, `current_price` NUMERIC, `sort_order` INTEGER
+- `asset_ticker`/`custom_asset_id`는 exclusive arc(정확히 하나만 채워짐) — "카탈로그 종목" vs "직접 추가한 커스텀 종목"을 구분한다. `name`/`market`/`color`는 컬럼으로 보관하지 않고 `assets`/`custom_assets` 중 채워진 쪽과 JOIN해서 읽는다
+
+**custom_assets** — 유저별 "직접 추가" 종목 (검색에 없는 종목을 이름·시장만 입력해 등록)
+- `id` UUID PK, `user_id` UUID (auth.users FK), `name` TEXT, `market` TEXT (KR/US), `color` TEXT (hex), `created_at`
+- `assets`(공개 카탈로그)와 별도 테이블 — service-role 배치가 `assets` 전체를 훑는 자리라 유저별 비공개 데이터를 섞지 않는다. RLS는 본인 것만 접근 가능(공개 읽기 아님)
+
+**trade_logs** — 매매 일지 (1행 = 1종목 거래)
+- `id` UUID PK, `user_id` UUID (auth.users FK), `type` TEXT (buy/sell), `date` DATE, `asset_ticker` TEXT NULL (`assets` FK), `custom_asset_id` UUID NULL (`custom_assets` FK), `quantity` NUMERIC, `price` NUMERIC, `tax` NUMERIC, `exchange_rate` NUMERIC, `memo` TEXT, `created_at`
+- `asset_ticker`/`custom_asset_id`는 `portfolio_assets`와 동일한 exclusive arc 패턴
 
 **execution_records** — 저장 시 생성되는 실행 기록
 - `id` UUID PK, `portfolio_id` UUID (portfolios FK), `executed_at` TIMESTAMPTZ, `total_budget` NUMERIC, `actions` JSONB, `memo` TEXT

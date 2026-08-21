@@ -116,6 +116,7 @@ export const PortfolioEditor = ({
                 shares: asset.shares,
                 currentPrice: asset.currentPrice,
                 order: asset.order,
+                isCustom: picked.isCustom,
               }
             : asset,
         ),
@@ -135,6 +136,7 @@ export const PortfolioEditor = ({
         shares: 0,
         currentPrice: 0,
         order: prev.length,
+        isCustom: picked.isCustom,
       },
     ]);
   };
@@ -334,7 +336,6 @@ export const PortfolioEditor = ({
             setReplacingTicker(null);
           }}
           onSelect={handleAddAsset}
-          existingTickers={assets.map((asset) => asset.ticker)}
         />
       )}
     </div>

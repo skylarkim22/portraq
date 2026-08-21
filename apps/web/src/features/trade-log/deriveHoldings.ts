@@ -7,6 +7,7 @@ export type Holding = {
   market: Market;
   avgPrice: number;
   quantity: number;
+  isCustom?: boolean;
 };
 
 // 평균단가는 매수 기록만으로 산출하고, 매도 기록이 생겨도 재계산하지 않는다(PRD 2.6.2).
@@ -19,7 +20,7 @@ export const deriveHoldings = (
 ): Holding[] => {
   const buyTotals = new Map<
     string,
-    { qty: number; cost: number; name: string; market: Market }
+    { qty: number; cost: number; name: string; market: Market; isCustom?: boolean }
   >();
   const soldQty = new Map<string, number>();
 
@@ -32,6 +33,7 @@ export const deriveHoldings = (
         cost: 0,
         name: row.name,
         market: row.market,
+        isCustom: row.isCustom,
       };
       entry.qty += row.quantity;
       entry.cost += row.quantity * row.price;
@@ -42,12 +44,13 @@ export const deriveHoldings = (
   }
 
   return Array.from(buyTotals.entries())
-    .map(([ticker, { qty, cost, name, market }]) => ({
+    .map(([ticker, { qty, cost, name, market, isCustom }]) => ({
       ticker,
       name,
       market,
       avgPrice: qty > 0 ? cost / qty : 0,
       quantity: qty - (soldQty.get(ticker) ?? 0),
+      isCustom,
     }))
     .filter((holding) => holding.quantity > 0);
 };

@@ -41,14 +41,14 @@ const baseRow = {
     { ticker: "TSLA", action: "sell", quantity: -1, pricePerShare: 220 },
   ],
   portfolios: { name: "워런 버핏 전략" },
-  portfolio_snapshots: [
-    {
-      assets: [
-        { ticker: "AAPL", name: "Apple", ratio: 60, shares: 3, pricePerShare: 200, color: "#355df9" },
-        { ticker: "TSLA", name: "Tesla", ratio: 40, shares: 0, pricePerShare: 220, color: "#e85d4a" },
-      ],
-    },
-  ],
+  // portfolio_snapshots.execution_record_id에 UNIQUE 제약이 있어(1:1 관계)
+  // PostgREST가 배열이 아닌 단일 객체로 embed를 반환한다.
+  portfolio_snapshots: {
+    assets: [
+      { ticker: "AAPL", name: "Apple", ratio: 60, shares: 3, pricePerShare: 200, color: "#355df9" },
+      { ticker: "TSLA", name: "Tesla", ratio: 40, shares: 0, pricePerShare: 220, color: "#e85d4a" },
+    ],
+  },
 };
 
 describe("useRebalancingHistory", () => {
