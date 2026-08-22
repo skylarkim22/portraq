@@ -12,12 +12,18 @@ export const GET = async (request: NextRequest) => {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
+  // NEXT_PUBLIC_SUPABASE_URL은 비밀이 아니라 클라이언트 번들에도 노출되는 값이라
+  // 서버에서도 그대로 재사용한다. service-role 키만 별도 비공개 변수로 유지.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const dataGoKrApiKey = process.env.DATA_GO_KR_API_KEY;
   if (!supabaseUrl || !serviceRoleKey || !dataGoKrApiKey) {
     return NextResponse.json(
-      { ok: false, error: "missing_env", detail: "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DATA_GO_KR_API_KEY" },
+      {
+        ok: false,
+        error: "missing_env",
+        detail: "NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DATA_GO_KR_API_KEY",
+      },
       { status: 500 }
     );
   }
