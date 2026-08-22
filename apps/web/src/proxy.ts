@@ -43,6 +43,8 @@ export const proxy = async (request: NextRequest) => {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // api/cron/* 는 Vercel Cron이 CRON_SECRET으로 자체 인증하는 서버 간 호출이라
+    // 유저 세션 기반 로그인 리다이렉트 대상이 아니다.
+    "/((?!_next/static|_next/image|favicon.ico|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
