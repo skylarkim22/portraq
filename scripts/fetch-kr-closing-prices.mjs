@@ -276,6 +276,7 @@ const main = async () => {
 };
 
 main().catch((e) => {
-  console.error(`\n❌ 실패: ${e.message}`);
+  const causeMessage = e.cause ? ` (원인: ${e.cause.code ?? e.cause.message ?? e.cause})` : "";
+  console.error(`\n❌ 실패: ${e.message}${causeMessage}`);
   process.exit(1);
 });
