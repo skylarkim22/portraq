@@ -432,7 +432,14 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `ticker` TEXT PK, `name` TEXT, `market` TEXT (KR/US/ETF), `created_at`, `updated_at`
 - 데이터: KR 2,768개 / ETF 1,145개 / US 4,246개 (총 8,159개, 2026-06-24 기준)
 
+**asset_prices** — 종목별 확정 종가 이력 (1:N)
+- `ticker` TEXT (`assets` FK), `price_date` DATE, `close_price` NUMERIC, `created_at`, `updated_at`
+- PK는 `(ticker, price_date)` 복합키 — `id` 컬럼 없음(다른 테이블이 이 행을 FK로 참조할 일이 없어 `asset_dividends`와 다르게 의도적으로 뺐다)
+- `scripts/fetch-kr-closing-prices.mjs` 배치(평일 매일, GitHub Actions)가 aikstockdata에서 KR 종목(실제 보유 중인 티커만) 확정 종가를 upsert. service-role 키로 RLS 우회
+- 앱 코드가 이 값을 실제로 소비하는 로직은 아직 없음(#60 스코프)
+
 ### 공통 사항
 - 모든 테이블 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근
 - `stocks`는 누구나 읽기 가능 (SELECT), 쓰기 차단
+- `asset_prices`도 `stocks`와 동일하게 누구나 읽기 가능, 쓰기는 RLS로 차단(배치는 service-role 키 사용)
 - 저장 버튼 1회 클릭 → `portfolios` 업데이트 + `execution_records` 생성 + `portfolio_snapshots` 생성 (트랜잭션)
