@@ -2,7 +2,7 @@ name: KR 종가 배치
 
 on:
   schedule:
-    - cron: "30 9 * * 1-5" # 평일 UTC 09:30 = KST 18:30 (aikstockdata 갱신 18:10 이후)
+    - cron: "30 9 * * 1-5" # 평일 UTC 09:30 = KST 18:30 (data.go.kr 종가 공개 이후)
   workflow_dispatch: {}
 
 permissions:
@@ -24,6 +24,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
         run: node scripts/fetch-kr-closing-prices.mjs
 
       - name: 디스코드 알림 전송

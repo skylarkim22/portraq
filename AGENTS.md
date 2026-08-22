@@ -435,7 +435,7 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 **asset_prices** — 종목별 확정 종가 이력 (1:N)
 - `ticker` TEXT (`assets` FK), `price_date` DATE, `close_price` NUMERIC, `created_at`, `updated_at`
 - PK는 `(ticker, price_date)` 복합키 — `id` 컬럼 없음(다른 테이블이 이 행을 FK로 참조할 일이 없어 `asset_dividends`와 다르게 의도적으로 뺐다)
-- `scripts/fetch-kr-closing-prices.mjs` 배치(평일 매일, GitHub Actions)가 aikstockdata에서 KR 종목(실제 보유 중인 티커만) 확정 종가를 upsert. service-role 키로 RLS 우회
+- `scripts/fetch-kr-closing-prices.mjs` 배치(평일 매일, GitHub Actions)가 data.go.kr(공공데이터포털) 금융위원회 시세정보 API(ETF/개별주식 두 엔드포인트)에서 KR 종목(실제 보유 중인 티커만) 확정 종가를 upsert. service-role 키로 RLS 우회
 - 앱 코드가 이 값을 실제로 소비하는 로직은 아직 없음(#60 스코프)
 
 ### 공통 사항
