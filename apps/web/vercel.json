@@ -1,5 +1,11 @@
 {
   "installCommand": "cd ../.. && pnpm install",
   "buildCommand": "cd ../.. && pnpm turbo run build --filter=@portraq/web",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/cron/fetch-kr-closing-prices",
+      "schedule": "30 9 * * 1-5"
+    }
+  ]
 }

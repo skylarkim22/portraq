@@ -1,5 +1,5 @@
 // ============================================================
-// KR 종목(개별주식 + ETF) 확정 종가 일일 배치
+// KR 종목(개별주식 + ETF) 확정 종가 — 로컬 수동 실행/dry-run 전용
 //
 // data.go.kr(공공데이터포털) 금융위원회 시세정보 API에서
 // 그날 전체 KR 개별주식·ETF 종가를 한 번에 가져와 asset_prices 테이블에 upsert한다.
@@ -8,9 +8,14 @@
 // (aikstockdata는 시총 상위 개별종목만 다루고 ETF를 전혀 지원하지 않아
 //  ETF 위주 보유 종목에서 매번 전체 실패했다 — data.go.kr로 교체)
 //
-// 다른 backfill-*.mjs 스크립트들과 달리 이 스크립트는 사람이 리뷰하는
-// SQL을 생성하지 않고, 매일 무인으로 실행되어 Supabase에 직접 upsert한다
-// (GitHub Actions 스케줄, .github/workflows/fetch-kr-closing-prices.yml).
+// 실제 매일 배치 실행은 Vercel Cron이 담당한다
+// (apps/web/src/app/api/cron/fetch-kr-closing-prices/route.ts,
+//  apps/web/vercel.json). GitHub Actions에서는 apis.data.go.kr 연결 자체가
+// 막혀서(UND_ERR_CONNECT_TIMEOUT) 실행 위치를 Vercel로 옮겼다 — 이 스크립트는
+// 로컬(한국 IP)에서 수동 실행하거나 --dry-run으로 점검할 때만 쓴다.
+// 같은 로직을 apps/web 쪽 TypeScript(fetchKrClosingPrices.ts)로도 복제해
+// 뒀다 — 실행 환경(Node CLI vs Next.js 라우트)이 달라 공유 모듈로 묶기보다
+// 중복을 허용했다.
 //
 // 흐름:
 //   1. portfolio_assets 에서 실제 보유 중인 KR 티커만 조회(전체 KR 종목 대상 아님)
@@ -276,6 +281,7 @@ const main = async () => {
 };
 
 main().catch((e) => {
-  console.error(`\n❌ 실패: ${e.message}`);
+  const causeMessage = e.cause ? ` (원인: ${e.cause.code ?? e.cause.message ?? e.cause})` : "";
+  console.error(`\n❌ 실패: ${e.message}${causeMessage}`);
   process.exit(1);
 });
