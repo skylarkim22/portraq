@@ -436,6 +436,8 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `ticker` TEXT (`assets` FK), `price_date` DATE, `close_price` NUMERIC, `created_at`, `updated_at`
 - PK는 `(ticker, price_date)` 복합키 — `id` 컬럼 없음(다른 테이블이 이 행을 FK로 참조할 일이 없어 `asset_dividends`와 다르게 의도적으로 뺐다)
 - `apps/web/src/app/api/cron/fetch-kr-closing-prices/route.ts` 배치(평일 매일, Vercel Cron — `apps/web/vercel.json`)가 data.go.kr(공공데이터포털) 금융위원회 시세정보 API(ETF/개별주식 두 엔드포인트)에서 KR 종목(실제 보유 중인 티커만) 확정 종가를 upsert. service-role 키로 RLS 우회. GitHub Actions에서는 apis.data.go.kr 접속이 막혀(UND_ERR_CONNECT_TIMEOUT) Vercel로 실행 위치를 옮겼다. `scripts/fetch-kr-closing-prices.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
+- `apps/web/src/app/api/cron/fetch-us-closing-prices/route.ts` 배치(평일 매일, Vercel Cron)가 Finnhub `/quote`에서 US 종목(실제 보유 중인 티커만) 종가를 upsert. 무료 티어는 확정 종가 캔들(`/stock/candle`)이 Premium 전용이라, 미국 장 마감 이후 `/quote`의 `c`(마지막 체결가)를 종가로 간주하고 `t`(체결 타임스탬프)를 America/New_York 기준 날짜로 변환해 저장한다. `scripts/fetch-us-closing-prices.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
+- 두 배치 모두 실패 시 `notifyDiscordFailure`(`features/asset-prices/notifyDiscordFailure.ts`)로 `DISCORD_WEBHOOK_URL` 웹훅에 알림을 보낸다. 변수가 없으면 조용히 건너뛴다
 - 앱 코드가 이 값을 실제로 소비하는 로직은 아직 없음(#60 스코프)
 
 ### 공통 사항
