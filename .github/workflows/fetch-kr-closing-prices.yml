@@ -1,0 +1,59 @@
+name: KR 종가 배치
+
+on:
+  schedule:
+    - cron: "30 9 * * 1-5" # 평일 UTC 09:30 = KST 18:30 (aikstockdata 갱신 18:10 이후)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-kr-closing-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: KR 종가 조회 및 upsert
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/fetch-kr-closing-prices.mjs
+
+      - name: 디스코드 알림 전송
+        if: failure()
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret이 설정되지 않아 알림을 건너뜁니다."
+            exit 0
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg title "❌ KR 종가 배치 $STATUS" \
+            --arg desc "scripts/fetch-kr-closing-prices.mjs 실행 실패" \
+            --arg runUrl "$RUN_URL" \
+            --argjson color 15158332 \
+            '{
+              embeds: [{
+                title: $title,
+                description: $desc,
+                color: $color,
+                fields: [
+                  { name: "실행 로그", value: $runUrl }
+                ]
+              }]
+            }')
+
+          curl -sf -X POST -H "Content-Type: application/json" \
+            -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"

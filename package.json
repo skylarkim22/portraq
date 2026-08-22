@@ -13,7 +13,8 @@
     "storybook": "turbo run storybook --filter=@portraq/ui",
     "build-storybook": "turbo run build-storybook --filter=@portraq/ui",
     "depcheck": "depcruise apps/web/src packages/ui/src packages/lib/src --config .dependency-cruiser.cjs",
-    "backfill:kr-dividends": "node scripts/backfill-kr-dividends.mjs"
+    "backfill:kr-dividends": "node scripts/backfill-kr-dividends.mjs",
+    "fetch:kr-closing-prices": "node scripts/fetch-kr-closing-prices.mjs"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^8",
