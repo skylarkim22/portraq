@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { fetchKrClosingPrices } from "@/features/asset-prices/fetchKrClosingPrices";
+import { notifyDiscordFailure } from "@/features/asset-prices/notifyDiscordFailure";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,14 +19,9 @@ export const GET = async (request: NextRequest) => {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const dataGoKrApiKey = process.env.DATA_GO_KR_API_KEY;
   if (!supabaseUrl || !serviceRoleKey || !dataGoKrApiKey) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "missing_env",
-        detail: "NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DATA_GO_KR_API_KEY",
-      },
-      { status: 500 }
-    );
+    const detail = "NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DATA_GO_KR_API_KEY";
+    await notifyDiscordFailure({ title: "❌ KR 종가 배치 실패", description: `환경변수 누락: ${detail}` });
+    return NextResponse.json({ ok: false, error: "missing_env", detail }, { status: 500 });
   }
 
   try {
@@ -36,6 +32,7 @@ export const GET = async (request: NextRequest) => {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error(`[fetch-kr-closing-prices] 실패: ${message}`);
+    await notifyDiscordFailure({ title: "❌ KR 종가 배치 실패", description: message });
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 };
