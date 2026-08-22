@@ -18,7 +18,9 @@
 //   1. portfolio_assets 에서 실제 보유 중인 US 티커만 조회(전체 US 종목 대상 아님)
 //   2. 대상 티커가 0개면 조용히 종료(정상 케이스)
 //   3. 티커별로 /quote를 호출해 종가(c)·거래일(t→날짜)을 조회
-//      존재하지 않는/상장폐지된 심볼은 필드가 전부 0으로 오므로 스킵 처리
+//      존재하지 않는/상장폐지된 심볼은 필드가 전부 0으로 오므로 스킵 처리(missing).
+//      네트워크 오류·API 키 문제 등으로 요청 자체가 실패하면 해당 티커만
+//      failed에 기록하고 나머지 티커는 계속 진행한다
 //   4. 수집된 종가를 asset_prices 에 upsert(복합 PK 기준 merge-duplicates)
 //   5. 매칭 0건(전체 실패)이면 예외, 일부라도 매칭되면 성공
 
@@ -38,6 +40,7 @@ export type FetchUsClosingPricesResult =
       status: "success" | "partial_failure";
       matched: number;
       missing: string[];
+      failed: { ticker: string; error: string }[];
       rows: { ticker: string; price_date: string; close_price: number }[];
     };
 
@@ -141,14 +144,20 @@ export const fetchUsClosingPrices = async ({
 
   const rows: { ticker: string; price_date: string; close_price: number }[] = [];
   const missing: string[] = [];
+  const failed: { ticker: string; error: string }[] = [];
   for (const ticker of tickers) {
     if (REQUEST_DELAY_MS) await sleep(REQUEST_DELAY_MS);
-    const quote = await fetchQuote({ ticker, apiKey: finnhubApiKey });
-    if (!quote) {
-      missing.push(ticker);
-      continue;
+    try {
+      const quote = await fetchQuote({ ticker, apiKey: finnhubApiKey });
+      if (!quote) {
+        missing.push(ticker);
+        continue;
+      }
+      rows.push({ ticker, ...quote });
+    } catch (e) {
+      // 티커 하나가 실패해도(네트워크 오류·API 키 문제 등) 나머지 티커는 계속 진행한다.
+      failed.push({ ticker, error: e instanceof Error ? e.message : String(e) });
     }
-    rows.push({ ticker, ...quote });
   }
 
   if (rows.length === 0) {
@@ -160,9 +169,10 @@ export const fetchUsClosingPrices = async ({
   }
 
   return {
-    status: missing.length > 0 ? "partial_failure" : "success",
+    status: missing.length > 0 || failed.length > 0 ? "partial_failure" : "success",
     matched: rows.length,
     missing,
+    failed,
     rows,
   };
 };
