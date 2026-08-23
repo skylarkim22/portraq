@@ -10,6 +10,10 @@
     {
       "path": "/api/cron/fetch-us-closing-prices",
       "schedule": "30 21 * * 1-5"
+    },
+    {
+      "path": "/api/cron/fetch-kr-stock-dividends",
+      "schedule": "0 22 * * *"
     }
   ]
 }
