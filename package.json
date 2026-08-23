@@ -24,5 +24,8 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
     "turbo": "^2"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0"
   }
 }
