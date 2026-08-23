@@ -411,6 +411,7 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 **portfolio_assets** — 포트폴리오 내 종목
 - `id` UUID PK, `portfolio_id` UUID (portfolios FK), `asset_ticker` TEXT NULL (`assets` FK), `custom_asset_id` UUID NULL (`custom_assets` FK), `ratio` NUMERIC (0~100), `shares` NUMERIC, `current_price` NUMERIC, `sort_order` INTEGER
 - `asset_ticker`/`custom_asset_id`는 exclusive arc(정확히 하나만 채워짐) — "카탈로그 종목" vs "직접 추가한 커스텀 종목"을 구분한다. `name`/`market`/`color`는 컬럼으로 보관하지 않고 `assets`/`custom_assets` 중 채워진 쪽과 JOIN해서 읽는다
+- `current_price`는 "현재 평가금액" 표시용 값이 아니다. ① 마지막 리밸런싱 실행(저장) 시 사용자가 확정한 매수/매도 실행가, ② `portfolioQueries.lists()`/`detail()`이 `asset_prices`에서 해당 티커의 최신 종가를 못 찾았을 때(오늘 막 추가돼 배치가 아직 못 돈 종목 등)의 폴백 값 — 두 가지 용도로만 쓰인다. 실제 화면에 보여줄 가격은 `asset_prices.close_price`가 있으면 그쪽이 우선이다(`fetchLatestClosePrices`, `features/portfolio/queries.ts`)
 
 **custom_assets** — 유저별 "직접 추가" 종목 (검색에 없는 종목을 이름·시장만 입력해 등록)
 - `id` UUID PK, `user_id` UUID (auth.users FK), `name` TEXT, `market` TEXT (KR/US), `color` TEXT (hex), `created_at`
@@ -438,7 +439,7 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `apps/web/src/app/api/cron/fetch-kr-closing-prices/route.ts` 배치(평일 매일, Vercel Cron — `apps/web/vercel.json`)가 data.go.kr(공공데이터포털) 금융위원회 시세정보 API(ETF/개별주식 두 엔드포인트)에서 KR 종목(실제 보유 중인 티커만) 확정 종가를 upsert. service-role 키로 RLS 우회. GitHub Actions에서는 apis.data.go.kr 접속이 막혀(UND_ERR_CONNECT_TIMEOUT) Vercel로 실행 위치를 옮겼다. `scripts/fetch-kr-closing-prices.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
 - `apps/web/src/app/api/cron/fetch-us-closing-prices/route.ts` 배치(평일 매일, Vercel Cron)가 Finnhub `/quote`에서 US 종목(실제 보유 중인 티커만) 종가를 upsert. 무료 티어는 확정 종가 캔들(`/stock/candle`)이 Premium 전용이라, 미국 장 마감 이후 `/quote`의 `c`(마지막 체결가)를 종가로 간주하고 `t`(체결 타임스탬프)를 America/New_York 기준 날짜로 변환해 저장한다. `scripts/fetch-us-closing-prices.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
 - 두 배치 모두 실패 시 `notifyDiscordFailure`(`features/asset-prices/notifyDiscordFailure.ts`)로 `DISCORD_WEBHOOK_URL` 웹훅에 알림을 보낸다. 변수가 없으면 조용히 건너뛴다
-- 앱 코드가 이 값을 실제로 소비하는 로직은 아직 없음(#60 스코프)
+- `portfolioQueries.lists()`/`detail()`(`features/portfolio/queries.ts`)이 보유 티커의 최신 `close_price`를 조회해 `current_price` 대신 우선 사용한다(#60). 해당 티커의 행이 없으면(신규 추가 등) `portfolio_assets.current_price`로 폴백
 
 ### 공통 사항
 - 모든 테이블 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근

@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ActionItem,
   Market,
@@ -55,6 +56,30 @@ const summarizeExecution = (
     { buyCount: 0, sellCount: 0, holdCount: 0 }
   );
 
+// asset_prices에서 티커별 최신 종가만 골라 Map으로 반환한다.
+// portfolio_assets.current_price(마지막 리밸런싱 실행가)보다 asset_prices가
+// 있으면 그쪽을 우선한다 — 신규 추가돼 아직 배치가 못 돈 종목은 이 Map에
+// 없으므로 호출부에서 current_price로 폴백한다(#60).
+const fetchLatestClosePrices = async (supabase: SupabaseClient, tickers: string[]) => {
+  const latestByTicker = new Map<string, number>();
+  if (tickers.length === 0) return latestByTicker;
+
+  const { data, error } = await supabase
+    .from("asset_prices")
+    .select("ticker, close_price, price_date")
+    .in("ticker", tickers)
+    .order("price_date", { ascending: false });
+
+  if (error) throw error;
+
+  for (const row of data) {
+    if (!latestByTicker.has(row.ticker)) {
+      latestByTicker.set(row.ticker, row.close_price);
+    }
+  }
+  return latestByTicker;
+};
+
 export const portfolioQueries = {
   all: () => ["portfolios"] as const,
 
@@ -74,6 +99,13 @@ export const portfolioQueries = {
 
         if (error) throw error;
 
+        const heldTickers = [
+          ...new Set(
+            data.flatMap((row) => row.portfolio_assets.map((asset) => asset.asset_ticker).filter((t) => t !== null))
+          ),
+        ];
+        const latestClosePrices = await fetchLatestClosePrices(supabase, heldTickers);
+
         return data.map((row) => {
           const assets: PortfolioCardAsset[] = row.portfolio_assets
             .sort((a, b) => a.sort_order - b.sort_order)
@@ -84,7 +116,7 @@ export const portfolioQueries = {
                 market: info.market as Market,
                 ratio: asset.ratio,
                 shares: asset.shares,
-                currentPrice: asset.current_price,
+                currentPrice: latestClosePrices.get(asset.asset_ticker ?? "") ?? asset.current_price,
                 color: info.color,
                 isCustom: asset.custom_asset_id !== null,
               };
@@ -121,6 +153,9 @@ export const portfolioQueries = {
 
         if (error) throw error;
 
+        const heldTickers = [...new Set(data.portfolio_assets.map((row) => row.asset_ticker).filter((t) => t !== null))];
+        const latestClosePrices = await fetchLatestClosePrices(supabase, heldTickers);
+
         const assets: PortfolioAsset[] = data.portfolio_assets
           .sort((a, b) => a.sort_order - b.sort_order)
           .map((row) => {
@@ -132,7 +167,7 @@ export const portfolioQueries = {
               color: info.color,
               ratio: row.ratio,
               shares: row.shares,
-              currentPrice: row.current_price,
+              currentPrice: latestClosePrices.get(row.asset_ticker ?? "") ?? row.current_price,
               order: row.sort_order,
               isCustom: row.custom_asset_id !== null,
             };
