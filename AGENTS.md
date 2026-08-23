@@ -446,6 +446,7 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - UNIQUE (ticker, record_date)
 - `record_date`(배당기준일)와 배당락일(ex-dividend date, 보통 기준일 1영업일 전)은 다른 개념이다 — 이 테이블은 배당락일을 저장하지 않는다(거래일 캘린더 없이는 정확히 계산 불가, 별도 이슈로 다룰 것)
 - 초기 데이터는 DART/SEIBRO 원본을 사람이 검토해 생성한 SQL을 마이그레이션으로 적용한 일회성 백필(`scripts/backfill-kr-dividends.mjs`, `scripts/load-stock-dividend-amounts.mjs`, `scripts/load-etf-dividend-amounts.mjs` — 전부 검토용 SQL 파일만 생성하고 DB에 직접 쓰지 않음)
+- ETF 분배금과 DART 배당의 `pay_date` 보강은 자동 배치 대신 **가끔 사람이 SEIBRO 원본을 받아와 수동으로 갱신**하는 방식을 유지한다(평균 매수 단가 대비 예상 분배율 계산이 목적이라 매일 자동 갱신될 필요가 없다고 판단, #75). 자동 Cron으로 만들었던 시도(#82)는 이 이유로 되돌렸다. 갱신 절차·SEIBRO 페이지 URL·사용하는 스크립트는 `docs/dividend-data-refresh.md` 참고. DART 쪽 `dividend_reason`은 `alotMatter`(주당현금배당금) API 특성상 전부 `'현금배당'`으로 고정 백필했다(`20260823150000_backfill_dart_dividend_reason.sql`) — 이 API 자체엔 지급일 개념이 없어 `pay_date`는 일부만(SEIBRO 배당내역상세와 매칭되는 2,562건 중 839건) 채워져 있고 나머지는 NULL이다
 - `apps/web/src/app/api/cron/fetch-kr-stock-dividends/route.ts` 배치(매일, Vercel Cron)가 data.go.kr 금융위원회_주식배당정보(`GetStocDiviInfoService_V2`, 한국예탁결제원 제공)에서 **개별주식**(보유 중인 티커만) 배당 이력을 upsert한다(#76, source='DATA_GO_KR'). 이 API는 하루치 시세가 아니라 전체 상장사 배당 이력 전체(수만 건)를 담고 있고 티커로 서버 필터링이 안 돼, 매 실행마다 `numOfRows=10000`으로 전체를 페이지네이션 순회하며 응답의 `isinCd`에서 티커를 뽑아 보유 티커와 매칭한다. `scripts/fetch-kr-stock-dividends.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
 - **ETF 분배금은 위 배치가 커버하지 못한다** — `GetStocDiviInfoService_V2`는 개별주식 전용이라 ETF는 응답에 없다. ETF 분배금 자동 수집은 별도 후속 이슈(SEIBRO 오픈플랫폼 조사 필요, 미해결)
 
