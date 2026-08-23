@@ -59,3 +59,4 @@ scripts/output/
 scripts/input/*
 !scripts/input/etf-distributions.json
 !scripts/input/seibro-etf-distributions-raw.json
+!scripts/input/seibro-stock-dividends-raw.json
