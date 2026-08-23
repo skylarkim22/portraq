@@ -442,12 +442,17 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `portfolioQueries.lists()`/`detail()`(`features/portfolio/queries.ts`)이 보유 티커의 최신 `close_price`를 조회해 `current_price` 대신 우선 사용한다(#60). 해당 티커의 행이 없으면(신규 추가 등) `portfolio_assets.current_price`로 폴백
 
 **asset_dividends** — 종목별 배당/분배 금액 이력 (1:N)
-- `id` UUID PK, `ticker` TEXT (`assets` FK), `record_date` DATE(배당기준일 — 이 날 주주여야 배당 대상), `pay_date` DATE NULL(실제 배당금 지급일), `dividend_reason` TEXT NULL(배당사유, 예: "현금배당"), `amount` NUMERIC(주당 배당금/분배금, 원), `source` TEXT (`DART`/`SEIBRO`/`DATA_GO_KR`), `created_at`, `updated_at`
+- `id` UUID PK, `ticker` TEXT (`assets` FK), `record_date` DATE(배당기준일 — 이 날 주주여야 배당 대상), `pay_date` DATE NULL(실제 배당금 지급일), `dividend_reason` TEXT NULL(배당사유, 예: "현금배당"), `amount` NUMERIC(주당 배당금/분배금, 원), `source` TEXT (`DART`/`SEIBRO`/`DATA_GO_KR`/`KODEX`/`TIGER`/`PLUS`/`SOL`), `created_at`, `updated_at`
 - UNIQUE (ticker, record_date)
 - `record_date`(배당기준일)와 배당락일(ex-dividend date, 보통 기준일 1영업일 전)은 다른 개념이다 — 이 테이블은 배당락일을 저장하지 않는다(거래일 캘린더 없이는 정확히 계산 불가, 별도 이슈로 다룰 것)
 - 초기 데이터는 DART/SEIBRO 원본을 사람이 검토해 생성한 SQL을 마이그레이션으로 적용한 일회성 백필(`scripts/backfill-kr-dividends.mjs`, `scripts/load-stock-dividend-amounts.mjs`, `scripts/load-etf-dividend-amounts.mjs` — 전부 검토용 SQL 파일만 생성하고 DB에 직접 쓰지 않음)
 - `apps/web/src/app/api/cron/fetch-kr-stock-dividends/route.ts` 배치(매일, Vercel Cron)가 data.go.kr 금융위원회_주식배당정보(`GetStocDiviInfoService_V2`, 한국예탁결제원 제공)에서 **개별주식**(보유 중인 티커만) 배당 이력을 upsert한다(#76, source='DATA_GO_KR'). 이 API는 하루치 시세가 아니라 전체 상장사 배당 이력 전체(수만 건)를 담고 있고 티커로 서버 필터링이 안 돼, 매 실행마다 `numOfRows=10000`으로 전체를 페이지네이션 순회하며 응답의 `isinCd`에서 티커를 뽑아 보유 티커와 매칭한다. `scripts/fetch-kr-stock-dividends.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
-- **ETF 분배금은 위 배치가 커버하지 못한다** — `GetStocDiviInfoService_V2`는 개별주식 전용이라 ETF는 응답에 없다. ETF 분배금 자동 수집은 별도 후속 이슈(SEIBRO 오픈플랫폼 조사 필요, 미해결)
+- **ETF 분배금**은 `GetStocDiviInfoService_V2`(개별주식 전용)가 커버하지 못해 별도로 4개 운용사(KODEX/TIGER/PLUS/SOL) 홈페이지가 공개하는 분배 데이터를 각각 배치로 직접 수집한다(#75). 공식 공개 API가 없어 사이트가 제공하는 엑셀/HTML 다운로드 경로를 그대로 쓴다.
+  - 네 배치 모두 **보유 여부와 무관하게 assets 카탈로그의 해당 운용사 KR 티커 전체**를 대상으로 저장한다 — 신규로 담는 종목도 배치를 기다리지 않고 바로 분배 이력이 있도록 하기 위함. 유효 티커 판별/이름→티커 매핑은 `apps/web/src/features/asset-prices/assetCatalog.ts`(`fetchValidKrTickers`/`fetchKrNameToTicker`, PostgREST `db-max-rows`=1000 제약 때문에 페이지네이션 필요)가, upsert는 `upsertAssetDividends.ts`가 4개 배치 공용으로 담당한다(같은 apps/web TS 실행 환경 내부라 중복을 허용하지 않고 공유 모듈로 묶었다 — 로컬 `.mjs` 스크립트 쪽은 실행 환경이 달라 기존 관례대로 로직을 복제했다)
+  - **KODEX**(삼성자산운용, `apps/web/src/app/api/cron/fetch-kodex-etf-dividends/route.ts`, source='KODEX'): 인증 없는 단일 GET(`m.samsungfund.com/excel-distribution.do`)으로 전체 상품의 분배 이력을 한 번에 받는다. 응답이 xlsx라 `xlsx`(SheetJS) 패키지로 파싱. 상품코드가 곧 KRX 티커라 이름 매칭이 필요 없다.
+  - **TIGER**(미래에셋자산운용, `apps/web/src/app/api/cron/fetch-tiger-etf-dividends/route.ts`, source='TIGER'): 엑셀 다운로드가 "그달의 분배 내역"만 주는 월별 스냅샷이라 최근 12개월을 각각 조회해 합친다(월마다 분배 종목 구성이 다름). 응답이 HTML 테이블이라 `cheerio`로 파싱. 종목코드가 없어 종목명으로만 매칭한다.
+  - **PLUS**(한화자산운용, `apps/web/src/app/api/cron/fetch-plus-etf-dividends/route.ts`, source='PLUS'): 상품 목록 API가 없어 상품 개요 정적 HTML(`plusetf.co.kr/product/overview`)에서 정규식으로 상품명↔내부코드를 추출한 뒤, 상품마다 개별 분배 엑셀(`excel/product/dividend`)을 내려받는다. 상품 수(약 80개 이상)가 많아 순차 요청 시 Vercel maxDuration(60초)을 넘길 수 있어(#76 프로덕션 타임아웃 사례와 동일한 문제) 소규모 배치 단위로 병렬 처리한다(`CONCURRENCY`). 종목명으로만 매칭한다.
+  - **SOL**(신한자산운용, `apps/web/src/app/api/cron/fetch-sol-etf-dividends/route.ts`, source='SOL'): 상품 목록 API(`soletf.com/api/etf/pds`)가 KRX 티커와 내부 상품코드를 함께 제공해 이름 매칭이 필요 없다. 분배 엑셀은 상품별로 2단계(`file/token/fund`로 120초 유효 토큰 발급 → `api/etf/pds/down/dividend/{fundCode}?token=...`으로 다운로드, `Referer`+`X-Requested-With` 헤더 필요)를 거쳐야 한다. 토큰 발급/상품 목록 엔드포인트 모두 IP 기준 rate limit이 걸려 있어(동시 요청 시 즉시 차단, 심하면 WAF 차단으로 이어짐) 다른 3개보다 훨씬 낮은 동시성(`CONCURRENCY=1`)과 지수 백오프 재시도로 운영한다.
 
 ### 공통 사항
 - 모든 테이블 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근

@@ -16,7 +16,11 @@
     "backfill:kr-dividends": "node scripts/backfill-kr-dividends.mjs",
     "fetch:kr-closing-prices": "node scripts/fetch-kr-closing-prices.mjs",
     "fetch:us-closing-prices": "node scripts/fetch-us-closing-prices.mjs",
-    "fetch:kr-stock-dividends": "node scripts/fetch-kr-stock-dividends.mjs"
+    "fetch:kr-stock-dividends": "node scripts/fetch-kr-stock-dividends.mjs",
+    "fetch:kodex-etf-dividends": "node scripts/fetch-kodex-etf-dividends.mjs",
+    "fetch:tiger-etf-dividends": "node scripts/fetch-tiger-etf-dividends.mjs",
+    "fetch:plus-etf-dividends": "node scripts/fetch-plus-etf-dividends.mjs",
+    "fetch:sol-etf-dividends": "node scripts/fetch-sol-etf-dividends.mjs"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^8",
@@ -24,5 +28,9 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
     "turbo": "^2"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "xlsx": "^0.18.5"
   }
 }
