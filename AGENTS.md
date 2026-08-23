@@ -442,12 +442,12 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 - `portfolioQueries.lists()`/`detail()`(`features/portfolio/queries.ts`)이 보유 티커의 최신 `close_price`를 조회해 `current_price` 대신 우선 사용한다(#60). 해당 티커의 행이 없으면(신규 추가 등) `portfolio_assets.current_price`로 폴백
 
 **asset_dividends** — 종목별 배당/분배 금액 이력 (1:N)
-- `id` UUID PK, `ticker` TEXT (`assets` FK), `record_date` DATE(배당기준일 — 이 날 주주여야 배당 대상), `pay_date` DATE NULL(실제 배당금 지급일), `dividend_reason` TEXT NULL(배당사유, 예: "현금배당"), `amount` NUMERIC(주당 배당금/분배금, 원), `source` TEXT (`DART`/`SEIBRO`/`DATA_GO_KR`), `created_at`, `updated_at`
+- `id` UUID PK, `ticker` TEXT (`assets` FK), `record_date` DATE(배당기준일 — 이 날 주주여야 배당 대상), `pay_date` DATE NULL(실제 배당금 지급일), `dividend_reason` TEXT NULL(배당사유, 예: "현금배당"), `amount` NUMERIC(주당 배당금/분배금, 원), `source` TEXT (`DART`/`SEIBRO`/`DATA_GO_KR`/`KODEX`), `created_at`, `updated_at`
 - UNIQUE (ticker, record_date)
 - `record_date`(배당기준일)와 배당락일(ex-dividend date, 보통 기준일 1영업일 전)은 다른 개념이다 — 이 테이블은 배당락일을 저장하지 않는다(거래일 캘린더 없이는 정확히 계산 불가, 별도 이슈로 다룰 것)
 - 초기 데이터는 DART/SEIBRO 원본을 사람이 검토해 생성한 SQL을 마이그레이션으로 적용한 일회성 백필(`scripts/backfill-kr-dividends.mjs`, `scripts/load-stock-dividend-amounts.mjs`, `scripts/load-etf-dividend-amounts.mjs` — 전부 검토용 SQL 파일만 생성하고 DB에 직접 쓰지 않음)
 - `apps/web/src/app/api/cron/fetch-kr-stock-dividends/route.ts` 배치(매일, Vercel Cron)가 data.go.kr 금융위원회_주식배당정보(`GetStocDiviInfoService_V2`, 한국예탁결제원 제공)에서 **개별주식**(보유 중인 티커만) 배당 이력을 upsert한다(#76, source='DATA_GO_KR'). 이 API는 하루치 시세가 아니라 전체 상장사 배당 이력 전체(수만 건)를 담고 있고 티커로 서버 필터링이 안 돼, 매 실행마다 `numOfRows=10000`으로 전체를 페이지네이션 순회하며 응답의 `isinCd`에서 티커를 뽑아 보유 티커와 매칭한다. `scripts/fetch-kr-stock-dividends.mjs`는 같은 로직의 로컬 수동 실행/dry-run용 사본
-- **ETF 분배금은 위 배치가 커버하지 못한다** — `GetStocDiviInfoService_V2`는 개별주식 전용이라 ETF는 응답에 없다. ETF 분배금 자동 수집은 별도 후속 이슈(SEIBRO 오픈플랫폼 조사 필요, 미해결)
+- **ETF 분배금은 공식 공개 API가 없다** — data.go.kr에 관련 데이터셋이 없고, SEIBRO 오픈플랫폼(`openplatform.seibro.or.kr`)은 법인 회원 전용이라 개인 프로젝트로는 가입 불가. 대신 운용사가 자사 홈페이지에 공개하는 "상품별 분배 현황" 파일을 사람이 다운받아 `scripts/load-{운용사}-etf-dividends.mjs`로 적재한다(KR 배당 배치와 동일하게 보유 티커만 걸러 upsert, `--dry-run` 지원). 현재 KODEX(삼성자산운용, `scripts/load-kodex-etf-dividends.mjs`)만 있고, TIGER/ACE/SOL 등 다른 운용사는 파일을 받는 대로 같은 패턴으로 추가한다 — 운용사마다 파일 형식이 달라 공통 파서로 묶지 않는다
 
 ### 공통 사항
 - 모든 테이블 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근
