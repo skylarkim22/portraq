@@ -16,9 +16,9 @@
 // 복제해 별도로 남아 있다.
 
 const DATA_GO_KR_DIVIDEND_ENDPOINT = "https://apis.data.go.kr/1160100/GetStocDiviInfoService_V2/getDiviInfo_V2";
-const PAGE_SIZE = 10_000; // 전체 약 7~8만 건을 이 크기로 나눠 순회(테스트 결과 1페이지 응답 ~2초)
+const PAGE_SIZE = 10_000; // 전체 약 7~8만 건을 이 크기로 나눠 순회
 const MAX_RETRIES = 4;
-const REQUEST_TIMEOUT_MS = 20_000; // 페이지당 응답이 커서(수 MB) 넉넉하게 잡는다
+const REQUEST_TIMEOUT_MS = 30_000; // Vercel(미국 리전) → data.go.kr 경로가 로컬보다 훨씬 느려 넉넉하게 잡는다
 const DIVIDEND_TYPE_CASH = "02"; // stckDvdnRcd: 현금배당만 취급(주식배당 등 제외)
 
 type DataGoKrDividendResponse = {
@@ -95,8 +95,46 @@ const fetchHeldKrTickers = async ({ supabaseUrl, serviceRoleKey }: { supabaseUrl
   return new Set(rows.map((r) => r.asset_ticker).filter((t): t is string => Boolean(t)));
 };
 
+const buildPageUrl = ({ apiKey, pageNo }: { apiKey: string; pageNo: number }) =>
+  `${DATA_GO_KR_DIVIDEND_ENDPOINT}?serviceKey=${apiKey}&numOfRows=${PAGE_SIZE}&pageNo=${pageNo}&resultType=json`;
+
+const fetchDividendPage = async ({ apiKey, pageNo }: { apiKey: string; pageNo: number }) => {
+  const res = await fetchWithRetry(buildPageUrl({ apiKey, pageNo }));
+  if (!res.ok) throw new Error(`${DATA_GO_KR_DIVIDEND_ENDPOINT} HTTP ${res.status}`);
+  const json = (await res.json()) as DataGoKrDividendResponse;
+  const header = json?.response?.header;
+  if (header?.resultCode !== "00") {
+    throw new Error(`${DATA_GO_KR_DIVIDEND_ENDPOINT} 응답 오류: ${header?.resultCode} ${header?.resultMsg}`);
+  }
+  return json.response.body;
+};
+
+const toRows = (items: DividendItem[], heldTickers: Set<string>) => {
+  const rows: AssetDividendRow[] = [];
+  for (const item of items) {
+    if (!item.isinCd || !item.dvdnBasDt || item.stckDvdnRcd !== DIVIDEND_TYPE_CASH) continue;
+    const ticker = isinToTicker(item.isinCd);
+    if (!heldTickers.has(ticker)) continue;
+    const amount = Number(item.stckGenrDvdnAmt ?? 0);
+    if (amount <= 0) continue;
+    rows.push({
+      ticker,
+      record_date: toIsoDate(item.dvdnBasDt),
+      pay_date: toIsoDateOrNull(item.cashDvdnPayDt),
+      dividend_reason: item.stckDvdnRcdNm ?? null,
+      amount,
+      source: "DATA_GO_KR",
+    });
+  }
+  return rows;
+};
+
 // 전체 배당 이력을 페이지네이션으로 순회하며 보유 티커와 일치하는 현금배당
-// 행만 골라 asset_dividends upsert용 row로 변환한다.
+// 행만 골라 asset_dividends upsert용 row로 변환한다. Vercel(미국 리전)에서
+// data.go.kr까지 왕복 지연이 커서(로컬 대비 수 배) 순차 조회 시 Vercel 함수
+// 실행 제한(maxDuration)을 넘기기 쉽다 — 1페이지로 totalCount·페이지 수를
+// 먼저 확인한 뒤 나머지 페이지는 전부 병렬로 요청해 총 소요 시간을
+// "페이지 수 × 응답시간"이 아니라 "가장 느린 페이지 1개" 수준으로 줄인다.
 const fetchMatchingDividendRows = async ({
   apiKey,
   heldTickers,
@@ -104,39 +142,21 @@ const fetchMatchingDividendRows = async ({
   apiKey: string;
   heldTickers: Set<string>;
 }) => {
-  const rows: AssetDividendRow[] = [];
-  let pageNo = 1;
-  let totalCount = Infinity;
-  while ((pageNo - 1) * PAGE_SIZE < totalCount) {
-    const url = `${DATA_GO_KR_DIVIDEND_ENDPOINT}?serviceKey=${apiKey}&numOfRows=${PAGE_SIZE}&pageNo=${pageNo}&resultType=json`;
-    const res = await fetchWithRetry(url);
-    if (!res.ok) throw new Error(`${DATA_GO_KR_DIVIDEND_ENDPOINT} HTTP ${res.status}`);
-    const json = (await res.json()) as DataGoKrDividendResponse;
-    const header = json?.response?.header;
-    if (header?.resultCode !== "00") {
-      throw new Error(`${DATA_GO_KR_DIVIDEND_ENDPOINT} 응답 오류: ${header?.resultCode} ${header?.resultMsg}`);
-    }
-    const body = json.response.body;
-    totalCount = Number(body.totalCount ?? 0);
-    const items = body.items?.item ?? [];
+  const firstPage = await fetchDividendPage({ apiKey, pageNo: 1 });
+  const totalCount = Number(firstPage.totalCount ?? 0);
+  const rows = toRows(firstPage.items?.item ?? [], heldTickers);
 
-    for (const item of items) {
-      if (!item.isinCd || !item.dvdnBasDt || item.stckDvdnRcd !== DIVIDEND_TYPE_CASH) continue;
-      const ticker = isinToTicker(item.isinCd);
-      if (!heldTickers.has(ticker)) continue;
-      const amount = Number(item.stckGenrDvdnAmt ?? 0);
-      if (amount <= 0) continue;
-      rows.push({
-        ticker,
-        record_date: toIsoDate(item.dvdnBasDt),
-        pay_date: toIsoDateOrNull(item.cashDvdnPayDt),
-        dividend_reason: item.stckDvdnRcdNm ?? null,
-        amount,
-        source: "DATA_GO_KR",
-      });
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  if (totalPages > 1) {
+    const remainingPageNumbers = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+    const remainingPages = await Promise.all(
+      remainingPageNumbers.map((pageNo) => fetchDividendPage({ apiKey, pageNo }))
+    );
+    for (const page of remainingPages) {
+      rows.push(...toRows(page.items?.item ?? [], heldTickers));
     }
-    pageNo += 1;
   }
+
   return rows;
 };
 
