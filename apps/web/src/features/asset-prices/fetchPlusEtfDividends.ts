@@ -14,7 +14,7 @@
 // 엑셀 컬럼: 지급 기준일, 실 지급일, 분배금 (원). 날짜는 "2026.07.31"
 // 형식(점 구분).
 
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import { fetchKrNameToTicker } from "@/features/asset-prices/assetCatalog";
 import { upsertAssetDividends, type AssetDividendRow } from "@/features/asset-prices/upsertAssetDividends";
 

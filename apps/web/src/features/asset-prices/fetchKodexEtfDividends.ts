@@ -12,7 +12,7 @@
 // 응답 컬럼(3번째 행이 헤더): 상품명, 상품코드, 유형, 지급기준일,
 // 실지급일, 분배율(%), 주당분배금, 주당과세표준액
 
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import { fetchValidKrTickers } from "@/features/asset-prices/assetCatalog";
 import { upsertAssetDividends, type AssetDividendRow } from "@/features/asset-prices/upsertAssetDividends";
 

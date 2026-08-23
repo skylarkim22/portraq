@@ -17,7 +17,7 @@
 // 엑셀 컬럼: 지급기준일, 실제지급일, 분배금액(원). 날짜는 "20251230"
 // 형식(8자리, KODEX와 동일).
 
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import { fetchValidKrTickers } from "@/features/asset-prices/assetCatalog";
 import { upsertAssetDividends, type AssetDividendRow } from "@/features/asset-prices/upsertAssetDividends";
 
