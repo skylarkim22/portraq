@@ -3,7 +3,7 @@ import type { ActionItem, Market } from "@portraq/lib/types";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import { fetchLatestClosePrices } from "@/features/portfolio/queries";
 import type { SupabaseClientGetter } from "@/lib/supabase/types";
-import { computeAveragePurchases } from "@/features/dividends/computeAveragePurchases";
+import { computeAveragePurchases, reconcileWithActualHoldings } from "@/features/dividends/computeAveragePurchases";
 import type { DividendInputEntry } from "@/features/dividends/computeDividendTrend";
 import {
   computeDividendSum,
@@ -61,7 +61,7 @@ export const dividendQueries = {
         const supabase = await getClient();
 
         const { data: portfolios, error: portfoliosError } = await supabase.from("portfolios").select(
-          "id, name, portfolio_assets(asset_ticker, custom_asset_id, ratio, assets(name, market, color, dividend_frequency, dividend_months), custom_assets(name, market, color))"
+          "id, name, portfolio_assets(asset_ticker, custom_asset_id, ratio, shares, current_price, assets(name, market, color, dividend_frequency, dividend_months), custom_assets(name, market, color))"
         );
         if (portfoliosError) throw portfoliosError;
 
@@ -129,7 +129,15 @@ export const dividendQueries = {
             if (!ticker) continue;
 
             const info = pickAssetInfo(holding.assets, holding.custom_assets);
-            const purchase = averagePurchases.get(ticker) ?? { ticker, avgPrice: 0, shares: 0 };
+            // buy/sell로 추적된 이동평균 결과가 실제 보유 수량(portfolio_assets.shares)에
+            // 못 미치면(이 앱에 등록하기 전부터 보유하던 종목 등, buy 액션이
+            // 아예 없을 수도 있음) 그 차이를 등록 시점 가격(current_price,
+            // 마지막 실행가)에 매수한 것으로 간주해 평균 단가에 반영한다.
+            const purchase = reconcileWithActualHoldings({
+              computed: averagePurchases.get(ticker),
+              actualShares: holding.shares,
+              fallbackPrice: holding.current_price,
+            });
             const manualHistory = manualHistoryByHolding.get(holdingKey(portfolio.id, ticker)) ?? [];
             const dividendSum = computeDividendSum(manualHistory);
             const annualizedYield = computeAnnualizedYield({
