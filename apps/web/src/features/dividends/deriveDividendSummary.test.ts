@@ -29,7 +29,6 @@ describe("deriveDividendSummary", () => {
       totalDividend: 0,
       avgYield: null,
       totalCount: 0,
-      noDataCount: 0,
     });
   });
 
@@ -44,7 +43,7 @@ describe("deriveDividendSummary", () => {
     expect(summary.avgYield).toBe(1.5); // 300 / 20000 = 1.5%
   });
 
-  it("noDataReason이 있는 종목 수를 센다", () => {
+  it("종목 수를 센다", () => {
     const summary = deriveDividendSummary([
       makeRow({ noDataReason: "policy" }),
       makeRow({ noDataReason: "new" }),
@@ -52,6 +51,5 @@ describe("deriveDividendSummary", () => {
     ]);
 
     expect(summary.totalCount).toBe(3);
-    expect(summary.noDataCount).toBe(2);
   });
 });

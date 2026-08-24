@@ -15,11 +15,12 @@ export const DividendSummaryCards = ({ summary }: DividendSummaryCardsProps) => 
       icon: TrendingUp,
       label: "가중평균 연환산수익률",
       value: summary.avgYield != null ? `${summary.avgYield}%` : "-",
+      tooltip: "모든 종목의 배당합(최근 12개월 입력분 합) ÷ 모든 종목의 투자금(매수가×수량) 합",
     },
     {
       icon: ListChecks,
-      label: "종목 수 · 데이터 없음",
-      value: `${summary.totalCount}개 · ${summary.noDataCount}개`,
+      label: "종목 수",
+      value: `${summary.totalCount}개`,
     },
   ];
 
@@ -29,7 +30,9 @@ export const DividendSummaryCards = ({ summary }: DividendSummaryCardsProps) => 
         <div key={card.label} className="rounded-2xl border border-[#ebebef] bg-white p-4">
           <div className="mb-2 flex items-center gap-2">
             <card.icon size={15} className="text-[#355df9]" />
-            <div className="text-[10px] font-bold text-[#6b6b7b]">{card.label}</div>
+            <div className="text-[10px] font-bold text-[#6b6b7b]" title={card.tooltip}>
+              {card.label}
+            </div>
           </div>
           <div className="text-[17px] font-extrabold tracking-tight text-[#1c1c1e]">{card.value}</div>
         </div>
