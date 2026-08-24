@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분배금 관리 — Portraq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Pretendard','system-ui','sans-serif'] } } } }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Pretendard', system-ui, sans-serif; background: #f8f9fe; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+    * { word-break: keep-all; }
+    .reveal { opacity:0; transform:translateY(.7rem); transition: opacity .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1); }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .nav-glass { background:rgba(255,255,255,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,0,0,.06); }
+    .btn-primary { display:inline-flex; align-items:center; gap:8px; background:#355df9; color:#fff; padding:11px 22px; border-radius:8px; font-weight:700; font-size:14px; transition:all .4s cubic-bezier(.16,1,.3,1); text-decoration:none; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#1a35c7; transform:translateY(-1px); box-shadow:0 6px 20px rgba(53,93,249,.35); }
+    .btn-ghost { display:inline-flex; align-items:center; gap:8px; background:transparent; color:#4b4b6a; padding:11px 18px; border-radius:8px; font-weight:600; font-size:14px; border:1.5px solid #e4e4e7; transition:all .3s; text-decoration:none; cursor:pointer; }
+    .btn-ghost:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+    .btn-icon { width:34px; height:34px; border-radius:8px; background:#fff; border:1.5px solid #ebebef; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#6b6b7b; transition:all .2s; }
+    .btn-icon:hover { border-color:#355df9; color:#355df9; background:#eef2ff; }
+    .card { background:#fff; border:1.5px solid #ebebef; border-radius:16px; overflow:hidden; transition:all .4s cubic-bezier(.16,1,.3,1); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-us { background:#eff6ff; color:#1d4ed8; }
+    .badge-kr { background:#fff1f2; color:#be123c; }
+    .tab-btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:700; color:#71717a; background:transparent; border:none; cursor:pointer; transition:all .2s ease; white-space:nowrap; }
+    .tab-btn.active { background:#355df9; color:#fff; }
+    .tab-btn:hover:not(.active) { background:#f4f4f5; color:#1c1c1e; }
+    .stat-tile { background:#f8f9fe; border-radius:12px; padding:10px 12px; }
+    .select-clean { appearance:none; -webkit-appearance:none; background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="%236b6b7b" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center; border:1.5px solid #e4e4e7; border-radius:10px; padding:9px 34px 9px 14px; font-size:13px; font-weight:700; color:#1c1c1e; cursor:pointer; outline:none; box-shadow:none; transition:border-color .2s; }
+    .select-clean:focus { border-color:#355df9; box-shadow:none; }
+    .select-clean:hover { border-color:#c7d5fd; }
+    .input-clean { outline:none; box-shadow:none; transition:border-color .2s; }
+    .input-clean:focus { border-color:#355df9; box-shadow:none; }
+
+    /* 사이드바 */
+    .sidebar { position:fixed; top:0; left:0; bottom:0; width:240px; background:#fff; border-right:1.5px solid #ebebef; display:flex; flex-direction:column; z-index:30; }
+    .sidebar-nav-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; font-size:14px; font-weight:600; color:#6b6b7b; text-decoration:none; cursor:pointer; border:none; background:transparent; font-family:inherit; width:100%; transition:all .25s cubic-bezier(.16,1,.3,1); }
+    .sidebar-nav-item:hover { background:#f4f4f5; color:#1c1c1e; }
+    .sidebar-nav-item.active { background:#eef2ff; color:#355df9; font-weight:700; }
+    .sidebar-nav-item.active iconify-icon { color:#355df9; }
+
+    /* 모바일 메뉴 */
+    .menu-item { transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1); }
+
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1c1c1e; color:#fff; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; z-index:60; transition:transform .4s cubic-bezier(.16,1,.3,1), opacity .4s; opacity:0; white-space:nowrap; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* 분배금 테이블 */
+    .dividend-table { border-collapse:collapse; width:100%; min-width:960px; font-size:12px; }
+    .dividend-table thead th { text-align:left; white-space:nowrap; padding:9px 12px; font-weight:700; color:#6b6b7b; border-bottom:1.5px solid #ebebef; background:#f8f9fe; }
+    .dividend-table tbody td { vertical-align:top; }
+    .dividend-table tbody tr:hover { background:#f8f9fe; }
+
+    /* 로딩 스켈레톤 — 기존 회색 톤(#f4f4f5)만 사용, 새 색상 추가 없음 */
+    .skeleton { position:relative; overflow:hidden; background:#f4f4f5; border-radius:6px; }
+    .skeleton::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent); animation:shimmer 1.6s infinite; }
+    @keyframes shimmer { 100% { transform:translateX(100%); } }
+
+    /* 목업 전용 상태 스위처 (실제 구현 대상 아님) */
+    .demo-switcher { background:#1c1c1e; border-radius:12px; padding:8px 10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .demo-switcher .tab-btn { color:#a1a1aa; }
+    .demo-switcher .tab-btn.active { background:#355df9; color:#fff; }
+    .demo-switcher .tab-btn:hover:not(.active) { background:#33333a; color:#fff; }
+  </style>
+</head>
+<body>
+
+  <!-- ── PC 사이드바 ── -->
+  <aside class="sidebar hidden md:flex flex-col">
+    <div style="padding:20px 20px 16px; border-bottom:1.5px solid #f4f4f5;">
+      <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+        <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+        <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+      </a>
+    </div>
+
+    <nav style="padding:16px 12px; flex:1;" class="flex flex-col gap-1">
+      <a href="05-home.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:home-2-bold" style="font-size:18px;"></iconify-icon>
+        홈
+      </a>
+      <a href="07-portfolio-list.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:pie-chart-2-linear" style="font-size:18px;"></iconify-icon>
+        내 포트폴리오
+      </a>
+      <a href="#" class="sidebar-nav-item">
+        <iconify-icon icon="solar:history-linear" style="font-size:18px;"></iconify-icon>
+        리밸런싱 기록
+      </a>
+      <a href="08-tradelog.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:notebook-linear" style="font-size:18px;"></iconify-icon>
+        매매 일지
+      </a>
+      <a href="09-dividends.html" class="sidebar-nav-item active">
+        <iconify-icon icon="solar:banknote-2-linear" style="font-size:18px;"></iconify-icon>
+        분배금 관리
+      </a>
+      <a href="02-templates.html" class="sidebar-nav-item">
+        <iconify-icon icon="solar:medal-star-linear" style="font-size:18px;"></iconify-icon>
+        대가 포트폴리오
+      </a>
+    </nav>
+
+    <div style="padding:12px; border-top:1.5px solid #f4f4f5;">
+      <div class="flex items-center gap-3" style="padding:10px 14px;">
+        <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <span style="font-size:11px; font-weight:800; color:#fff;">김</span>
+        </div>
+        <div style="min-width:0; flex:1;">
+          <div style="font-size:13px; font-weight:700; color:#1c1c1e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">김민준</div>
+          <div style="font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">kim@example.com</div>
+        </div>
+        <button onclick="handleLogout()" title="로그아웃" style="width:30px; height:30px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; flex-shrink:0; transition:all .25s cubic-bezier(.16,1,.3,1);" onmouseover="this.style.background='#f4f4f5'; this.style.color='#6b6b7b'" onmouseout="this.style.background='transparent'; this.style.color='#9ca3af'">
+          <iconify-icon icon="solar:logout-2-linear" style="font-size:17px;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── 모바일 GNB ── -->
+  <header class="nav-glass sticky top-0 z-40 md:hidden">
+    <div class="px-4">
+      <div class="flex items-center justify-between h-16">
+        <a href="01-landing.html" style="text-decoration:none;" class="flex items-center gap-2">
+          <img src="../../public/logo-symbol.svg" width="28" height="28" alt="Portraq">
+          <span style="font-family:'Carter One',serif; font-size:17px; color:#1c1c1e;">Portraq</span>
+        </a>
+        <button onclick="openMobileMenu()" style="width:36px; height:36px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#1c1c1e;">
+          <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px;"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 모바일 메뉴 오버레이 ── -->
+  <div id="mobile-menu" style="display:none; position:fixed; inset:0; z-index:50;">
+    <div id="menu-backdrop" onclick="closeMobileMenu()" style="position:absolute; inset:0; background:rgba(0,0,0,0); transition:background .4s cubic-bezier(.16,1,.3,1);"></div>
+    <div id="menu-panel" style="position:absolute; top:0; right:0; bottom:0; width:100%; max-width:260px; background:#fff; display:flex; flex-direction:column; box-shadow:-20px 0 60px rgba(0,0,0,.08); transform:translateX(100%); transition:transform .45s cubic-bezier(.16,1,.3,1);">
+      <div style="padding:16px 16px 8px; display:flex; justify-content:flex-end;">
+        <button onclick="closeMobileMenu()" style="background:transparent; border:none; cursor:pointer; padding:4px; color:#9ca3af; font-size:22px; line-height:1; transition:color .2s;" onmouseover="this.style.color='#1c1c1e'" onmouseout="this.style.color='#9ca3af'">×</button>
+      </div>
+      <nav style="padding:16px 12px; flex:1;" class="flex flex-col gap-1">
+        <a href="05-home.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:home-2-bold" style="font-size:18px;"></iconify-icon>
+          홈
+        </a>
+        <a href="07-portfolio-list.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:pie-chart-2-linear" style="font-size:18px;"></iconify-icon>
+          내 포트폴리오
+        </a>
+        <a href="#" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:history-linear" style="font-size:18px;"></iconify-icon>
+          리밸런싱 기록
+        </a>
+        <a href="08-tradelog.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:notebook-linear" style="font-size:18px;"></iconify-icon>
+          매매 일지
+        </a>
+        <a href="09-dividends.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item active" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:banknote-2-linear" style="font-size:18px;"></iconify-icon>
+          분배금 관리
+        </a>
+        <a href="02-templates.html" onclick="closeMobileMenu()" class="menu-item sidebar-nav-item" style="opacity:0; transform:translateX(12px);">
+          <iconify-icon icon="solar:medal-star-linear" style="font-size:18px;"></iconify-icon>
+          대가 포트폴리오
+        </a>
+      </nav>
+      <div style="padding:12px; border-top:1.5px solid #f4f4f5;">
+        <div class="menu-item flex items-center gap-3" style="padding:10px 14px; opacity:0; transform:translateX(12px);">
+          <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#355df9,#6b8ffb); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span style="font-size:11px; font-weight:800; color:#fff;">김</span>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:13px; font-weight:700; color:#1c1c1e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">김민준</div>
+            <div style="font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">kim@example.com</div>
+          </div>
+          <button onclick="handleLogout()" title="로그아웃" style="width:30px; height:30px; border-radius:8px; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9ca3af; flex-shrink:0; transition:all .25s cubic-bezier(.16,1,.3,1);" onmouseover="this.style.background='#f4f4f5'; this.style.color='#6b6b7b'" onmouseout="this.style.background='transparent'; this.style.color='#9ca3af'">
+            <iconify-icon icon="solar:logout-2-linear" style="font-size:17px;"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 메인 콘텐츠 ── -->
+  <main class="md:ml-60 mx-auto px-4 sm:px-6 py-6 pb-16" style="max-width:1400px;">
+
+    <!-- 목업 전용: 화면 상태 미리보기 스위처 (실제 구현 대상 아님) -->
+    <section class="mb-5 reveal visible">
+      <div class="demo-switcher">
+        <span style="font-size:11px; font-weight:700; color:#71717a; padding-left:4px;">상태 미리보기 (목업 전용)</span>
+        <button class="tab-btn active" onclick="setPageState('default', this)">기본</button>
+        <button class="tab-btn" onclick="setPageState('loading', this)">로딩</button>
+        <button class="tab-btn" onclick="setPageState('empty', this)">빈 상태</button>
+        <button class="tab-btn" onclick="setPageState('error', this)">에러</button>
+      </div>
+    </section>
+
+    <!-- ══════════ 기본 상태 ══════════ -->
+    <div id="state-default">
+
+      <!-- Page header -->
+      <section class="mb-5 reveal visible">
+        <h1 style="font-size:20px; font-weight:800; color:#1c1c1e; letter-spacing:-.03em; margin-bottom:4px;">분배금 관리</h1>
+        <p style="font-size:14px; color:#6b6b7b; line-height:1.5;">보유 종목의 평균 매수 단가와 최근 12개월 배당(분배)금을 한눈에 확인하세요. 평균 매수 단가는 리밸런싱 실행 기록을 이동평균법으로 계산합니다.</p>
+      </section>
+
+      <!-- 배당 데이터 기준 안내 배너 -->
+      <section class="mb-5 reveal">
+        <div style="background:#eff6ff; border:1.5px solid #c7d5fd; border-radius:16px; padding:16px 18px; display:flex; align-items:flex-start; gap:12px;">
+          <iconify-icon icon="solar:info-circle-bold" style="font-size:20px; color:#355df9; flex-shrink:0; margin-top:1px;"></iconify-icon>
+          <div>
+            <div style="font-size:13px; font-weight:800; color:#1d4ed8; margin-bottom:3px;">배당금은 직접 입력해야 정확합니다</div>
+            <div style="font-size:12px; color:#3b4a8f; line-height:1.6;">
+              배당합·연환산수익률은 각 종목의 <iconify-icon icon="solar:pen-2-linear" style="font-size:11px; vertical-align:-1px;"></iconify-icon> 버튼으로 직접 입력한 값만 반영합니다. 입력하지 않은 종목은 0으로 표시됩니다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 포트폴리오 범위 선택 -->
+      <section class="mb-5 reveal">
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-2">
+          <select id="portfolio-filter-select" class="select-clean" onchange="setPortfolioFilter(this.value)">
+            <option value="all">전체 합산</option>
+            <option value="buffett">워런 버핏 전략</option>
+            <option value="dalio">레이 달리오 올웨더</option>
+            <option value="bogle">존 보글 인덱스</option>
+          </select>
+          <div style="font-size:11px; color:#9ca3af;"><b>전체 합산</b>은 종목을 포트폴리오별로 묶어 보여줍니다. 동일 종목이 여러 포트폴리오에 있으면 각 그룹에 따로 표시됩니다.</div>
+        </div>
+      </section>
+
+      <!-- 요약 통계 -->
+      <section class="mb-6 reveal">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="summary-cards">
+          <!-- JS로 렌더링 -->
+        </div>
+      </section>
+
+      <!-- 데스크톱: 밀도 높은 테이블 -->
+      <section class="card mb-3 hidden md:block reveal" style="padding:0;">
+        <div style="overflow-x:auto;">
+          <table class="dividend-table">
+            <colgroup>
+              <col style="width:170px">
+              <col style="width:70px"><col style="width:80px">
+              <col style="width:110px">
+              <col style="width:90px"><col style="width:60px">
+              <col style="width:120px"><col style="width:100px"><col style="width:100px">
+              <col style="width:64px">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>종목명</th>
+                <th style="text-align:right;">세팅비중</th>
+                <th style="text-align:right;" title="현재가 기준 기대 배당수익률(기대 배당률과 동일 값, 스캔 편의상 앞쪽에도 표시)">기대수익</th>
+                <th style="text-align:center;">배당일</th>
+                <th style="text-align:right;" title="이동평균법으로 계산한 평균 매수 단가">매수가</th>
+                <th style="text-align:right;">수량</th>
+                <th style="text-align:right;" title="직접 입력한 최근 12개월 배당금 합계. 입력하지 않았으면 0">배당합</th>
+                <th style="text-align:right;" title="배당합 ÷ 투자금(매수가×수량) — 내가 실제로 낸 원금 대비 실현 수익률">연환산수익률</th>
+                <th style="text-align:right;" title="최근 주당 배당금을 연 환산해 현재가 대비 계산한 기대 수익률">기대 배당률</th>
+                <th style="text-align:center;">수정</th>
+              </tr>
+            </thead>
+            <tbody id="dividend-table-body">
+              <!-- JS로 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+        <div id="table-empty" style="display:none; text-align:center; padding:40px 16px; color:#9ca3af; font-size:13px;">
+          선택한 포트폴리오에 표시할 종목이 없습니다.
+        </div>
+      </section>
+
+      <!-- 모바일: 카드 리스트 -->
+      <section class="md:hidden reveal" id="dividend-cards">
+        <!-- JS로 렌더링 -->
+      </section>
+      <div id="cards-empty" style="display:none;" class="md:hidden text-center reveal" style="padding:40px 16px; color:#9ca3af; font-size:13px; background:#fff; border:1.5px dashed #ebebef; border-radius:14px;">
+        선택한 포트폴리오에 표시할 종목이 없습니다.
+      </div>
+
+      <!-- 범례 -->
+      <section class="mt-4 reveal">
+        <div style="font-size:11px; color:#9ca3af; line-height:1.7;">
+          <div><span style="display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:6px; background:#fef2f2; vertical-align:-3px;"><iconify-icon icon="solar:danger-triangle-bold" style="font-size:12px; color:#dc2626;"></iconify-icon><b style="color:#dc2626;">교체 고려</b></span> 직전월 대비 배당금이 <b>5% 이상 하락</b>한 종목을 하락률과 함께 빨간 배경으로 표시합니다. 최소 2개월 이상 입력해야 판단할 수 있습니다.</div>
+          <div><span style="color:#c1c1c8;">-</span> 데이터 없음. 무배당 정책 종목이거나, 최근 편입되어 아직 배당 이력이 수집되지 않은 종목입니다. (마우스를 올리면 사유가 표시됩니다)</div>
+        </div>
+      </section>
+
+    </div>
+    <!-- /state-default -->
+
+    <!-- ══════════ 로딩 상태 ══════════ -->
+    <div id="state-loading" style="display:none;">
+      <section class="mb-5">
+        <div class="skeleton" style="width:180px; height:22px; margin-bottom:8px;"></div>
+        <div class="skeleton" style="width:70%; height:14px;"></div>
+      </section>
+      <section class="mb-5">
+        <div class="skeleton" style="width:100%; height:64px; border-radius:16px;"></div>
+      </section>
+      <section class="mb-5">
+        <div class="skeleton" style="width:340px; height:38px; border-radius:10px;"></div>
+      </section>
+      <section class="mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="skeleton" style="height:74px; border-radius:14px;"></div>
+          <div class="skeleton" style="height:74px; border-radius:14px;"></div>
+          <div class="skeleton" style="height:74px; border-radius:14px;"></div>
+          <div class="skeleton" style="height:74px; border-radius:14px;"></div>
+        </div>
+      </section>
+      <section class="card" style="padding:18px;">
+        <div class="flex flex-col gap-3">
+          <div class="skeleton" style="height:16px; width:100%;"></div>
+          <div class="skeleton" style="height:16px; width:100%;"></div>
+          <div class="skeleton" style="height:16px; width:100%;"></div>
+          <div class="skeleton" style="height:16px; width:100%;"></div>
+          <div class="skeleton" style="height:16px; width:100%;"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════ 빈 상태 (포트폴리오/보유 종목 없음) ══════════ -->
+    <div id="state-empty" style="display:none;">
+      <section class="mb-5">
+        <h1 style="font-size:20px; font-weight:800; color:#1c1c1e; letter-spacing:-.03em; margin-bottom:4px;">분배금 관리</h1>
+        <p style="font-size:14px; color:#6b6b7b;">보유 종목의 평균 매수 단가와 배당금을 한눈에 확인하세요.</p>
+      </section>
+      <section class="card" style="padding:56px 24px; text-align:center;">
+        <div style="width:56px; height:56px; border-radius:16px; background:#eef2ff; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <iconify-icon icon="solar:inbox-linear" style="font-size:26px; color:#355df9;"></iconify-icon>
+        </div>
+        <div style="font-size:15px; font-weight:800; color:#1c1c1e; margin-bottom:6px;">아직 보유 중인 종목이 없습니다</div>
+        <div style="font-size:13px; color:#6b6b7b; margin-bottom:20px; line-height:1.6;">포트폴리오를 만들고 리밸런싱을 한 번 실행하면<br>이 화면에서 종목별 배당 정보를 확인할 수 있어요.</div>
+        <a href="02-templates.html" class="btn-primary" style="padding:11px 22px; font-size:13px;">
+          <iconify-icon icon="solar:add-circle-linear" style="font-size:15px;"></iconify-icon>
+          포트폴리오 만들기
+        </a>
+      </section>
+    </div>
+
+    <!-- ══════════ 에러 상태 ══════════ -->
+    <div id="state-error" style="display:none;">
+      <section class="mb-5">
+        <h1 style="font-size:20px; font-weight:800; color:#1c1c1e; letter-spacing:-.03em; margin-bottom:4px;">분배금 관리</h1>
+      </section>
+      <section class="card" style="padding:56px 24px; text-align:center;">
+        <div style="width:56px; height:56px; border-radius:16px; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <iconify-icon icon="solar:danger-circle-bold" style="font-size:26px; color:#dc2626;"></iconify-icon>
+        </div>
+        <div style="font-size:15px; font-weight:800; color:#1c1c1e; margin-bottom:6px;">배당 정보를 불러오지 못했습니다</div>
+        <div style="font-size:13px; color:#6b6b7b; margin-bottom:20px; line-height:1.6;">일시적인 오류일 수 있습니다. 잠시 후 다시 시도해 주세요.</div>
+        <button class="btn-ghost" style="padding:11px 22px; font-size:13px;" onclick="setPageState('default', document.querySelector('.demo-switcher .tab-btn'))">
+          <iconify-icon icon="solar:refresh-linear" style="font-size:15px;"></iconify-icon>
+          다시 시도
+        </button>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ── 배당금 직접 입력 모달 ── -->
+  <div id="input-modal" style="display:none; position:fixed; inset:0; z-index:55; align-items:center; justify-content:center; padding:16px;">
+    <div id="input-modal-backdrop" onclick="closeInputModal()" style="position:absolute; inset:0; background:rgba(0,0,0,0); transition:background .3s;"></div>
+    <div id="input-modal-panel" class="card" style="position:relative; width:100%; max-width:380px; padding:22px; opacity:0; transform:translateY(12px) scale(.98); transition:opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1);">
+      <div class="flex items-center justify-between mb-1">
+        <div style="font-size:15px; font-weight:800; color:#1c1c1e;" id="input-modal-ticker">배당금 직접 입력</div>
+        <button onclick="closeInputModal()" style="background:transparent; border:none; cursor:pointer; padding:4px; color:#9ca3af; font-size:20px; line-height:1;">×</button>
+      </div>
+      <div style="font-size:12px; color:#6b6b7b; margin-bottom:16px;" id="input-modal-desc"></div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px; font-weight:700; color:#1c1c1e; display:block; margin-bottom:6px;">입력할 월</label>
+        <input id="input-modal-month" type="month" onchange="onInputModalMonthChange()" class="input-clean"
+          style="width:100%; padding:10px 12px; border:1.5px solid #ebebef; border-radius:10px; font-size:14px; font-weight:700; color:#1c1c1e;" />
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:700; color:#1c1c1e; display:block; margin-bottom:6px;" id="input-modal-month-label">배당금 (원)</label>
+        <input id="input-modal-amount" type="number" min="0" placeholder="예: 25000" class="input-clean"
+          style="width:100%; padding:10px 12px; border:1.5px solid #ebebef; border-radius:10px; font-size:14px; font-weight:700; color:#1c1c1e;" />
+        <div style="font-size:11px; color:#9ca3af; margin-top:6px;">그 달 실제로 받은 배당금 총액을 입력하세요. 같은 달을 다시 입력하면 값이 갱신됩니다.</div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px; font-weight:700; color:#6b6b7b; margin-bottom:6px;">최근 입력 이력</div>
+        <div id="input-modal-history" style="display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+
+      <div class="flex gap-2">
+        <button class="btn-ghost" style="flex:1; justify-content:center; padding:10px;" onclick="closeInputModal()">취소</button>
+        <button class="btn-primary" style="flex:1; justify-content:center; padding:10px;" onclick="saveInputModal()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
+
+    // ─────────────────────────────────────────────
+    // 목업 데이터 — 실제로는 portfolios / portfolio_assets(이동평균 매수단가) /
+    // asset_prices / asset_dividends 조인 결과로 채워질 부분
+    // ─────────────────────────────────────────────
+    const DIVIDEND_ROWS = [
+      { portfolio:'buffett', portfolioLabel:'워런 버핏 전략', ticker:'AAPL', name:'Apple Inc.', market:'US', ratio:42, avgPrice:186400, shares:18, investedAmount:3355200, paySchedule:'2·5·8·11월', expectedYield:2.3, manualHistory:[] },
+      { portfolio:'buffett', portfolioLabel:'워런 버핏 전략', ticker:'BRK.B', name:'Berkshire Hathaway', market:'US', ratio:28, avgPrice:581000, shares:4, investedAmount:2324000, paySchedule:null, expectedYield:null, noDataReason:'policy', manualHistory:[] },
+      { portfolio:'buffett', portfolioLabel:'워런 버핏 전략', ticker:'BAC', name:'Bank of America', market:'US', ratio:12, avgPrice:39840, shares:25, investedAmount:996000, paySchedule:null, expectedYield:null, noDataReason:'new', manualHistory:[] },
+      { portfolio:'buffett', portfolioLabel:'워런 버핏 전략', ticker:'KO', name:'Coca-Cola', market:'US', ratio:10, avgPrice:83000, shares:10, investedAmount:830000, paySchedule:'1·4·7·10월', expectedYield:3.2, manualHistory:[] },
+      { portfolio:'buffett', portfolioLabel:'워런 버핏 전략', ticker:'OXY', name:'Occidental Petroleum', market:'US', ratio:8, avgPrice:60364, shares:11, investedAmount:664000, paySchedule:'1·4·7·10월', expectedYield:1.7, manualHistory:[] },
+
+      // VTI: 직접 입력 이력이 3개월치 있고 직전월 대비 5% 이상 하락 — "교체 고려" 배지 데모
+      { portfolio:'dalio', portfolioLabel:'레이 달리오 올웨더', ticker:'VTI', name:'Vanguard Total Stock', market:'US', ratio:30, avgPrice:150000, shares:8, investedAmount:1200000, paySchedule:'3·6·9·12월', expectedYield:1.3, manualHistory:[{month:'2026-06', amount:5200},{month:'2026-07', amount:5100},{month:'2026-08', amount:4300}] },
+      { portfolio:'dalio', portfolioLabel:'레이 달리오 올웨더', ticker:'TLT', name:'iShares 20+ Treasury', market:'US', ratio:40, avgPrice:82000, shares:20, investedAmount:1640000, paySchedule:'매월', expectedYield:3.4, manualHistory:[{month:'2026-06', amount:4400},{month:'2026-07', amount:4500},{month:'2026-08', amount:4600}] },
+      { portfolio:'dalio', portfolioLabel:'레이 달리오 올웨더', ticker:'GLD', name:'SPDR Gold Shares', market:'US', ratio:15, avgPrice:205000, shares:3, investedAmount:615000, paySchedule:null, expectedYield:null, noDataReason:'policy', manualHistory:[] },
+      { portfolio:'dalio', portfolioLabel:'레이 달리오 올웨더', ticker:'DBC', name:'Invesco DB Commodity', market:'US', ratio:7.5, avgPrice:51250, shares:6, investedAmount:307500, paySchedule:'연1회(12월)', expectedYield:1.4, manualHistory:[] },
+      { portfolio:'dalio', portfolioLabel:'레이 달리오 올웨더', ticker:'IEF', name:'iShares 7-10Y Treasury', market:'US', ratio:7.5, avgPrice:102500, shares:3, investedAmount:307500, paySchedule:'매월', expectedYield:2.7, manualHistory:[] },
+
+      { portfolio:'bogle', portfolioLabel:'존 보글 인덱스', ticker:'VTI', name:'Vanguard Total Stock', market:'US', ratio:70, avgPrice:150000, shares:9, investedAmount:1350000, paySchedule:'3·6·9·12월', expectedYield:1.3, manualHistory:[] },
+      { portfolio:'bogle', portfolioLabel:'존 보글 인덱스', ticker:'BND', name:'Vanguard Total Bond', market:'US', ratio:30, avgPrice:75000, shares:8, investedAmount:600000, paySchedule:'매월', expectedYield:3.3, manualHistory:[] },
+    ];
+
+    // 실제 구현에서는 features/dividends/computeDividendTrend.ts의 순수함수로 대체.
+    // 직전월 대비 상대적으로 5% 이상 하락하면 "교체 고려" 신호. 이력 2개월 미만이면 판단 보류.
+    const DECLINE_SIGNAL_THRESHOLD = 0.05;
+    function computeDeclineSignal(history) {
+      if (!history || history.length < 2) return null;
+      const sorted = [...history].sort((a, b) => a.month.localeCompare(b.month));
+      const curr = sorted[sorted.length - 1].amount;
+      const prev = sorted[sorted.length - 2].amount;
+      if (prev <= 0) return null;
+      const dropRatio = (prev - curr) / prev;
+      return dropRatio >= DECLINE_SIGNAL_THRESHOLD ? { dropPercent: Math.round(dropRatio * 1000) / 10 } : null;
+    }
+
+    // 실제 구현에서는 features/dividends/computeDividendMetrics.ts의 순수함수로 대체.
+    // 배당합은 직접 입력한 값만 쓴다(asset_dividends 추정값으로 폴백하지 않음).
+    // 최근 12개월치 입력분을 합산하고, 입력이 없으면 0.
+    function trailing12MonthEntries(history) {
+      const now = new Date();
+      const cutoff = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      return (history || [])
+        .filter(h => {
+          const [y, m] = h.month.split('-').map(Number);
+          return new Date(y, m - 1, 1) >= cutoff;
+        })
+        .sort((a, b) => a.month.localeCompare(b.month));
+    }
+
+    // 배당합(최근 12개월 직접 입력분 합계) — 입력이 없으면 0
+    function getDividendSum(row) {
+      return trailing12MonthEntries(row.manualHistory).reduce((sum, h) => sum + h.amount, 0);
+    }
+
+    // 배당합 셀에 보여줄 breakdown: 직접 입력한 개별 월별 금액을 오래된 순으로
+    // 나열하고 마지막 줄에 합계를 굵게 표시. 입력이 없으면 합계 0만 보여준다.
+    function dividendSumBreakdown(row) {
+      const entries = trailing12MonthEntries(row.manualHistory);
+      const total = entries.reduce((sum, h) => sum + h.amount, 0);
+      if (entries.length === 0) return fmtWon(total);
+
+      const lines = entries
+        .map(h => `<div style="color:#6b6b7b;">${monthLabel(h.month)}: ${fmtWon(h.amount)}</div>`)
+        .join('');
+      return `${lines}<div style="margin-top:2px; padding-top:2px; border-top:1px solid #f4f4f5; font-weight:800;">합계: ${fmtWon(total)}</div>`;
+    }
+
+    // 연환산수익률 = 배당합(직접 입력 합계) ÷ 투자금(매수가 × 수량) — 내가 실제로
+    // 낸 원금 대비 실현 수익률. 입력이 없으면 0%.
+    function getAnnualizedYield(row) {
+      const invested = row.avgPrice * row.shares;
+      if (invested <= 0) return null;
+      return Math.round((getDividendSum(row) / invested) * 1000) / 10;
+    }
+
+    let currentPortfolioFilter = 'all';
+
+    function fmtWon(n) {
+      if (n === null || n === undefined) return '—';
+      return '₩' + n.toLocaleString('ko-KR');
+    }
+
+    function noDataTooltip(reason) {
+      if (reason === 'policy') return '이 종목은 배당/분배금을 지급하지 않는 정책입니다.';
+      if (reason === 'new') return '최근 편입되어 아직 수집된 배당 이력이 없습니다. 다음 배치 갱신 후 표시됩니다.';
+      return '데이터 없음';
+    }
+
+    function noDataSpan(reason) {
+      return `<span title="${noDataTooltip(reason)}" style="color:#c1c1c8; cursor:help;">-</span>`;
+    }
+
+    function declineSignalIcon(row) {
+      const signal = computeDeclineSignal(row.manualHistory);
+      if (!signal) return '';
+      return `<span title="교체 고려 — 직전월 대비 ${signal.dropPercent}% 하락" style="display:inline-flex; align-items:center; gap:3px; cursor:help;">
+        <iconify-icon icon="solar:danger-triangle-bold" style="font-size:14px; color:#dc2626;"></iconify-icon>
+        <span style="font-size:11px; font-weight:800; color:#dc2626;">-${signal.dropPercent}%</span>
+      </span>`;
+    }
+
+    function renderTableRow(row, rowIndex) {
+      const marketBadge = row.market === 'US' ? 'badge-us' : 'badge-kr';
+      const annualizedYield = getAnnualizedYield(row);
+      const hasDeclineSignal = !!computeDeclineSignal(row.manualHistory);
+      const rowStyle = hasDeclineSignal
+        ? 'border-bottom:1px solid #f4f4f5; background:#fef2f2;'
+        : 'border-bottom:1px solid #f4f4f5;';
+      return `
+        <tr style="${rowStyle}">
+          <td style="padding:10px 12px;">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span style="font-weight:800; color:#1c1c1e;">${row.ticker}</span>
+              <span class="badge ${marketBadge}">${row.market}</span>
+              ${declineSignalIcon(row)}
+            </div>
+            <div style="font-size:11px; color:#9ca3af; margin-top:1px;">${row.name}</div>
+          </td>
+          <td style="padding:10px 12px; text-align:right; font-weight:700;">${row.ratio}%</td>
+          <td style="padding:10px 12px; text-align:right; color:#16a34a; font-weight:700;">${row.expectedYield != null ? row.expectedYield + '%' : noDataSpan(row.noDataReason)}</td>
+          <td style="padding:10px 12px; text-align:center;">${row.paySchedule ?? noDataSpan(row.noDataReason)}</td>
+          <td style="padding:10px 12px; text-align:right;">${fmtWon(row.avgPrice)}</td>
+          <td style="padding:10px 12px; text-align:right;">${row.shares}주</td>
+          <td style="padding:10px 12px; text-align:right; font-weight:700; font-size:11px;">
+            ${dividendSumBreakdown(row)}
+          </td>
+          <td style="padding:10px 12px; text-align:right; font-weight:700; color:#355df9;">${annualizedYield != null ? annualizedYield + '%' : noDataSpan(row.noDataReason)}</td>
+          <td style="padding:10px 12px; text-align:right; font-weight:700;">${row.expectedYield != null ? row.expectedYield + '%' : noDataSpan(row.noDataReason)}</td>
+          <td style="padding:10px 12px;">
+            <div class="flex items-center justify-center">
+              <button class="btn-icon" title="배당금 수정" onclick="openInputModal(${rowIndex})">
+                <iconify-icon icon="solar:pen-2-linear" style="font-size:15px;"></iconify-icon>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    function renderMobileCard(row, rowIndex) {
+      const marketBadge = row.market === 'US' ? 'badge-us' : 'badge-kr';
+      const annualizedYield = getAnnualizedYield(row);
+      const hasDeclineSignal = !!computeDeclineSignal(row.manualHistory);
+      const cardStyle = hasDeclineSignal ? 'padding:16px; background:#fef2f2; border-color:#fecaca;' : 'padding:16px;';
+      return `
+        <div class="card mb-3" style="${cardStyle}">
+          <div class="flex items-start justify-between mb-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span style="font-size:15px; font-weight:800; color:#1c1c1e;">${row.ticker}</span>
+                <span class="badge ${marketBadge}">${row.market}</span>
+                ${declineSignalIcon(row)}
+              </div>
+              <div style="font-size:12px; color:#6b6b7b; margin-top:2px;">${row.name}</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <div style="font-size:10px; color:#6b6b7b; font-weight:600;">세팅비중</div>
+              <div style="font-size:16px; font-weight:800; color:#355df9;">${row.ratio}%</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="stat-tile"><div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">기대수익</div><div style="font-size:13px; font-weight:800; color:#16a34a;">${row.expectedYield != null ? row.expectedYield + '%' : noDataSpan(row.noDataReason)}</div></div>
+            <div class="stat-tile"><div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">배당일</div><div style="font-size:13px; font-weight:800;">${row.paySchedule ?? noDataSpan(row.noDataReason)}</div></div>
+            <div class="stat-tile"><div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">매수가 · 수량</div><div style="font-size:13px; font-weight:800;">${fmtWon(row.avgPrice)} · ${row.shares}주</div></div>
+            <div class="stat-tile"><div style="font-size:10px; color:#6b6b7b; font-weight:600; margin-bottom:3px;">연환산수익률</div><div style="font-size:13px; font-weight:800; color:#355df9;">${annualizedYield != null ? annualizedYield + '%' : noDataSpan(row.noDataReason)}</div></div>
+          </div>
+          <div style="margin-top:10px; padding-top:10px; border-top:1px solid #f4f4f5; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div>
+              <div style="font-size:10px; color:#6b6b7b; font-weight:600;">배당합 (최근 12개월)</div>
+              <div style="font-size:13px; font-weight:700;">${dividendSumBreakdown(row)}</div>
+            </div>
+            <button class="btn-ghost" style="padding:8px 14px; font-size:12px;" onclick="openInputModal(${rowIndex})">
+              <iconify-icon icon="solar:pen-2-linear" style="font-size:13px;"></iconify-icon>
+              입력
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function renderSummaryCards(rows) {
+      const totalInvested = rows.reduce((sum, r) => sum + r.investedAmount, 0);
+      const totalDividend = rows.reduce((sum, r) => sum + getDividendSum(r), 0);
+      const avgYield = totalInvested > 0 ? Math.round((totalDividend / totalInvested) * 1000) / 10 : null;
+      const noDataCount = rows.filter(r => r.noDataReason).length;
+
+      const cards = [
+        { icon: 'solar:wallet-money-bold', label: '총 투자금', value: fmtWon(totalInvested), color: '#1c1c1e' },
+        { icon: 'solar:banknote-2-bold', label: '배당합 (최근 12개월)', value: fmtWon(totalDividend), color: '#1c1c1e' },
+        { icon: 'solar:chart-2-bold', label: '가중평균 연환산수익률', value: avgYield != null ? avgYield + '%' : '—', color: '#355df9' },
+        { icon: 'solar:list-check-bold', label: '종목 수 · 데이터 없음', value: `${rows.length}개 · ${noDataCount}개`, color: '#1c1c1e' },
+      ];
+
+      document.getElementById('summary-cards').innerHTML = cards.map(c => `
+        <div class="card" style="padding:14px 16px; border-radius:14px;">
+          <div class="flex items-center gap-2 mb-2">
+            <iconify-icon icon="${c.icon}" style="font-size:15px; color:#355df9;"></iconify-icon>
+            <div style="font-size:10px; color:#6b6b7b; font-weight:700;">${c.label}</div>
+          </div>
+          <div style="font-size:17px; font-weight:800; color:${c.color}; letter-spacing:-.02em;">${c.value}</div>
+        </div>
+      `).join('');
+    }
+
+    // 포트폴리오별로 첫 등장 순서를 유지하며 그룹핑한다("전체 합산" 탭 전용).
+    function groupByPortfolio(filtered) {
+      const order = [];
+      const groups = new Map();
+      filtered.forEach(item => {
+        const key = item.row.portfolio;
+        if (!groups.has(key)) {
+          groups.set(key, []);
+          order.push(key);
+        }
+        groups.get(key).push(item);
+      });
+      return order.map(key => ({
+        portfolioLabel: groups.get(key)[0].row.portfolioLabel,
+        items: groups.get(key),
+      }));
+    }
+
+    function groupHeaderRowHtml(group) {
+      return `<tr>
+        <td colspan="10" style="padding:8px 12px; background:#f8f9fe; border-bottom:1px solid #ebebef; font-size:11px; font-weight:800; color:#355df9;">
+          ${group.portfolioLabel} <span style="color:#9ca3af; font-weight:600;">· ${group.items.length}개 종목</span>
+        </td>
+      </tr>`;
+    }
+
+    function groupHeaderCardHtml(group) {
+      return `<div style="font-size:12px; font-weight:800; color:#355df9; margin:4px 0 8px;">
+        ${group.portfolioLabel} <span style="color:#9ca3af; font-weight:600;">· ${group.items.length}개 종목</span>
+      </div>`;
+    }
+
+    function renderRows(filterKey) {
+      currentPortfolioFilter = filterKey;
+      const indexed = DIVIDEND_ROWS.map((r, i) => ({ row: r, index: i }));
+      const filtered = filterKey === 'all' ? indexed : indexed.filter(({ row }) => row.portfolio === filterKey);
+
+      const tbody = document.getElementById('dividend-table-body');
+      const cardsContainer = document.getElementById('dividend-cards');
+      const tableEmpty = document.getElementById('table-empty');
+      const cardsEmpty = document.getElementById('cards-empty');
+
+      if (!filtered.length) {
+        tbody.innerHTML = '';
+        cardsContainer.innerHTML = '';
+        tableEmpty.style.display = 'block';
+        cardsEmpty.style.display = 'block';
+      } else if (filterKey === 'all') {
+        const groups = groupByPortfolio(filtered);
+        tbody.innerHTML = groups
+          .map(g => groupHeaderRowHtml(g) + g.items.map(({ row, index }) => renderTableRow(row, index)).join(''))
+          .join('');
+        cardsContainer.innerHTML = groups
+          .map(g => groupHeaderCardHtml(g) + g.items.map(({ row, index }) => renderMobileCard(row, index)).join(''))
+          .join('');
+        tableEmpty.style.display = 'none';
+        cardsEmpty.style.display = 'none';
+      } else {
+        tbody.innerHTML = filtered.map(({ row, index }) => renderTableRow(row, index)).join('');
+        cardsContainer.innerHTML = filtered.map(({ row, index }) => renderMobileCard(row, index)).join('');
+        tableEmpty.style.display = 'none';
+        cardsEmpty.style.display = 'none';
+      }
+
+      renderSummaryCards(filtered.map(({ row }) => row));
+    }
+
+    function setPortfolioFilter(key) {
+      renderRows(key);
+    }
+
+    // ─────────────────────────────────────────────
+    // 배당금 직접 입력 모달
+    // ─────────────────────────────────────────────
+    let inputModalRowIndex = null;
+
+    function currentMonthKey() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function monthLabel(monthKey) {
+      const [y, m] = monthKey.split('-');
+      return `${y}.${m}`;
+    }
+
+    function applyInputModalMonth(row, monthKey) {
+      document.getElementById('input-modal-month-label').textContent = `${monthLabel(monthKey)} 배당금 (원)`;
+      const existing = row.manualHistory.find(h => h.month === monthKey);
+      document.getElementById('input-modal-amount').value = existing ? existing.amount : '';
+    }
+
+    function onInputModalMonthChange() {
+      const row = DIVIDEND_ROWS[inputModalRowIndex];
+      const monthInput = document.getElementById('input-modal-month');
+      if (!monthInput.value) return;
+      applyInputModalMonth(row, monthInput.value);
+    }
+
+    function openInputModal(rowIndex) {
+      inputModalRowIndex = rowIndex;
+      const row = DIVIDEND_ROWS[rowIndex];
+      const thisMonth = currentMonthKey();
+
+      document.getElementById('input-modal-ticker').textContent = `${row.ticker} 배당금 입력`;
+      document.getElementById('input-modal-desc').textContent = row.name;
+
+      const monthInput = document.getElementById('input-modal-month');
+      monthInput.max = thisMonth;
+      monthInput.value = thisMonth;
+      applyInputModalMonth(row, thisMonth);
+
+      const historyContainer = document.getElementById('input-modal-history');
+      const sorted = [...row.manualHistory].sort((a, b) => b.month.localeCompare(a.month)).slice(0, 6);
+      historyContainer.innerHTML = sorted.length
+        ? sorted.map(h => `
+          <div class="flex items-center justify-between" style="font-size:12px; padding:5px 8px; background:#f8f9fe; border-radius:6px;">
+            <span style="color:#6b6b7b;">${monthLabel(h.month)}</span>
+            <span style="font-weight:700;">${fmtWon(h.amount)}</span>
+          </div>`).join('')
+        : '<div style="font-size:11px; color:#9ca3af;">아직 입력한 이력이 없습니다.</div>';
+
+      const overlay = document.getElementById('input-modal');
+      const panel = document.getElementById('input-modal-panel');
+      const backdrop = document.getElementById('input-modal-backdrop');
+      overlay.style.display = 'flex';
+      requestAnimationFrame(() => {
+        backdrop.style.background = 'rgba(0,0,0,.4)';
+        panel.style.opacity = '1';
+        panel.style.transform = 'translateY(0) scale(1)';
+      });
+    }
+
+    function closeInputModal() {
+      const overlay = document.getElementById('input-modal');
+      const panel = document.getElementById('input-modal-panel');
+      const backdrop = document.getElementById('input-modal-backdrop');
+      panel.style.opacity = '0';
+      panel.style.transform = 'translateY(12px) scale(.98)';
+      backdrop.style.background = 'rgba(0,0,0,0)';
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    }
+
+    function saveInputModal() {
+      const monthInput = document.getElementById('input-modal-month');
+      const amountInput = document.getElementById('input-modal-amount');
+      const amount = Number(amountInput.value);
+      if (!monthInput.value) {
+        showToast('입력할 월을 선택해 주세요');
+        return;
+      }
+      if (!amountInput.value || !Number.isFinite(amount) || amount < 0) {
+        showToast('올바른 금액을 입력해 주세요');
+        return;
+      }
+
+      const row = DIVIDEND_ROWS[inputModalRowIndex];
+      const targetMonth = monthInput.value;
+      const existingIndex = row.manualHistory.findIndex(h => h.month === targetMonth);
+      if (existingIndex >= 0) row.manualHistory[existingIndex] = { month: targetMonth, amount };
+      else row.manualHistory.push({ month: targetMonth, amount });
+
+      closeInputModal();
+      showToast(`${monthLabel(targetMonth)} 배당금이 저장되었습니다`);
+      renderRows(currentPortfolioFilter);
+    }
+
+    renderRows('all');
+
+    // ─────────────────────────────────────────────
+    // 목업 전용: 화면 상태 스위처
+    // ─────────────────────────────────────────────
+    function setPageState(state, btn) {
+      document.querySelectorAll('.demo-switcher .tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      ['default', 'loading', 'empty', 'error'].forEach(s => {
+        document.getElementById('state-' + s).style.display = s === state ? 'block' : 'none';
+      });
+    }
+
+    // ─────────────────────────────────────────────
+    // 공통 UI 헬퍼
+    // ─────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function openMobileMenu() {
+      const overlay = document.getElementById('mobile-menu');
+      const panel = document.getElementById('menu-panel');
+      const backdrop = document.getElementById('menu-backdrop');
+      overlay.style.display = 'block';
+      requestAnimationFrame(() => {
+        panel.style.transform = 'translateX(0)';
+        backdrop.style.background = 'rgba(0,0,0,.4)';
+        document.querySelectorAll('.menu-item').forEach((el, i) => {
+          setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(0)';
+          }, 120 + i * 60);
+        });
+      });
+    }
+
+    function closeMobileMenu() {
+      const overlay = document.getElementById('mobile-menu');
+      const panel = document.getElementById('menu-panel');
+      const backdrop = document.getElementById('menu-backdrop');
+      panel.style.transform = 'translateX(100%)';
+      backdrop.style.background = 'rgba(0,0,0,0)';
+      document.querySelectorAll('.menu-item').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(12px)';
+      });
+      setTimeout(() => { overlay.style.display = 'none'; }, 450);
+    }
+
+    function handleLogout() {
+      window.location.href = '06-auth.html';
+    }
+  </script>
+</body>
+</html>
