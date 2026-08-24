@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
-import { useSaveDividendInput } from "@/features/dividends/mutations";
+import { useSaveDividendInput, useDeleteDividendInput } from "@/features/dividends/mutations";
 import type { DividendRow } from "@/features/dividends/queries";
 
 const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
@@ -31,6 +31,7 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
   const amountInput = useNumericTextInput({ value: amount, onChange: setAmount, thousandsSeparator: true });
 
   const saveDividendInput = useSaveDividendInput();
+  const deleteDividendInput = useDeleteDividendInput();
 
   const handleMonthChange = (value: string) => {
     setMonth(value);
@@ -52,6 +53,21 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
           onClose();
         },
         onError: () => toast.error("저장에 실패했습니다. 다시 시도해 주세요"),
+      }
+    );
+  };
+
+  const handleDelete = (targetMonth: string) => {
+    if (!window.confirm(`${monthLabel(targetMonth)} 배당금 입력을 삭제할까요?`)) return;
+
+    deleteDividendInput.mutate(
+      { portfolioId: row.portfolioId, ticker: row.ticker, isCustom: row.isCustom, month: targetMonth },
+      {
+        onSuccess: () => {
+          toast.success(`${monthLabel(targetMonth)} 배당금이 삭제되었습니다`);
+          if (targetMonth === month) setAmount(0);
+        },
+        onError: () => toast.error("삭제에 실패했습니다. 다시 시도해 주세요"),
       }
     );
   };
@@ -109,7 +125,18 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
                   className="flex items-center justify-between rounded-md bg-muted px-2 py-1.5 text-xs"
                 >
                   <span className="text-muted-foreground">{monthLabel(entry.month)}</span>
-                  <span className="font-bold">{fmtWon(entry.amount)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{fmtWon(entry.amount)}</span>
+                    <button
+                      type="button"
+                      aria-label={`${monthLabel(entry.month)} 배당금 삭제`}
+                      onClick={() => handleDelete(entry.month)}
+                      disabled={deleteDividendInput.isPending}
+                      className="text-muted-foreground hover:text-destructive disabled:opacity-50"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

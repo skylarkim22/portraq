@@ -13,7 +13,7 @@ export type SaveDividendInputPayload = {
 
 // 월별 배당금 직접 입력. (portfolio_id, ticker, month) 단위로 upsert —
 // 같은 달을 다시 저장하면 값이 갱신된다. exclusive arc라 asset_ticker/
-// custom_asset_id 중 채워지는 쪽에 맞는 partial unique index로 충돌을 잡는다.
+// custom_asset_id 중 채워지는 쪽에 맞는 UNIQUE 제약으로 충돌을 잡는다.
 export const useSaveDividendInput = () => {
   const queryClient = useQueryClient();
   const listQueryKey = dividendQueries.list().queryKey;
@@ -63,6 +63,57 @@ export const useSaveDividendInput = () => {
     },
     onError: (_err, _payload, context) => {
       if (context?.prev) queryClient.setQueryData(listQueryKey, context.prev);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: dividendQueries.all() });
+    },
+  });
+};
+
+export type DeleteDividendInputPayload = {
+  portfolioId: string;
+  ticker: string;
+  isCustom?: boolean;
+  month: string; // 'YYYY-MM'
+};
+
+// 잘못 입력한 월별 배당금 삭제. 낙관적 업데이트 없이 서버 삭제 성공 후에만
+// 캐시에서 해당 월 항목을 직접 제거한다(AGENTS.md 삭제 mutation 규칙).
+export const useDeleteDividendInput = () => {
+  const queryClient = useQueryClient();
+  const listQueryKey = dividendQueries.list().queryKey;
+
+  return useMutation({
+    mutationFn: async (payload: DeleteDividendInputPayload) => {
+      const supabase = createClient();
+      let query = supabase
+        .from("dividend_inputs")
+        .delete()
+        .eq("portfolio_id", payload.portfolioId)
+        .eq("month", `${payload.month}-01`);
+      query = payload.isCustom
+        ? query.eq("custom_asset_id", payload.ticker)
+        : query.eq("asset_ticker", payload.ticker);
+
+      const { error } = await query;
+      if (error) throw error;
+    },
+    onSuccess: (_data, payload) => {
+      queryClient.setQueryData<DividendRow[]>(listQueryKey, (old) =>
+        (old ?? []).map((row) => {
+          if (row.portfolioId !== payload.portfolioId || row.ticker !== payload.ticker) return row;
+
+          const manualHistory = row.manualHistory.filter((entry) => entry.month !== payload.month);
+          const dividendSum = computeDividendSum(manualHistory);
+          const annualizedYield = computeAnnualizedYield({
+            dividendSum,
+            avgPrice: row.avgPrice,
+            shares: row.shares,
+          });
+
+          return { ...row, manualHistory, dividendSum, annualizedYield };
+        })
+      );
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: dividendQueries.all() });
