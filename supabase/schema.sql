@@ -213,7 +213,7 @@ CREATE POLICY "users can manage own portfolio assets"
 -- ============================================================
 -- dividend_inputs: 사용자가 매달 직접 입력하는 실제 수령 배당(분배)금
 --   asset_dividends(자동/수동 갱신 추정치)와 달리 사용자가 실제로 받은
---   금액을 직접 입력한다(#75) — 분배금 관리 화면의 배당합/연환산수익률은
+--   금액을 직접 입력한다(#75) — 배당금 관리 화면의 배당합/연환산수익률은
 --   이 테이블 값만 사용하고 추정치로 폴백하지 않는다.
 --   portfolio_assets.id가 아니라 (portfolio_id, ticker)로 키를 잡는다:
 --   save_portfolio()가 저장할 때마다 portfolio_assets를 전체 DELETE 후

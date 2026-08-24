@@ -8,7 +8,7 @@ const NAV_ITEMS_BEFORE = [{ href: "/home", label: "홈", icon: Home }];
 const NAV_ITEMS_AFTER = [
   { href: "/rebalancing-history", label: "리밸런싱 기록", icon: History },
   { href: "/trade-log", label: "매매 일지", icon: NotebookText },
-  { href: "/dividends", label: "분배금 관리", icon: Banknote },
+  { href: "/dividends", label: "배당금 관리", icon: Banknote },
   { href: "/templates", label: "대가 포트폴리오", icon: Award },
 ];
 

@@ -36,7 +36,7 @@ export const DividendsPage = () => {
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-6 sm:px-6">
       <div className="mb-5">
-        <h1 className="mb-1 text-xl font-extrabold tracking-tight text-foreground">분배금 관리</h1>
+        <h1 className="mb-1 text-xl font-extrabold tracking-tight text-foreground">배당금 관리</h1>
         <p className="text-sm text-muted-foreground">
           보유 종목의 평균 매수 단가와 최근 12개월 배당(분배)금을 한눈에 확인하세요. 평균 매수 단가는
           리밸런싱 실행 기록을 이동평균법으로 계산합니다.
