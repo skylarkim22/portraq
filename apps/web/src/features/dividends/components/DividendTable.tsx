@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 import { AlertTriangle, Pencil } from "lucide-react";
+import { InfoPopover } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
-import { InfoTooltip } from "@/features/dividends/components/InfoTooltip";
 import type { DividendRow } from "@/features/dividends/queries";
 
 const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
@@ -156,26 +156,30 @@ export const DividendTable = ({ rows, grouped, onEditRow }: DividendTableProps) 
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">
               <span className="inline-flex items-center gap-1">
                 매수가
-                <InfoTooltip text="이동평균법으로 계산한 평균 매수 단가" />
+                <InfoPopover label="매수가 설명">이동평균법으로 계산한 평균 매수 단가</InfoPopover>
               </span>
             </th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">수량</th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">
               <span className="inline-flex items-center gap-1">
                 배당합
-                <InfoTooltip text="직접 입력한 최근 12개월 배당금 합계. 입력하지 않았으면 0" />
+                <InfoPopover label="배당합 설명">직접 입력한 최근 12개월 배당금 합계. 입력하지 않았으면 0</InfoPopover>
               </span>
             </th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">
               <span className="inline-flex items-center gap-1">
                 연 환산 수익률
-                <InfoTooltip text="입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가" />
+                <InfoPopover label="연 환산 수익률 설명">
+                  입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가
+                </InfoPopover>
               </span>
             </th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">
               <span className="inline-flex items-center gap-1">
                 기대 배당률
-                <InfoTooltip text="최근 주당 배당금을 연 환산해 현재가 대비 계산한 기대 수익률" />
+                <InfoPopover label="기대 배당률 설명">
+                  최근 주당 배당금을 연 환산해 현재가 대비 계산한 기대 수익률
+                </InfoPopover>
               </span>
             </th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-center font-bold text-[#6b6b7b]">수정</th>

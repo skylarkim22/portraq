@@ -1,5 +1,5 @@
 import { Wallet, Banknote, TrendingUp, ListChecks } from "lucide-react";
-import { InfoTooltip } from "@/features/dividends/components/InfoTooltip";
+import { InfoPopover } from "@portraq/ui";
 import type { DividendSummary } from "@/features/dividends/deriveDividendSummary";
 
 const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
@@ -33,7 +33,7 @@ export const DividendSummaryCards = ({ summary }: DividendSummaryCardsProps) => 
             <card.icon size={15} className="text-[#355df9]" />
             <div className="flex items-center gap-1 text-[10px] font-bold text-[#6b6b7b]">
               {card.label}
-              {card.tooltip && <InfoTooltip text={card.tooltip} />}
+              {card.tooltip && <InfoPopover label={`${card.label} 설명`}>{card.tooltip}</InfoPopover>}
             </div>
           </div>
           <div className="text-[17px] font-extrabold tracking-tight text-[#1c1c1e]">{card.value}</div>

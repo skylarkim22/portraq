@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 import { AlertTriangle, Pencil } from "lucide-react";
+import { InfoPopover } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
-import { InfoTooltip } from "@/features/dividends/components/InfoTooltip";
 import type { DividendRow } from "@/features/dividends/queries";
 
 const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
@@ -31,7 +31,7 @@ const StatTile = ({
   <div className="rounded-xl bg-[#f8f9fe] p-2.5">
     <div className="mb-[3px] flex items-center gap-1 text-[10px] font-semibold text-[#6b6b7b]">
       {label}
-      {title && <InfoTooltip text={title} />}
+      {title && <InfoPopover label={`${label} 설명`}>{title}</InfoPopover>}
     </div>
     <div className="text-[13px] font-extrabold">{children}</div>
   </div>
