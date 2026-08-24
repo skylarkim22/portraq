@@ -58,7 +58,7 @@ const DividendCard = ({ row, onEdit }: { row: DividendRow; onEdit: () => void })
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <StatTile label="기대수익">
+        <StatTile label="기대 배당률">
           <span className="text-[#16a34a]">
             {row.expectedYield != null ? `${row.expectedYield}%` : <NoData reason={row.noDataReason} />}
           </span>

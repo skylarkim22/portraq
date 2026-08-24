@@ -71,9 +71,6 @@ const TableRow = ({ row, onEdit }: { row: DividendRow; onEdit: () => void }) => 
         <div className="mt-px text-[11px] text-[#9ca3af]">{formatAssetTicker(row.ticker, row.isCustom)}</div>
       </td>
       <td className="p-2.5 text-right font-bold">{row.ratio}%</td>
-      <td className="p-2.5 text-right font-bold text-[#16a34a]">
-        {row.expectedYield != null ? `${row.expectedYield}%` : <NoData reason={row.noDataReason} />}
-      </td>
       <td className="p-2.5 text-center">
         {row.paySchedule ?? <NoData reason={row.noDataReason} />}
       </td>
@@ -85,7 +82,7 @@ const TableRow = ({ row, onEdit }: { row: DividendRow; onEdit: () => void }) => 
       <td className="p-2.5 text-right font-bold text-[#355df9]">
         {row.annualizedYield != null ? `${row.annualizedYield}%` : <NoData reason={row.noDataReason} />}
       </td>
-      <td className="p-2.5 text-right font-bold">
+      <td className="p-2.5 text-right font-bold text-[#16a34a]">
         {row.expectedYield != null ? `${row.expectedYield}%` : <NoData reason={row.noDataReason} />}
       </td>
       <td className="p-2.5">
@@ -106,7 +103,7 @@ const TableRow = ({ row, onEdit }: { row: DividendRow; onEdit: () => void }) => 
 
 const GroupHeaderRow = ({ portfolioName, count }: { portfolioName: string; count: number }) => (
   <tr>
-    <td colSpan={10} className="border-b border-[#ebebef] bg-[#f8f9fe] p-2 text-[11px] font-extrabold text-[#355df9]">
+    <td colSpan={9} className="border-b border-[#ebebef] bg-[#f8f9fe] p-2 text-[11px] font-extrabold text-[#355df9]">
       {portfolioName} <span className="font-semibold text-[#9ca3af]">· {count}개 종목</span>
     </td>
   </tr>
@@ -154,12 +151,6 @@ export const DividendTable = ({ rows, grouped, onEditRow }: DividendTableProps) 
           <tr>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-left font-bold text-[#6b6b7b]">종목명</th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">세팅비중</th>
-            <th
-              className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]"
-              title="현재가 기준 기대 배당수익률(기대 배당률과 동일 값)"
-            >
-              기대수익
-            </th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-center font-bold text-[#6b6b7b]">배당일</th>
             <th
               className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]"
