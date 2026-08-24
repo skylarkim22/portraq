@@ -60,7 +60,7 @@ export const InfoPopover = ({
           role="tooltip"
           onClick={(event) => event.stopPropagation()}
           className={cn(
-            "absolute top-full z-20 mt-1.5 w-56 rounded-lg border border-border bg-popover p-3 text-left text-xs font-normal normal-case leading-relaxed text-popover-foreground shadow-lg",
+            "absolute top-full z-20 mt-1.5 w-56 whitespace-normal rounded-lg border border-border bg-popover p-3 text-left text-xs font-normal normal-case leading-relaxed text-popover-foreground shadow-lg",
             align === "left" ? "left-0" : "right-0"
           )}
         >

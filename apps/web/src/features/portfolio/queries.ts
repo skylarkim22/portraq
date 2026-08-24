@@ -60,7 +60,7 @@ const summarizeExecution = (
 // portfolio_assets.current_price(마지막 리밸런싱 실행가)보다 asset_prices가
 // 있으면 그쪽을 우선한다 — 신규 추가돼 아직 배치가 못 돈 종목은 이 Map에
 // 없으므로 호출부에서 current_price로 폴백한다(#60).
-const fetchLatestClosePrices = async (supabase: SupabaseClient, tickers: string[]) => {
+export const fetchLatestClosePrices = async (supabase: SupabaseClient, tickers: string[]) => {
   const latestByTicker = new Map<string, number>();
   if (tickers.length === 0) return latestByTicker;
 
