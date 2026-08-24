@@ -50,7 +50,7 @@ export const useSaveDividendInput = () => {
 
           const dividendSum = computeDividendSum(manualHistory);
           const annualizedYield = computeAnnualizedYield({
-            dividendSum,
+            manualHistory,
             avgPrice: row.avgPrice,
             shares: row.shares,
           });
@@ -106,7 +106,7 @@ export const useDeleteDividendInput = () => {
           const manualHistory = row.manualHistory.filter((entry) => entry.month !== payload.month);
           const dividendSum = computeDividendSum(manualHistory);
           const annualizedYield = computeAnnualizedYield({
-            dividendSum,
+            manualHistory,
             avgPrice: row.avgPrice,
             shares: row.shares,
           });

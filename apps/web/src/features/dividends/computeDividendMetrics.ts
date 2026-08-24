@@ -13,30 +13,41 @@ const isMonthWithinTrailing12Months = (monthKey: string, asOf: Date) => {
   return new Date(year, month - 1, 1) >= cutoff;
 };
 
-// 배당합 = 사용자가 직접 입력한 최근 12개월 배당금 합계. asset_dividends
-// 추정치로 폴백하지 않는다(#75) — 입력이 없으면 0.
+const trailing12MonthEntries = (manualHistory: DividendInputEntry[], asOf: Date) =>
+  manualHistory.filter((entry) => isMonthWithinTrailing12Months(entry.month, asOf));
+
+// 배당합 = 사용자가 직접 입력한 최근 12개월 배당금 합계(실수령액 그대로).
+// asset_dividends 추정치로 폴백하지 않는다(#75) — 입력이 없으면 0.
 export const computeDividendSum = (
   manualHistory: DividendInputEntry[],
   asOf: Date = new Date()
 ): number =>
-  manualHistory
-    .filter((entry) => isMonthWithinTrailing12Months(entry.month, asOf))
-    .reduce((sum, entry) => sum + entry.amount, 0);
+  trailing12MonthEntries(manualHistory, asOf).reduce((sum, entry) => sum + entry.amount, 0);
 
-// 연환산수익률 = 배당합 ÷ 투자금(매수가 × 수량) — 내가 실제로 낸 원금
-// 대비 실현 수익률. 투자금이 0이면 계산할 수 없다(null).
+// 연환산수익률 = (최근 12개월 입력분 합 ÷ 입력된 개월 수 × 12) ÷ 투자금.
+// 아직 1~2개월치만 입력해도 그 페이스를 12개월로 환산해 기대 배당률과
+// 바로 비교할 수 있게 한다 — 12개월 전부 채워지면 배당합을 그대로 쓰는
+// 것과 같아진다. 투자금이 0이거나 입력이 아예 없으면 계산할 수 없다.
 export const computeAnnualizedYield = ({
-  dividendSum,
+  manualHistory,
   avgPrice,
   shares,
+  asOf = new Date(),
 }: {
-  dividendSum: number;
+  manualHistory: DividendInputEntry[];
   avgPrice: number;
   shares: number;
+  asOf?: Date;
 }): number | null => {
   const invested = avgPrice * shares;
   if (invested <= 0) return null;
-  return Math.round((dividendSum / invested) * 1000) / 10;
+
+  const entries = trailing12MonthEntries(manualHistory, asOf);
+  if (entries.length === 0) return 0;
+
+  const sum = entries.reduce((total, entry) => total + entry.amount, 0);
+  const annualizedSum = (sum / entries.length) * 12;
+  return Math.round((annualizedSum / invested) * 1000) / 10;
 };
 
 // 기대 배당률 = asset_dividends의 최근 12개월 주당 배당금 합 ÷ 현재가.
@@ -60,9 +71,13 @@ export const computeExpectedYield = ({
 };
 
 // assets.dividend_months([2,5,8,11]) → "2·5·8·11월" 형태로 포맷한다.
+// 1~12월이 전부 채워져 있으면(매달 지급) "월배당"으로 축약한다.
 export const formatPaySchedule = (dividendMonths: number[] | null): string | null => {
   if (!dividendMonths || dividendMonths.length === 0) return null;
-  return `${[...dividendMonths].sort((a, b) => a - b).join("·")}월`;
+  const sorted = [...dividendMonths].sort((a, b) => a - b);
+  const isEveryMonth = sorted.length === 12 && sorted.every((month, i) => month === i + 1);
+  if (isEveryMonth) return "월배당";
+  return `${sorted.join("·")}월`;
 };
 
 export type DividendNoDataReason = "policy" | "new";

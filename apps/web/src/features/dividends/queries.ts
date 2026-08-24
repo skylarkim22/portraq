@@ -141,7 +141,7 @@ export const dividendQueries = {
             const manualHistory = manualHistoryByHolding.get(holdingKey(portfolio.id, ticker)) ?? [];
             const dividendSum = computeDividendSum(manualHistory);
             const annualizedYield = computeAnnualizedYield({
-              dividendSum,
+              manualHistory,
               avgPrice: purchase.avgPrice,
               shares: purchase.shares,
             });
