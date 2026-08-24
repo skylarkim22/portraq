@@ -240,13 +240,15 @@ CREATE TRIGGER trg_dividend_inputs_updated_at
 
 CREATE INDEX idx_dividend_inputs_portfolio ON dividend_inputs(portfolio_id);
 
--- exclusive arc라 asset_ticker/custom_asset_id 각각 한쪽이 항상 NULL이므로
--- 일반 UNIQUE(portfolio_id, asset_ticker, month)로는 같은 종목에 같은 달을
--- 여러 번 입력해도 막지 못한다 — 컬럼별 partial unique index로 나눠서 막는다.
-CREATE UNIQUE INDEX dividend_inputs_ticker_month_uniq
-  ON dividend_inputs(portfolio_id, asset_ticker, month) WHERE asset_ticker IS NOT NULL;
-CREATE UNIQUE INDEX dividend_inputs_custom_month_uniq
-  ON dividend_inputs(portfolio_id, custom_asset_id, month) WHERE custom_asset_id IS NOT NULL;
+-- exclusive arc라 asset_ticker/custom_asset_id 각각 한쪽이 항상 NULL이지만,
+-- Postgres 기본 UNIQUE 제약은 NULL끼리 서로 다른 값으로 취급하므로 일반
+-- UNIQUE 제약 두 개로 각 컬럼이 채워진 경우만 중복을 막을 수 있다.
+-- (partial unique index는 PostgREST upsert의 ON CONFLICT 컬럼 목록으로
+-- 추론되지 않아 42P10 에러가 나므로 쓰지 않는다 — #75)
+ALTER TABLE dividend_inputs
+  ADD CONSTRAINT dividend_inputs_ticker_month_uniq UNIQUE (portfolio_id, asset_ticker, month);
+ALTER TABLE dividend_inputs
+  ADD CONSTRAINT dividend_inputs_custom_month_uniq UNIQUE (portfolio_id, custom_asset_id, month);
 
 ALTER TABLE dividend_inputs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users can manage own dividend inputs"
