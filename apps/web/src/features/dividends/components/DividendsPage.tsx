@@ -12,15 +12,26 @@ import { DividendCardList } from "@/features/dividends/components/DividendCardLi
 import { DividendInputModal } from "@/features/dividends/components/DividendInputModal";
 import type { DividendRow } from "@/features/dividends/queries";
 
+// 수정 대상 종목은 (portfolioId, ticker) 키로만 들고 있다가 매 렌더마다
+// allRows에서 다시 찾아 쓴다 — DividendRow 객체 자체를 상태로 들고 있으면
+// 삭제/저장으로 캐시가 갱신돼도 모달이 클릭 시점의 스냅샷을 계속 보여준다.
+type EditingKey = { portfolioId: string; ticker: string };
+
 export const DividendsPage = () => {
   const { data: rows, isLoading, isError } = useDividends();
   const [portfolioFilter, setPortfolioFilter] = useState(ALL_PORTFOLIOS);
-  const [editingRow, setEditingRow] = useState<DividendRow | null>(null);
+  const [editingKey, setEditingKey] = useState<EditingKey | null>(null);
 
   const allRows = rows ?? [];
   const filteredRows =
     portfolioFilter === ALL_PORTFOLIOS ? allRows : allRows.filter((row) => row.portfolioId === portfolioFilter);
   const summary = deriveDividendSummary(filteredRows);
+
+  const editingRow: DividendRow | null = editingKey
+    ? (allRows.find((row) => row.portfolioId === editingKey.portfolioId && row.ticker === editingKey.ticker) ?? null)
+    : null;
+
+  const handleEditRow = (row: DividendRow) => setEditingKey({ portfolioId: row.portfolioId, ticker: row.ticker });
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-6 sm:px-6">
@@ -69,18 +80,18 @@ export const DividendsPage = () => {
             <DividendTable
               rows={filteredRows}
               grouped={portfolioFilter === ALL_PORTFOLIOS}
-              onEditRow={setEditingRow}
+              onEditRow={handleEditRow}
             />
           </div>
           <DividendCardList
             rows={filteredRows}
             grouped={portfolioFilter === ALL_PORTFOLIOS}
-            onEditRow={setEditingRow}
+            onEditRow={handleEditRow}
           />
         </>
       )}
 
-      {editingRow && <DividendInputModal row={editingRow} onClose={() => setEditingRow(null)} />}
+      {editingRow && <DividendInputModal row={editingRow} onClose={() => setEditingKey(null)} />}
     </div>
   );
 };
