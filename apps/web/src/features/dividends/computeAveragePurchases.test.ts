@@ -29,6 +29,17 @@ describe("computeAveragePurchases", () => {
     expect(result.get("AAPL")).toEqual({ ticker: "AAPL", avgPrice: 100, shares: 6 });
   });
 
+  it("실제 저장 형식대로 매도 quantity가 음수여도 올바르게 차감한다", () => {
+    // deriveActionRows.ts가 매도 수량을 음수로 부호화해 저장한다
+    // (RebalancingHistoryActionRow.tsx가 표시할 때 Math.abs를 쓰는 이유).
+    const result = computeAveragePurchases([
+      { actions: [{ ticker: "AAPL", action: "buy", quantity: 10, pricePerShare: 100 }] },
+      { actions: [{ ticker: "AAPL", action: "sell", quantity: -4, pricePerShare: 300 }] },
+    ]);
+
+    expect(result.get("AAPL")).toEqual({ ticker: "AAPL", avgPrice: 100, shares: 6 });
+  });
+
   it("hold는 상태를 변경하지 않는다", () => {
     const result = computeAveragePurchases([
       { actions: [{ ticker: "AAPL", action: "buy", quantity: 10, pricePerShare: 100 }] },
@@ -126,6 +137,20 @@ describe("computeSharesTimeline", () => {
     expect(result).toEqual([
       { date: "2026-07-01T00:00:00Z", shares: 100 },
       { date: "2026-08-01T00:00:00Z", shares: 150 },
+    ]);
+  });
+
+  it("실제 저장 형식대로 매도 quantity가 음수여도 체크포인트가 올바르게 줄어든다", () => {
+    const result = computeSharesTimeline(
+      [
+        { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 100, pricePerShare: 10000 }] },
+        { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "sell", quantity: -30, pricePerShare: 12000 }] },
+      ],
+      "AAPL"
+    );
+    expect(result).toEqual([
+      { date: "2026-07-01T00:00:00Z", shares: 100 },
+      { date: "2026-08-01T00:00:00Z", shares: 70 },
     ]);
   });
 

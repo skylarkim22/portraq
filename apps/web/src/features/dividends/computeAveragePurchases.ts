@@ -18,15 +18,20 @@ export const computeAveragePurchases = (
     for (const action of record.actions) {
       const current = state.get(action.ticker) ?? { ticker: action.ticker, avgPrice: 0, shares: 0 };
 
+      // execution_records.actions[].quantity는 부호 있는 값이다(매도면
+      // 음수 — deriveActionRows.ts가 그렇게 만들어 저장한다). 방향은
+      // action.action이 이미 나타내므로 여기서는 절대값(매매 수량)만 쓴다.
+      const quantity = Math.abs(action.quantity);
+
       if (action.action === "buy") {
-        const newShares = current.shares + action.quantity;
+        const newShares = current.shares + quantity;
         const newAvgPrice =
           newShares > 0
-            ? (current.avgPrice * current.shares + action.pricePerShare * action.quantity) / newShares
+            ? (current.avgPrice * current.shares + action.pricePerShare * quantity) / newShares
             : 0;
         state.set(action.ticker, { ticker: action.ticker, avgPrice: newAvgPrice, shares: newShares });
       } else if (action.action === "sell") {
-        state.set(action.ticker, { ...current, shares: Math.max(0, current.shares - action.quantity) });
+        state.set(action.ticker, { ...current, shares: Math.max(0, current.shares - quantity) });
       }
     }
   }
@@ -85,11 +90,14 @@ export const computeSharesTimeline = (
     // shares가 여전히 0인 채로 "그 시점엔 0주였다"는 잘못된 기록이 되어
     // sharesAsOfMonth가 fallbackShares 대신 이 0을 써버린다 — 그래서
     // buy/sell일 때만 체크포인트를 남긴다.
+    // execution_records.actions[].quantity는 부호 있는 값이다(매도면
+    // 음수). 절대값(매매 수량)만 쓰고 방향은 action.action으로 판단한다.
+    const quantity = Math.abs(action.quantity);
     if (action.action === "buy") {
-      shares += action.quantity;
+      shares += quantity;
       checkpoints.push({ date: record.executedAt, shares });
     } else if (action.action === "sell") {
-      shares = Math.max(0, shares - action.quantity);
+      shares = Math.max(0, shares - quantity);
       checkpoints.push({ date: record.executedAt, shares });
     }
   }
