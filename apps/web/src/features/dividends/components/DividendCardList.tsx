@@ -67,7 +67,7 @@ const DividendCard = ({ row, onEdit }: { row: DividendRow; onEdit: () => void })
         <StatTile label="매수가 · 수량">
           {fmtWon(row.avgPrice)} · {row.shares}주
         </StatTile>
-        <StatTile label="연환산수익률">
+        <StatTile label="연 환산 수익률">
           <span className="text-[#355df9]">
             {row.annualizedYield != null ? `${row.annualizedYield}%` : <NoData reason={row.noDataReason} />}
           </span>

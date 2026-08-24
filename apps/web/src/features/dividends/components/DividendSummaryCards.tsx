@@ -13,7 +13,7 @@ export const DividendSummaryCards = ({ summary }: DividendSummaryCardsProps) => 
     { icon: Banknote, label: "배당합 (최근 12개월)", value: fmtWon(summary.totalDividend) },
     {
       icon: TrendingUp,
-      label: "가중평균 연환산수익률",
+      label: "가중평균 연 환산 수익률",
       value: summary.avgYield != null ? `${summary.avgYield}%` : "-",
       tooltip: "모든 종목의 배당합(최근 12개월 입력분 합) ÷ 모든 종목의 투자금(매수가×수량) 합",
     },

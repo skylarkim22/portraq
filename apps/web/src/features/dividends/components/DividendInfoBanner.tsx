@@ -8,7 +8,7 @@ export const DividendInfoBanner = () => (
         배당금은 직접 입력해야 정확합니다
       </div>
       <div className="text-xs leading-relaxed text-[#3b4a8f]">
-        배당합·연환산수익률은 각 종목의 <Pencil size={11} className="inline align-[-1px]" /> 버튼으로 직접
+        배당합·연 환산 수익률은 각 종목의 <Pencil size={11} className="inline align-[-1px]" /> 버튼으로 직접
         입력한 값만 반영합니다. 입력하지 않은 종목은 0으로 표시됩니다.
       </div>
     </div>
