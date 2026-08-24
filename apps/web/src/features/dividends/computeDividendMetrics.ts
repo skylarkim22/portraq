@@ -53,6 +53,24 @@ export const computeAnnualizedYield = ({
   return Math.round((annualizedPerShare / avgPrice) * 1000) / 10;
 };
 
+// 입금된 배당금 하나의 수익률 = 그 달 주당 배당금(amount÷shares) ÷ 매수
+// 단가(avgPrice). 연환산(×12)하지 않고 "이번에 들어온 배당금이 투자
+// 원금 대비 몇 %였는지"를 그대로 보여준다 — 분기·반기 배당처럼 매달
+// 들어오지 않는 종목도 부풀림 없이 표시할 수 있다.
+export const computeEntryYield = ({
+  amount,
+  shares,
+  avgPrice,
+}: {
+  amount: number;
+  shares: number;
+  avgPrice: number;
+}): number | null => {
+  if (avgPrice <= 0 || shares <= 0) return null;
+  const perShareAmount = amount / shares;
+  return Math.round((perShareAmount / avgPrice) * 1000) / 10;
+};
+
 // 기대 배당률 = asset_dividends의 최근 12개월 주당 배당금 합 ÷ 현재가.
 // 매수 단가가 아니라 현재가 기준이라 "지금 사면 기대할 수 있는 수익률"을
 // 뜻한다(연환산수익률과는 다른 지표).

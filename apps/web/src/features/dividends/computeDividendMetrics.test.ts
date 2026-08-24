@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeDividendSum,
   computeAnnualizedYield,
+  computeEntryYield,
   computeExpectedYield,
   formatPaySchedule,
   deriveNoDataReason,
@@ -86,6 +87,24 @@ describe("computeAnnualizedYield", () => {
       asOf: FIXED_NOW,
     });
     expect(result).toBe(5.6);
+  });
+});
+
+describe("computeEntryYield", () => {
+  it("매수 단가나 그 달 보유 수량이 0이면 null을 반환한다", () => {
+    expect(computeEntryYield({ amount: 5000, shares: 10, avgPrice: 0 })).toBeNull();
+    expect(computeEntryYield({ amount: 5000, shares: 0, avgPrice: 60000 })).toBeNull();
+  });
+
+  it("연환산 없이 이번 입금분의 원금 대비 수익률을 그대로 반환한다", () => {
+    // 주당 500원(5000/10) ÷ 매수단가 60,000원 = 0.833% (×12 하지 않음)
+    const result = computeEntryYield({ amount: 5000, shares: 10, avgPrice: 60000 });
+    expect(result).toBe(0.8);
+  });
+
+  it("분기 배당처럼 큰 금액이 한 번에 들어와도 부풀리지 않는다", () => {
+    const result = computeEntryYield({ amount: 15000, shares: 10, avgPrice: 60000 });
+    expect(result).toBe(2.5); // 1500/60000 = 2.5%
   });
 });
 
