@@ -2,7 +2,6 @@ import { Fragment } from "react";
 import { AlertTriangle, Pencil } from "lucide-react";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
-import { computeEntryYield } from "@/features/dividends/computeDividendMetrics";
 import type { DividendRow } from "@/features/dividends/queries";
 
 const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
@@ -41,15 +40,11 @@ const DividendSumBreakdown = ({ row }: { row: DividendRow }) => {
   const sorted = [...row.manualHistory].sort((a, b) => a.month.localeCompare(b.month));
   return (
     <>
-      {sorted.map((entry) => {
-        const entryYield = computeEntryYield({ amount: entry.amount, shares: entry.shares, avgPrice: row.avgPrice });
-        return (
-          <div key={entry.month} className="text-[#6b6b7b]">
-            {monthLabel(entry.month)}: {fmtWon(entry.amount)}
-            {entryYield != null && <span className="ml-1 text-[#16a34a]">({entryYield}%)</span>}
-          </div>
-        );
-      })}
+      {sorted.map((entry) => (
+        <div key={entry.month} className="text-[#6b6b7b]">
+          {monthLabel(entry.month)}: {fmtWon(entry.amount)}
+        </div>
+      ))}
       <div className="mt-0.5 border-t border-[#f4f4f5] pt-0.5 font-extrabold">
         합계: {fmtWon(row.dividendSum)}
       </div>

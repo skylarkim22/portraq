@@ -7,7 +7,6 @@ import { Button, Input } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { useSaveDividendInput, useDeleteDividendInput } from "@/features/dividends/mutations";
-import { computeEntryYield } from "@/features/dividends/computeDividendMetrics";
 import type { DividendRow } from "@/features/dividends/queries";
 
 const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
@@ -120,34 +119,26 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
             <div className="text-[11px] text-muted-foreground">아직 입력한 이력이 없습니다.</div>
           ) : (
             <div className="flex flex-col gap-1">
-              {recentHistory.map((entry) => {
-                const entryYield = computeEntryYield({
-                  amount: entry.amount,
-                  shares: entry.shares,
-                  avgPrice: row.avgPrice,
-                });
-                return (
-                  <div
-                    key={entry.month}
-                    className="flex items-center justify-between rounded-md bg-muted px-2 py-1.5 text-xs"
-                  >
-                    <span className="text-muted-foreground">{monthLabel(entry.month)}</span>
-                    <div className="flex items-center gap-2">
-                      {entryYield != null && <span className="font-semibold text-green-600">{entryYield}%</span>}
-                      <span className="font-bold">{fmtWon(entry.amount)}</span>
-                      <button
-                        type="button"
-                        aria-label={`${monthLabel(entry.month)} 배당금 삭제`}
-                        onClick={() => handleDelete(entry.month)}
-                        disabled={deleteDividendInput.isPending}
-                        className="text-muted-foreground hover:text-destructive disabled:opacity-50"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
+              {recentHistory.map((entry) => (
+                <div
+                  key={entry.month}
+                  className="flex items-center justify-between rounded-md bg-muted px-2 py-1.5 text-xs"
+                >
+                  <span className="text-muted-foreground">{monthLabel(entry.month)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{fmtWon(entry.amount)}</span>
+                    <button
+                      type="button"
+                      aria-label={`${monthLabel(entry.month)} 배당금 삭제`}
+                      onClick={() => handleDelete(entry.month)}
+                      disabled={deleteDividendInput.isPending}
+                      className="text-muted-foreground hover:text-destructive disabled:opacity-50"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>
