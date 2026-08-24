@@ -4,6 +4,8 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@portraq/ui";
+import { formatAssetTicker } from "@portraq/lib/utils";
+import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { useSaveDividendInput } from "@/features/dividends/mutations";
 import type { DividendRow } from "@/features/dividends/queries";
 
@@ -25,25 +27,25 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
   const thisMonth = currentMonthKey();
   const [month, setMonth] = useState(thisMonth);
   const existing = row.manualHistory.find((entry) => entry.month === month);
-  const [amount, setAmount] = useState<string>(existing ? String(existing.amount) : "");
+  const [amount, setAmount] = useState(existing?.amount ?? 0);
+  const amountInput = useNumericTextInput({ value: amount, onChange: setAmount, thousandsSeparator: true });
 
   const saveDividendInput = useSaveDividendInput();
 
   const handleMonthChange = (value: string) => {
     setMonth(value);
     const found = row.manualHistory.find((entry) => entry.month === value);
-    setAmount(found ? String(found.amount) : "");
+    setAmount(found?.amount ?? 0);
   };
 
   const handleSave = () => {
-    const parsedAmount = Number(amount);
-    if (!amount || !Number.isFinite(parsedAmount) || parsedAmount < 0) {
+    if (amount <= 0) {
       toast.error("올바른 금액을 입력해 주세요");
       return;
     }
 
     saveDividendInput.mutate(
-      { portfolioId: row.portfolioId, ticker: row.ticker, isCustom: row.isCustom, month, amount: parsedAmount },
+      { portfolioId: row.portfolioId, ticker: row.ticker, isCustom: row.isCustom, month, amount },
       {
         onSuccess: () => {
           toast.success(`${monthLabel(month)} 배당금이 저장되었습니다`);
@@ -65,12 +67,12 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
     >
       <div className="w-full max-w-[380px] rounded-3xl bg-card p-[22px]">
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="text-[15px] font-extrabold text-foreground">{row.ticker} 배당금 입력</h3>
+          <h3 className="text-[15px] font-extrabold text-foreground">{row.name} 배당금 입력</h3>
           <button type="button" aria-label="닫기" onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X size={20} />
           </button>
         </div>
-        <div className="mb-4 text-xs text-muted-foreground">{row.name}</div>
+        <div className="mb-4 text-xs text-muted-foreground">{formatAssetTicker(row.ticker, row.isCustom)}</div>
 
         <label className="mb-1.5 block text-xs font-bold text-foreground">입력할 월</label>
         <Input
@@ -81,13 +83,15 @@ export const DividendInputModal = ({ row, onClose }: DividendInputModalProps) =>
           className="mb-3"
         />
 
-        <label className="mb-1.5 block text-xs font-bold text-foreground">{monthLabel(month)} 배당금 (원)</label>
+        <label className="mb-1.5 block text-xs font-bold text-foreground">배당금 (원)</label>
         <Input
-          type="number"
-          min={0}
-          placeholder="예: 25000"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          type="text"
+          inputMode="numeric"
+          aria-label="배당금"
+          value={amountInput.text}
+          onFocus={amountInput.handleFocus}
+          onChange={(e) => amountInput.handleChange(e.target.value)}
+          onBlur={amountInput.handleBlur}
         />
         <div className="mb-4 mt-1.5 text-[11px] text-muted-foreground">
           그 달 실제로 받은 배당금 총액을 입력하세요. 같은 달을 다시 입력하면 값이 갱신됩니다.
