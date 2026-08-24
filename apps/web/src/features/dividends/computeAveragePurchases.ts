@@ -80,9 +80,18 @@ export const computeSharesTimeline = (
     const action = record.actions.find((a) => a.ticker === ticker);
     if (!action) continue;
 
-    if (action.action === "buy") shares += action.quantity;
-    else if (action.action === "sell") shares = Math.max(0, shares - action.quantity);
-    checkpoints.push({ date: record.executedAt, shares });
+    // hold는 buy/sell 이력이 없는 종목(이 앱에 등록하기 전부터 보유하던
+    // 종목 등)에서도 매 실행마다 찍힌다. 여기서 체크포인트를 남기면
+    // shares가 여전히 0인 채로 "그 시점엔 0주였다"는 잘못된 기록이 되어
+    // sharesAsOfMonth가 fallbackShares 대신 이 0을 써버린다 — 그래서
+    // buy/sell일 때만 체크포인트를 남긴다.
+    if (action.action === "buy") {
+      shares += action.quantity;
+      checkpoints.push({ date: record.executedAt, shares });
+    } else if (action.action === "sell") {
+      shares = Math.max(0, shares - action.quantity);
+      checkpoints.push({ date: record.executedAt, shares });
+    }
   }
 
   return checkpoints;

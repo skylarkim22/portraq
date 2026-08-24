@@ -128,6 +128,17 @@ describe("computeSharesTimeline", () => {
       { date: "2026-08-01T00:00:00Z", shares: 150 },
     ]);
   });
+
+  it("hold만 있는 종목(앱 등록 전부터 보유)은 0주 체크포인트를 남기지 않고 빈 배열을 반환한다", () => {
+    const result = computeSharesTimeline(
+      [
+        { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "hold", quantity: 0, pricePerShare: 0 }] },
+        { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "hold", quantity: 0, pricePerShare: 0 }] },
+      ],
+      "AAPL"
+    );
+    expect(result).toEqual([]);
+  });
 });
 
 describe("sharesAsOfMonth", () => {
