@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { computeAveragePurchases, reconcileWithActualHoldings } from "@/features/dividends/computeAveragePurchases";
+import {
+  computeAveragePurchases,
+  reconcileWithActualHoldings,
+  computeSharesTimeline,
+  sharesAsOfMonth,
+} from "@/features/dividends/computeAveragePurchases";
 
 describe("computeAveragePurchases", () => {
   it("실행 기록이 없으면 빈 Map을 반환한다", () => {
@@ -98,5 +103,50 @@ describe("reconcileWithActualHoldings", () => {
       fallbackPrice: 999,
     });
     expect(result).toEqual({ avgPrice: 100, shares: 20 });
+  });
+});
+
+describe("computeSharesTimeline", () => {
+  it("해당 티커의 실행 기록이 없으면 빈 배열을 반환한다", () => {
+    const result = computeSharesTimeline(
+      [{ executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "MSFT", action: "buy", quantity: 5, pricePerShare: 400 }] }],
+      "AAPL"
+    );
+    expect(result).toEqual([]);
+  });
+
+  it("buy/sell을 시간순으로 재생해 실행 시점마다 누적 보유 수량 체크포인트를 만든다", () => {
+    const result = computeSharesTimeline(
+      [
+        { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 100, pricePerShare: 10000 }] },
+        { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 50, pricePerShare: 12000 }] },
+      ],
+      "AAPL"
+    );
+    expect(result).toEqual([
+      { date: "2026-07-01T00:00:00Z", shares: 100 },
+      { date: "2026-08-01T00:00:00Z", shares: 150 },
+    ]);
+  });
+});
+
+describe("sharesAsOfMonth", () => {
+  it("timeline이 비어있으면 fallbackShares를 그대로 쓴다", () => {
+    expect(sharesAsOfMonth([], "2026-07", 200)).toBe(200);
+  });
+
+  it("해당 월 말일 이전 체크포인트가 없으면(등록 전부터 보유) fallbackShares를 쓴다", () => {
+    const timeline = [{ date: "2026-08-01T00:00:00Z", shares: 150 }];
+    expect(sharesAsOfMonth(timeline, "2026-07", 999)).toBe(999);
+  });
+
+  it("해당 월 말일까지의 체크포인트 중 가장 최근 값을 그 달 보유 수량으로 쓴다", () => {
+    const timeline = [
+      { date: "2026-07-01T00:00:00Z", shares: 100 },
+      { date: "2026-08-01T00:00:00Z", shares: 150 },
+    ];
+    expect(sharesAsOfMonth(timeline, "2026-07", 0)).toBe(100);
+    expect(sharesAsOfMonth(timeline, "2026-08", 0)).toBe(150);
+    expect(sharesAsOfMonth(timeline, "2026-09", 0)).toBe(150);
   });
 });

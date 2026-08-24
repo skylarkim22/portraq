@@ -17,9 +17,9 @@ describe("computeDividendSum", () => {
   it("최근 12개월 이내 입력만 합산한다", () => {
     const result = computeDividendSum(
       [
-        { month: "2026-06", amount: 100 },
-        { month: "2026-07", amount: 200 },
-        { month: "2024-01", amount: 9999 }, // 12개월 밖
+        { month: "2026-06", amount: 100, shares: 10 },
+        { month: "2026-07", amount: 200, shares: 10 },
+        { month: "2024-01", amount: 9999, shares: 10 }, // 12개월 밖
       ],
       FIXED_NOW
     );
@@ -28,45 +28,35 @@ describe("computeDividendSum", () => {
 });
 
 describe("computeAnnualizedYield", () => {
-  it("투자금이 0이면 null을 반환한다", () => {
-    expect(
-      computeAnnualizedYield({
-        manualHistory: [{ month: "2026-08", amount: 1000 }],
-        avgPrice: 0,
-        shares: 10,
-        asOf: FIXED_NOW,
-      })
-    ).toBeNull();
-    expect(
-      computeAnnualizedYield({
-        manualHistory: [{ month: "2026-08", amount: 1000 }],
-        avgPrice: 100,
-        shares: 0,
-        asOf: FIXED_NOW,
-      })
-    ).toBeNull();
+  it("매수 단가가 0이면 null을 반환한다", () => {
+    const result = computeAnnualizedYield({
+      manualHistory: [{ month: "2026-08", amount: 1000, shares: 10 }],
+      avgPrice: 0,
+      asOf: FIXED_NOW,
+    });
+    expect(result).toBeNull();
   });
 
   it("입력이 없으면 0%를 반환한다", () => {
-    const result = computeAnnualizedYield({ manualHistory: [], avgPrice: 150000, shares: 10, asOf: FIXED_NOW });
+    const result = computeAnnualizedYield({ manualHistory: [], avgPrice: 150000, asOf: FIXED_NOW });
     expect(result).toBe(0);
   });
 
-  it("12개월치가 모두 입력됐으면 배당합 ÷ 투자금과 같다", () => {
+  it("수량이 변하지 않았으면 배당합 ÷ 투자금과 같다", () => {
     const manualHistory = Array.from({ length: 12 }, (_, i) => ({
       month: `2025-${String(((i + 8) % 12) + 1).padStart(2, "0")}`,
       amount: 1250,
+      shares: 10,
     }));
-    const result = computeAnnualizedYield({ manualHistory, avgPrice: 150000, shares: 10, asOf: FIXED_NOW });
-    expect(result).toBe(1); // 15000 / 1500000 = 1%
+    const result = computeAnnualizedYield({ manualHistory, avgPrice: 150000, asOf: FIXED_NOW });
+    expect(result).toBe(1); // (1250/10)×12 / 150000 = 1%
   });
 
   it("일부 달만 입력됐으면 그 페이스를 12개월로 환산한다", () => {
-    // 이번 달 하나만 5,000원 입력 → 연환산 60,000원 ÷ 투자금 600,000원 = 10%
+    // 이번 달 하나만 5,000원(10주 기준=주당 500원) 입력 → 연환산 6,000원 ÷ 매수단가 60,000원 = 10%
     const result = computeAnnualizedYield({
-      manualHistory: [{ month: "2026-08", amount: 5000 }],
+      manualHistory: [{ month: "2026-08", amount: 5000, shares: 10 }],
       avgPrice: 60000,
-      shares: 10,
       asOf: FIXED_NOW,
     });
     expect(result).toBe(10);
@@ -75,14 +65,27 @@ describe("computeAnnualizedYield", () => {
   it("최근 12개월 밖의 입력은 환산 대상에서 제외한다", () => {
     const result = computeAnnualizedYield({
       manualHistory: [
-        { month: "2026-08", amount: 5000 },
-        { month: "2024-01", amount: 9999 }, // 12개월 밖
+        { month: "2026-08", amount: 5000, shares: 10 },
+        { month: "2024-01", amount: 9999, shares: 10 }, // 12개월 밖
       ],
       avgPrice: 60000,
-      shares: 10,
       asOf: FIXED_NOW,
     });
     expect(result).toBe(10);
+  });
+
+  it("중간에 수량이 늘어나도 매수 단가 대비 주당 배당 기준으로 왜곡 없이 계산한다", () => {
+    // 7월: 100주일 때 5,000원(주당 50원) 8월: 150주로 늘어난 뒤 7,500원(주당 50원)
+    // 두 달 다 주당 50원 페이스 → 연환산 600원 ÷ 매수단가 10,667원 ≈ 5.6%
+    const result = computeAnnualizedYield({
+      manualHistory: [
+        { month: "2026-07", amount: 5000, shares: 100 },
+        { month: "2026-08", amount: 7500, shares: 150 },
+      ],
+      avgPrice: 10667,
+      asOf: FIXED_NOW,
+    });
+    expect(result).toBe(5.6);
   });
 });
 

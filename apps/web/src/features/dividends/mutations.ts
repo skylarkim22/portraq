@@ -45,15 +45,16 @@ export const useSaveDividendInput = () => {
 
           const existingIndex = row.manualHistory.findIndex((entry) => entry.month === payload.month);
           const manualHistory = [...row.manualHistory];
-          if (existingIndex >= 0) manualHistory[existingIndex] = { month: payload.month, amount: payload.amount };
-          else manualHistory.push({ month: payload.month, amount: payload.amount });
+          // 기존 달을 수정하는 거면 서버에서 계산해둔 그 달의 실제 보유
+          // 수량(shares)을 그대로 유지한다. 새로 추가하는 달이면 정확한
+          // 값은 refetch 후에나 알 수 있으니 현재 보유 수량으로 근사한다.
+          const shares = existingIndex >= 0 ? manualHistory[existingIndex].shares : row.shares;
+          const updatedEntry = { month: payload.month, amount: payload.amount, shares };
+          if (existingIndex >= 0) manualHistory[existingIndex] = updatedEntry;
+          else manualHistory.push(updatedEntry);
 
           const dividendSum = computeDividendSum(manualHistory);
-          const annualizedYield = computeAnnualizedYield({
-            manualHistory,
-            avgPrice: row.avgPrice,
-            shares: row.shares,
-          });
+          const annualizedYield = computeAnnualizedYield({ manualHistory, avgPrice: row.avgPrice });
 
           return { ...row, manualHistory, dividendSum, annualizedYield };
         })
@@ -105,11 +106,7 @@ export const useDeleteDividendInput = () => {
 
           const manualHistory = row.manualHistory.filter((entry) => entry.month !== payload.month);
           const dividendSum = computeDividendSum(manualHistory);
-          const annualizedYield = computeAnnualizedYield({
-            manualHistory,
-            avgPrice: row.avgPrice,
-            shares: row.shares,
-          });
+          const annualizedYield = computeAnnualizedYield({ manualHistory, avgPrice: row.avgPrice });
 
           return { ...row, manualHistory, dividendSum, annualizedYield };
         })

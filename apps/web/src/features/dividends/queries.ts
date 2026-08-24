@@ -3,7 +3,12 @@ import type { ActionItem, Market } from "@portraq/lib/types";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import { fetchLatestClosePrices } from "@/features/portfolio/queries";
 import type { SupabaseClientGetter } from "@/lib/supabase/types";
-import { computeAveragePurchases, reconcileWithActualHoldings } from "@/features/dividends/computeAveragePurchases";
+import {
+  computeAveragePurchases,
+  reconcileWithActualHoldings,
+  computeSharesTimeline,
+  sharesAsOfMonth,
+} from "@/features/dividends/computeAveragePurchases";
 import type { DividendInputEntry } from "@/features/dividends/computeDividendTrend";
 import {
   computeDividendSum,
@@ -96,21 +101,23 @@ export const dividendQueries = {
         if (dividendInputsResult.error) throw dividendInputsResult.error;
         if (assetDividendsResult.error) throw assetDividendsResult.error;
 
-        const executionsByPortfolio = new Map<string, { actions: ActionItem[] }[]>();
+        const executionsByPortfolio = new Map<string, { executedAt: string; actions: ActionItem[] }[]>();
         for (const record of executionResult.data) {
           const list = executionsByPortfolio.get(record.portfolio_id) ?? [];
-          list.push({ actions: record.actions as ActionItem[] });
+          list.push({ executedAt: record.executed_at, actions: record.actions as ActionItem[] });
           executionsByPortfolio.set(record.portfolio_id, list);
         }
 
-        const manualHistoryByHolding = new Map<string, DividendInputEntry[]>();
+        // shares는 아직 모른다(티커별 timeline이 필요) — 여기서는 월/금액만
+        // 모아두고, 아래 rows 루프에서 종목별 timeline을 만들어 채운다.
+        const rawManualHistoryByHolding = new Map<string, { month: string; amount: number }[]>();
         for (const row of dividendInputsResult.data) {
           const ticker = row.asset_ticker ?? row.custom_asset_id;
           if (!ticker) continue;
           const key = holdingKey(row.portfolio_id, ticker);
-          const list = manualHistoryByHolding.get(key) ?? [];
+          const list = rawManualHistoryByHolding.get(key) ?? [];
           list.push({ month: String(row.month).slice(0, 7), amount: row.amount });
-          manualHistoryByHolding.set(key, list);
+          rawManualHistoryByHolding.set(key, list);
         }
 
         const dividendRecordsByTicker = new Map<string, AssetDividendRecord[]>();
@@ -122,7 +129,8 @@ export const dividendQueries = {
 
         const rows: DividendRow[] = [];
         for (const portfolio of portfolios) {
-          const averagePurchases = computeAveragePurchases(executionsByPortfolio.get(portfolio.id) ?? []);
+          const executionRecords = executionsByPortfolio.get(portfolio.id) ?? [];
+          const averagePurchases = computeAveragePurchases(executionRecords);
 
           for (const holding of portfolio.portfolio_assets) {
             const ticker = holding.asset_ticker ?? holding.custom_asset_id;
@@ -138,12 +146,21 @@ export const dividendQueries = {
               actualShares: holding.shares,
               fallbackPrice: holding.current_price,
             });
-            const manualHistory = manualHistoryByHolding.get(holdingKey(portfolio.id, ticker)) ?? [];
+
+            // 새 스키마 없이 execution_records만 재생해 입력월마다 실제
+            // 보유 수량을 추정한다(연 환산 수익률이 중간 증좌로 왜곡되는
+            // 문제 대응). timeline 이전 달은 현재 보유 수량으로 폴백한다.
+            const sharesTimeline = computeSharesTimeline(executionRecords, ticker);
+            const rawManualHistory = rawManualHistoryByHolding.get(holdingKey(portfolio.id, ticker)) ?? [];
+            const manualHistory: DividendInputEntry[] = rawManualHistory.map((entry) => ({
+              ...entry,
+              shares: sharesAsOfMonth(sharesTimeline, entry.month, purchase.shares),
+            }));
+
             const dividendSum = computeDividendSum(manualHistory);
             const annualizedYield = computeAnnualizedYield({
               manualHistory,
               avgPrice: purchase.avgPrice,
-              shares: purchase.shares,
             });
 
             const currentPrice = holding.asset_ticker ? (latestClosePrices.get(holding.asset_ticker) ?? 0) : 0;

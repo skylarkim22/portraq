@@ -1,4 +1,7 @@
-export type DividendInputEntry = { month: string; amount: number };
+// shares = 그 달에 실제로 보유하고 있던 수량 추정치(computeSharesTimeline
+// 기반, computeAveragePurchases.ts). 스키마에 저장된 값이 아니라 조회
+// 시점에 execution_records로부터 매번 다시 계산된다.
+export type DividendInputEntry = { month: string; amount: number; shares: number };
 
 export type DividendDeclineSignal = { dropPercent: number };
 
@@ -8,7 +11,7 @@ export type DividendDeclineSignal = { dropPercent: number };
 export const DIVIDEND_DECLINE_THRESHOLD = 0.05;
 
 export const computeDividendDeclineSignal = (
-  history: DividendInputEntry[]
+  history: Pick<DividendInputEntry, "month" | "amount">[]
 ): DividendDeclineSignal | null => {
   if (history.length < 2) return null;
 

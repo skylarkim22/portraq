@@ -24,30 +24,33 @@ export const computeDividendSum = (
 ): number =>
   trailing12MonthEntries(manualHistory, asOf).reduce((sum, entry) => sum + entry.amount, 0);
 
-// 연환산수익률 = (최근 12개월 입력분 합 ÷ 입력된 개월 수 × 12) ÷ 투자금.
-// 아직 1~2개월치만 입력해도 그 페이스를 12개월로 환산해 기대 배당률과
-// 바로 비교할 수 있게 한다 — 12개월 전부 채워지면 배당합을 그대로 쓰는
-// 것과 같아진다. 투자금이 0이거나 입력이 아예 없으면 계산할 수 없다.
+// 연환산수익률 = 입력월별 "그 달 실제 보유 수량 기준 주당 배당금"을
+// 평균 낸 값을 12개월로 환산 ÷ 매수 단가(avgPrice).
+// 리밸런싱으로 중간에 수량이 늘어나면(예: 100주 → 150주) 예전 달의
+// 배당 실수령액은 더 작은 수량 기준이라, 늘어난 현재 투자금(avgPrice×
+// 현재shares)으로 그냥 나누면 수익률이 실제보다 낮게 나온다. 각 입력월의
+// 배당금을 "그 달 당시 보유 수량"(entry.shares, computeSharesTimeline
+// 기반)으로 먼저 나눠 주당 배당금으로 정규화한 뒤 평균·연환산하면, 수량
+// 변화와 무관하게 매수 단가 대비 일관된 수익률이 나온다. avgPrice가
+// 0이거나(=보유 없음) 입력이 아예 없으면 계산할 수 없다.
 export const computeAnnualizedYield = ({
   manualHistory,
   avgPrice,
-  shares,
   asOf = new Date(),
 }: {
   manualHistory: DividendInputEntry[];
   avgPrice: number;
-  shares: number;
   asOf?: Date;
 }): number | null => {
-  const invested = avgPrice * shares;
-  if (invested <= 0) return null;
+  if (avgPrice <= 0) return null;
 
-  const entries = trailing12MonthEntries(manualHistory, asOf);
+  const entries = trailing12MonthEntries(manualHistory, asOf).filter((entry) => entry.shares > 0);
   if (entries.length === 0) return 0;
 
-  const sum = entries.reduce((total, entry) => total + entry.amount, 0);
-  const annualizedSum = (sum / entries.length) * 12;
-  return Math.round((annualizedSum / invested) * 1000) / 10;
+  const perShareAmounts = entries.map((entry) => entry.amount / entry.shares);
+  const avgPerShareMonth = perShareAmounts.reduce((sum, value) => sum + value, 0) / perShareAmounts.length;
+  const annualizedPerShare = avgPerShareMonth * 12;
+  return Math.round((annualizedPerShare / avgPrice) * 1000) / 10;
 };
 
 // 기대 배당률 = asset_dividends의 최근 12개월 주당 배당금 합 ÷ 현재가.

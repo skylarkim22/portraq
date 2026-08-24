@@ -167,7 +167,7 @@ export const DividendTable = ({ rows, grouped, onEditRow }: DividendTableProps) 
             </th>
             <th
               className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]"
-              title="입력된 개월수 기준 12개월로 환산한 배당금 ÷ 투자금(매수가×수량)"
+              title="입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가"
             >
               연 환산 수익률
             </th>

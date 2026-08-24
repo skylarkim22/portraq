@@ -61,3 +61,49 @@ export const reconcileWithActualHoldings = ({
   const totalCost = computedAvgPrice * computedShares + fallbackPrice * preExistingShares;
   return { avgPrice: totalCost / actualShares, shares: actualShares };
 };
+
+export type SharesCheckpoint = { date: string; shares: number };
+
+// 특정 티커에 대해 execution_records를 시간순으로 재생하며, 각 실행 시점
+// 직후의 누적 보유 수량 체크포인트를 만든다. dividend_inputs의 입력월마다
+// 실제로 몇 주를 보유하고 있었는지, 새 컬럼 없이 이미 저장된 리밸런싱
+// 실행 기록만으로 추정할 때 쓴다(연 환산 수익률이 중간에 수량이 늘어난
+// 것 때문에 왜곡되는 문제 대응).
+export const computeSharesTimeline = (
+  orderedExecutionRecords: { executedAt: string; actions: ActionItem[] }[],
+  ticker: string
+): SharesCheckpoint[] => {
+  let shares = 0;
+  const checkpoints: SharesCheckpoint[] = [];
+
+  for (const record of orderedExecutionRecords) {
+    const action = record.actions.find((a) => a.ticker === ticker);
+    if (!action) continue;
+
+    if (action.action === "buy") shares += action.quantity;
+    else if (action.action === "sell") shares = Math.max(0, shares - action.quantity);
+    checkpoints.push({ date: record.executedAt, shares });
+  }
+
+  return checkpoints;
+};
+
+// monthKey("YYYY-MM") 말일 시점까지 실행된 기록 중 가장 최근 체크포인트를
+// 그 달의 보유 수량으로 추정한다. 그 이전에 실행 기록이 전혀 없으면(이 앱에
+// 등록하기 전부터 보유하던 종목 등) fallbackShares(보통 현재 실제 보유
+// 수량)를 그 달에도 이미 갖고 있었다는 가정으로 대신 쓴다.
+export const sharesAsOfMonth = (
+  timeline: SharesCheckpoint[],
+  monthKey: string,
+  fallbackShares: number
+): number => {
+  const [year, month] = monthKey.split("-").map(Number);
+  const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
+  let shares: number | null = null;
+  for (const checkpoint of timeline) {
+    if (new Date(checkpoint.date) > monthEnd) break;
+    shares = checkpoint.shares;
+  }
+  return shares ?? fallbackShares;
+};
