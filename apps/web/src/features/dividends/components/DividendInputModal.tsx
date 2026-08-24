@@ -7,16 +7,13 @@ import { Button, Input } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { useNumericTextInput } from "@/lib/useNumericTextInput";
 import { useSaveDividendInput, useDeleteDividendInput } from "@/features/dividends/mutations";
+import { fmtWon, monthLabel } from "@/features/dividends/formatDividend";
 import type { DividendRow } from "@/features/dividends/queries";
-
-const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
 
 const currentMonthKey = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
-
-const monthLabel = (monthKey: string) => monthKey.replace("-", ".");
 
 type DividendInputModalProps = {
   row: DividendRow;

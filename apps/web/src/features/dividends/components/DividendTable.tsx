@@ -3,23 +3,10 @@ import { AlertTriangle, Pencil } from "lucide-react";
 import { InfoPopover } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
+import { fmtWon, monthLabel } from "@/features/dividends/formatDividend";
+import { groupByPortfolio } from "@/features/dividends/groupByPortfolio";
+import { NoData } from "@/features/dividends/components/NoData";
 import type { DividendRow } from "@/features/dividends/queries";
-
-const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
-
-const monthLabel = (monthKey: string) => monthKey.replace("-", ".");
-
-const noDataTooltip = (reason: DividendRow["noDataReason"]) => {
-  if (reason === "policy") return "이 종목은 배당/분배금을 지급하지 않는 정책입니다.";
-  if (reason === "new") return "최근 편입되어 아직 수집된 배당 이력이 없습니다.";
-  return "데이터 없음";
-};
-
-const NoData = ({ reason }: { reason: DividendRow["noDataReason"] }) => (
-  <span title={noDataTooltip(reason)} className="cursor-help text-[#c1c1c8]">
-    -
-  </span>
-);
 
 const DeclineIcon = ({ row }: { row: DividendRow }) => {
   const signal = computeDividendDeclineSignal(row.manualHistory);
@@ -109,24 +96,6 @@ const GroupHeaderRow = ({ portfolioName, count }: { portfolioName: string; count
     </td>
   </tr>
 );
-
-type DividendGroup = { portfolioName: string; rows: DividendRow[] };
-
-const groupByPortfolio = (rows: DividendRow[]): DividendGroup[] => {
-  const order: string[] = [];
-  const groups = new Map<string, DividendRow[]>();
-  for (const row of rows) {
-    if (!groups.has(row.portfolioId)) {
-      groups.set(row.portfolioId, []);
-      order.push(row.portfolioId);
-    }
-    groups.get(row.portfolioId)?.push(row);
-  }
-  return order.map((portfolioId) => {
-    const groupRows = groups.get(portfolioId) ?? [];
-    return { portfolioName: groupRows[0]?.portfolioName ?? "", rows: groupRows };
-  });
-};
 
 type DividendTableProps = {
   rows: DividendRow[];

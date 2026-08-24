@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeAveragePurchases,
   reconcileWithActualHoldings,
-  computeSharesTimeline,
+  computeSharesTimelines,
   sharesAsOfMonth,
 } from "@/features/dividends/computeAveragePurchases";
 
@@ -117,52 +117,49 @@ describe("reconcileWithActualHoldings", () => {
   });
 });
 
-describe("computeSharesTimeline", () => {
-  it("해당 티커의 실행 기록이 없으면 빈 배열을 반환한다", () => {
-    const result = computeSharesTimeline(
-      [{ executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "MSFT", action: "buy", quantity: 5, pricePerShare: 400 }] }],
-      "AAPL"
-    );
-    expect(result).toEqual([]);
+describe("computeSharesTimelines", () => {
+  it("실행 기록이 없으면 빈 Map을 반환한다", () => {
+    expect(computeSharesTimelines([]).size).toBe(0);
   });
 
-  it("buy/sell을 시간순으로 재생해 실행 시점마다 누적 보유 수량 체크포인트를 만든다", () => {
-    const result = computeSharesTimeline(
-      [
-        { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 100, pricePerShare: 10000 }] },
-        { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 50, pricePerShare: 12000 }] },
-      ],
-      "AAPL"
-    );
-    expect(result).toEqual([
+  it("buy/sell을 시간순으로 한 번만 재생해 티커별 누적 보유 수량 체크포인트를 만든다", () => {
+    const result = computeSharesTimelines([
+      {
+        executedAt: "2026-07-01T00:00:00Z",
+        actions: [
+          { ticker: "AAPL", action: "buy", quantity: 100, pricePerShare: 10000 },
+          { ticker: "MSFT", action: "buy", quantity: 5, pricePerShare: 400 },
+        ],
+      },
+      { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 50, pricePerShare: 12000 }] },
+    ]);
+
+    expect(result.get("AAPL")).toEqual([
       { date: "2026-07-01T00:00:00Z", shares: 100 },
       { date: "2026-08-01T00:00:00Z", shares: 150 },
     ]);
+    expect(result.get("MSFT")).toEqual([{ date: "2026-07-01T00:00:00Z", shares: 5 }]);
   });
 
   it("실제 저장 형식대로 매도 quantity가 음수여도 체크포인트가 올바르게 줄어든다", () => {
-    const result = computeSharesTimeline(
-      [
-        { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 100, pricePerShare: 10000 }] },
-        { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "sell", quantity: -30, pricePerShare: 12000 }] },
-      ],
-      "AAPL"
-    );
-    expect(result).toEqual([
+    const result = computeSharesTimelines([
+      { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "buy", quantity: 100, pricePerShare: 10000 }] },
+      { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "sell", quantity: -30, pricePerShare: 12000 }] },
+    ]);
+
+    expect(result.get("AAPL")).toEqual([
       { date: "2026-07-01T00:00:00Z", shares: 100 },
       { date: "2026-08-01T00:00:00Z", shares: 70 },
     ]);
   });
 
-  it("hold만 있는 종목(앱 등록 전부터 보유)은 0주 체크포인트를 남기지 않고 빈 배열을 반환한다", () => {
-    const result = computeSharesTimeline(
-      [
-        { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "hold", quantity: 0, pricePerShare: 0 }] },
-        { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "hold", quantity: 0, pricePerShare: 0 }] },
-      ],
-      "AAPL"
-    );
-    expect(result).toEqual([]);
+  it("hold만 있는 종목(앱 등록 전부터 보유)은 0주 체크포인트를 남기지 않고 Map에 아예 등록되지 않는다", () => {
+    const result = computeSharesTimelines([
+      { executedAt: "2026-07-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "hold", quantity: 0, pricePerShare: 0 }] },
+      { executedAt: "2026-08-01T00:00:00Z", actions: [{ ticker: "AAPL", action: "hold", quantity: 0, pricePerShare: 0 }] },
+    ]);
+
+    expect(result.get("AAPL")).toBeUndefined();
   });
 });
 

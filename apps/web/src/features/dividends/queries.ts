@@ -6,7 +6,7 @@ import type { SupabaseClientGetter } from "@/lib/supabase/types";
 import {
   computeAveragePurchases,
   reconcileWithActualHoldings,
-  computeSharesTimeline,
+  computeSharesTimelines,
   sharesAsOfMonth,
 } from "@/features/dividends/computeAveragePurchases";
 import type { DividendInputEntry } from "@/features/dividends/computeDividendTrend";
@@ -131,6 +131,9 @@ export const dividendQueries = {
         for (const portfolio of portfolios) {
           const executionRecords = executionsByPortfolio.get(portfolio.id) ?? [];
           const averagePurchases = computeAveragePurchases(executionRecords);
+          // 포트폴리오당 한 번만 execution_records를 재생해 모든 보유
+          // 종목의 timeline을 동시에 만든다(종목마다 반복 재생하지 않음).
+          const sharesTimelines = computeSharesTimelines(executionRecords);
 
           for (const holding of portfolio.portfolio_assets) {
             const ticker = holding.asset_ticker ?? holding.custom_asset_id;
@@ -150,7 +153,7 @@ export const dividendQueries = {
             // 새 스키마 없이 execution_records만 재생해 입력월마다 실제
             // 보유 수량을 추정한다(연 환산 수익률이 중간 증좌로 왜곡되는
             // 문제 대응). timeline 이전 달은 현재 보유 수량으로 폴백한다.
-            const sharesTimeline = computeSharesTimeline(executionRecords, ticker);
+            const sharesTimeline = sharesTimelines.get(ticker) ?? [];
             const rawManualHistory = rawManualHistoryByHolding.get(holdingKey(portfolio.id, ticker)) ?? [];
             const manualHistory: DividendInputEntry[] = rawManualHistory.map((entry) => ({
               ...entry,

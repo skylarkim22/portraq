@@ -69,40 +69,42 @@ export const reconcileWithActualHoldings = ({
 
 export type SharesCheckpoint = { date: string; shares: number };
 
-// 특정 티커에 대해 execution_records를 시간순으로 재생하며, 각 실행 시점
+// execution_records를 시간순으로 한 번만 재생하며, 티커별로 각 실행 시점
 // 직후의 누적 보유 수량 체크포인트를 만든다. dividend_inputs의 입력월마다
 // 실제로 몇 주를 보유하고 있었는지, 새 컬럼 없이 이미 저장된 리밸런싱
 // 실행 기록만으로 추정할 때 쓴다(연 환산 수익률이 중간에 수량이 늘어난
-// 것 때문에 왜곡되는 문제 대응).
-export const computeSharesTimeline = (
-  orderedExecutionRecords: { executedAt: string; actions: ActionItem[] }[],
-  ticker: string
-): SharesCheckpoint[] => {
-  let shares = 0;
-  const checkpoints: SharesCheckpoint[] = [];
+// 것 때문에 왜곡되는 문제 대응). 보유 종목마다 이 함수를 따로 호출하면
+// execution_records를 종목 수만큼 반복 재생하게 되므로, 한 포트폴리오당
+// 한 번만 호출해 모든 티커의 timeline을 동시에 만든다.
+export const computeSharesTimelines = (
+  orderedExecutionRecords: { executedAt: string; actions: ActionItem[] }[]
+): Map<string, SharesCheckpoint[]> => {
+  const sharesByTicker = new Map<string, number>();
+  const timelines = new Map<string, SharesCheckpoint[]>();
 
   for (const record of orderedExecutionRecords) {
-    const action = record.actions.find((a) => a.ticker === ticker);
-    if (!action) continue;
+    for (const action of record.actions) {
+      // hold는 buy/sell 이력이 없는 종목(이 앱에 등록하기 전부터 보유하던
+      // 종목 등)에서도 매 실행마다 찍힌다. 여기서 체크포인트를 남기면
+      // shares가 여전히 0인 채로 "그 시점엔 0주였다"는 잘못된 기록이 되어
+      // sharesAsOfMonth가 fallbackShares 대신 이 0을 써버린다 — 그래서
+      // buy/sell일 때만 체크포인트를 남긴다.
+      if (action.action !== "buy" && action.action !== "sell") continue;
 
-    // hold는 buy/sell 이력이 없는 종목(이 앱에 등록하기 전부터 보유하던
-    // 종목 등)에서도 매 실행마다 찍힌다. 여기서 체크포인트를 남기면
-    // shares가 여전히 0인 채로 "그 시점엔 0주였다"는 잘못된 기록이 되어
-    // sharesAsOfMonth가 fallbackShares 대신 이 0을 써버린다 — 그래서
-    // buy/sell일 때만 체크포인트를 남긴다.
-    // execution_records.actions[].quantity는 부호 있는 값이다(매도면
-    // 음수). 절대값(매매 수량)만 쓰고 방향은 action.action으로 판단한다.
-    const quantity = Math.abs(action.quantity);
-    if (action.action === "buy") {
-      shares += quantity;
-      checkpoints.push({ date: record.executedAt, shares });
-    } else if (action.action === "sell") {
-      shares = Math.max(0, shares - quantity);
-      checkpoints.push({ date: record.executedAt, shares });
+      // execution_records.actions[].quantity는 부호 있는 값이다(매도면
+      // 음수). 절대값(매매 수량)만 쓰고 방향은 action.action으로 판단한다.
+      const quantity = Math.abs(action.quantity);
+      const current = sharesByTicker.get(action.ticker) ?? 0;
+      const next = action.action === "buy" ? current + quantity : Math.max(0, current - quantity);
+      sharesByTicker.set(action.ticker, next);
+
+      const timeline = timelines.get(action.ticker) ?? [];
+      timeline.push({ date: record.executedAt, shares: next });
+      timelines.set(action.ticker, timeline);
     }
   }
 
-  return checkpoints;
+  return timelines;
 };
 
 // monthKey("YYYY-MM") 말일 시점까지 실행된 기록 중 가장 최근 체크포인트를

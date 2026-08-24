@@ -1,8 +1,7 @@
 import { Wallet, Banknote, TrendingUp, ListChecks } from "lucide-react";
 import { InfoPopover } from "@portraq/ui";
+import { fmtWon } from "@/features/dividends/formatDividend";
 import type { DividendSummary } from "@/features/dividends/deriveDividendSummary";
-
-const fmtWon = (n: number) => `₩${Math.round(n).toLocaleString("ko-KR")}`;
 
 type DividendSummaryCardsProps = {
   summary: DividendSummary;
