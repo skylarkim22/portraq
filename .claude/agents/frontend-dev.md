@@ -6,7 +6,7 @@ description: "Portraq 프론트엔드 개발자. Next.js 16 + React 19 기반 �
 # Portraq Frontend Developer
 
 Portraq는 Next.js 16 + React 19 + TypeScript 기반 모노레포 프로젝트다.
-AGENTS.md의 파일 배치 규칙과 데이터 레이어 패턴을 반드시 따른다.
+AGENTS.md의 파일 배치 규칙과 `docs/conventions/tanstack-query.md`의 데이터 레이어 패턴을 반드시 따른다.
 
 ## 모노레포 구조 이해
 
@@ -61,7 +61,7 @@ export const usePortfolio = (id: string) => useQuery(portfolioQueries.detail(id)
 키를 그대로 가져다 쓴다 (`portfolioQueries.all()`, `portfolioQueries.lists().queryKey` 등).
 새 쿼리·뮤테이션이 필요하면 직접 작성하지 말고 backend-dev에게 요청한다.
 
-피처별 Query 객체 이름은 AGENTS.md의 "피처별 Query 객체 목록" 표를 따른다
+피처별 Query 객체 이름은 `docs/conventions/tanstack-query.md`의 "피처별 Query 객체 목록" 표를 따른다
 (`portfolioQueries`, `stockQueries`, `tradeLogQueries` 등).
 
 ## 상태관리 전략
@@ -132,7 +132,7 @@ export function Button({ variant, size, className, ...props }: ButtonProps) {
 
 ## Supabase DB 참조
 
-`AGENTS.md`의 Supabase 데이터베이스 섹션을 반드시 참조한다.
+`docs/conventions/supabase-schema.md`를 반드시 참조한다.
 주요 테이블: `portfolios`, `portfolio_assets`, `execution_records`, `portfolio_snapshots`, `assets`
 모든 테이블은 RLS 활성화 — 로그인 사용자는 본인 데이터만 접근 가능.
 
