@@ -390,11 +390,19 @@ Component + props**로 구현한다(#86).
 `portfolioQueries.lists()`/`rebalancingHistoryQueries.list()`의 `queryFn` 본체를
 그대로 뽑아낸 재사용 함수다 — `/portfolio`, `/rebalancing-history` 등 기존
 TanStack 기반 소비자는 그대로 이 함수를 `queryFn`으로 감싸 쓰고, `/home`의
-`page.tsx`는 이 함수들을 직접 `await`해 결과를 props로 넘긴다. `getQueryClient`/
-`HydrationBoundary`/`dehydrate`가 전혀 필요 없어 `/home`은 이 라우트들 중
-유일하게 TanStack Query와 무관하다. `SummaryTiles`만 카운트업 애니메이션
-(`useCountUp`) 때문에 `"use client"`로 남고, `PortfolioPreviewSection`/
-`RecentHistorySection`은 순수 Server Component다.
+`page.tsx`는 이 함수들을 직접 `await`해 결과를 props로 넘긴다. `HomePage`와
+그 하위(`PortfolioPreviewSection`/`RecentHistorySection`)는 TanStack Query와
+무관하게 순수 props로만 렌더된다. `SummaryTiles`만 카운트업 애니메이션
+(`useCountUp`) 때문에 `"use client"`로 남는다.
+
+다만 `(app)/layout.tsx`의 사이드바(`PortfolioNavItem`)가 브라우저 QueryClient
+싱글턴에서 같은 `portfolioQueries.lists()` 쿼리 키를 구독하고 있어(#86 리뷰에서
+발견), `/home`의 `page.tsx`는 `getQueryClient()`로 얻은 `QueryClient`에
+`queryClient.setQueryData(portfolioQueries.lists().queryKey, portfolios)`로
+이미 가져온 결과를 심어준 뒤 `<HydrationBoundary>`로 감싼다 — 페이지 본문은
+여전히 props로 그리되, 사이드바가 같은 데이터를 위해 별도로 재요청하지
+않도록 캐시만 대신 채워주는 용도다. `rebalancingHistoryQueries`는 이런
+공유 소비자가 없어 시딩이 필요 없다.
 
 이 패턴은 "화면에 인라인 뮤테이션이 없고 다른 화면 변경에 즉시 반응할 필요도
 없다"는 조건을 만족할 때만 적용한다 — 그 조건이 깨지면(예: 나중에 홈에 삭제
