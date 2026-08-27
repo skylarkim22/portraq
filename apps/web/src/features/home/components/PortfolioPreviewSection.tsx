@@ -6,24 +6,6 @@ import { PortfolioListItem } from "@/features/portfolio/components/PortfolioList
 
 const PORTFOLIO_PREVIEW_LIMIT = 3;
 
-export const PortfolioPreviewSkeleton = () => (
-  <div data-testid="portfolio-preview-skeleton" className="flex flex-col gap-3">
-    {Array.from({ length: PORTFOLIO_PREVIEW_LIMIT }).map((_, index) => (
-      <Card key={index} className="flex flex-col gap-3 p-5">
-        <div>
-          <div className="mb-1.5 h-[15px] w-32 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-        </div>
-        <div className="h-[7px] w-full animate-pulse rounded bg-muted" />
-        <div className="flex items-center justify-between">
-          <div className="h-5 w-12 animate-pulse rounded-full bg-muted" />
-          <div className="h-4 w-16 animate-pulse rounded bg-muted" />
-        </div>
-      </Card>
-    ))}
-  </div>
-);
-
 type PortfolioPreviewSectionProps = {
   portfolios: PortfolioSummary[];
 };
