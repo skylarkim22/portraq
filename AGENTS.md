@@ -313,7 +313,7 @@ export const useSavePortfolio = () => {
 ### 서버 프리페치(SSR) 패턴
 
 Server Component에서 미리 데이터를 가져와 클라이언트에 그대로 넘겨줘야 하는
-라우트(현재 `/home`, `/portfolio`, `/portfolio/[id]`, `/rebalancing-history`,
+라우트(현재 `/portfolio`, `/portfolio/[id]`, `/rebalancing-history`,
 `/templates`)는 아래 패턴을 따른다.
 
 `queries.ts`의 해당 항목은 Supabase 클라이언트를 주입받도록
@@ -376,6 +376,29 @@ export default PortfolioPage
 아직 어떤 라우트에서도 서버 prefetch되지 않는 피처(`auth`, `stocks`, `trade-log`)는
 `getClient` 파라미터를 추가하지 않는다 — 실제로 Server Component에서 prefetch가
 필요해지는 시점에 이 패턴을 적용한다.
+
+#### 예외: 클라이언트 반응성이 필요 없는 화면 — `/home`
+
+`/home`의 `SummaryTiles`/`PortfolioPreviewSection`/`RecentHistorySection`은 이
+페이지 안에서 뮤테이션(삭제·수정 등 인라인 액션)이 전혀 없는 읽기 전용 표시
+컴포넌트다. 다른 화면의 뮤테이션에 즉시 반응해야 할 이유가 없어서, 이 셋은
+TanStack Query(`useQuery`/`HydrationBoundary`)를 거치지 않고 **Server
+Component + props**로 구현한다(#86).
+
+`fetchPortfolioList(getClient)`/`fetchRebalancingHistoryPage(filters, getClient, pageParam?)`
+(각각 `features/portfolio/queries.ts`, `features/rebalancing-history/queries.ts`)가
+`portfolioQueries.lists()`/`rebalancingHistoryQueries.list()`의 `queryFn` 본체를
+그대로 뽑아낸 재사용 함수다 — `/portfolio`, `/rebalancing-history` 등 기존
+TanStack 기반 소비자는 그대로 이 함수를 `queryFn`으로 감싸 쓰고, `/home`의
+`page.tsx`는 이 함수들을 직접 `await`해 결과를 props로 넘긴다. `getQueryClient`/
+`HydrationBoundary`/`dehydrate`가 전혀 필요 없어 `/home`은 이 라우트들 중
+유일하게 TanStack Query와 무관하다. `SummaryTiles`만 카운트업 애니메이션
+(`useCountUp`) 때문에 `"use client"`로 남고, `PortfolioPreviewSection`/
+`RecentHistorySection`은 순수 Server Component다.
+
+이 패턴은 "화면에 인라인 뮤테이션이 없고 다른 화면 변경에 즉시 반응할 필요도
+없다"는 조건을 만족할 때만 적용한다 — 그 조건이 깨지면(예: 나중에 홈에 삭제
+버튼이 추가되면) 위의 TanStack 기반 패턴으로 되돌린다.
 
 ### Query 무효화 범위
 

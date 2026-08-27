@@ -1,28 +1,17 @@
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { HomePage } from "@/features/home/components/HomePage";
-import { portfolioQueries } from "@/features/portfolio/queries";
-import { rebalancingHistoryQueries } from "@/features/rebalancing-history/queries";
-import { getQueryClient } from "@/lib/getQueryClient";
+import { fetchPortfolioList } from "@/features/portfolio/queries";
+import { fetchRebalancingHistoryPage } from "@/features/rebalancing-history/queries";
 import { createClient } from "@/lib/supabase/server";
 
-const Home = async () => {
-  const queryClient = getQueryClient();
+const RECENT_HISTORY_FILTERS = { portfolioId: null, dateFrom: null, dateTo: null };
 
-  await Promise.all([
-    queryClient.prefetchQuery(portfolioQueries.lists(createClient)),
-    queryClient.prefetchInfiniteQuery(
-      rebalancingHistoryQueries.list(
-        { portfolioId: null, dateFrom: null, dateTo: null },
-        createClient
-      )
-    ),
+const Home = async () => {
+  const [portfolios, historyPage] = await Promise.all([
+    fetchPortfolioList(createClient),
+    fetchRebalancingHistoryPage(RECENT_HISTORY_FILTERS, createClient),
   ]);
 
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <HomePage />
-    </HydrationBoundary>
-  );
+  return <HomePage portfolios={portfolios} recentHistoryRecords={historyPage.records} />;
 };
 
 export default Home;

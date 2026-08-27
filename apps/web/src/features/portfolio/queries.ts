@@ -86,61 +86,68 @@ export const fetchLatestClosePrices = async (supabase: SupabaseClient, tickers: 
   return latestByTicker;
 };
 
+// portfolioQueries.lists()의 queryFn 본체. TanStack Query 캐시를 거치지 않고
+// 데이터가 필요한 곳(예: /home의 서버 컴포넌트가 클라이언트 훅 없이 직접
+// fetch하는 경우)에서도 재사용할 수 있도록 별도 함수로 뺐다.
+export const fetchPortfolioList = async (
+  getClient: SupabaseClientGetter
+): Promise<PortfolioSummary[]> => {
+  const supabase = await getClient();
+  const { data, error } = await supabase
+    .from("portfolios")
+    .select(
+      "id, name, updated_at, portfolio_assets(asset_ticker, custom_asset_id, ratio, shares, current_price, sort_order, assets(name, market, color), custom_assets(name, market, color)), execution_records(executed_at, actions)"
+    )
+    .order("updated_at", { ascending: false })
+    .order("executed_at", { referencedTable: "execution_records", ascending: false })
+    .limit(1, { referencedTable: "execution_records" });
+
+  if (error) throw error;
+
+  const heldTickers = [
+    ...new Set(
+      data.flatMap((row) => row.portfolio_assets.map((asset) => asset.asset_ticker).filter((t) => t !== null))
+    ),
+  ];
+  const latestClosePrices = await fetchLatestClosePrices(supabase, heldTickers);
+
+  return data.map((row) => {
+    const assets: PortfolioCardAsset[] = row.portfolio_assets
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((asset) => {
+        const info = pickAssetInfo(asset.assets, asset.custom_assets);
+        return {
+          ticker: asset.asset_ticker ?? asset.custom_asset_id,
+          market: info.market as Market,
+          ratio: asset.ratio,
+          shares: asset.shares,
+          currentPrice: latestClosePrices.get(asset.asset_ticker ?? "") ?? asset.current_price,
+          color: info.color,
+          isCustom: asset.custom_asset_id !== null,
+        };
+      });
+
+    const latestExecution = row.execution_records[0]
+      ? summarizeExecution(row.execution_records[0].actions as ActionItem[])
+      : null;
+
+    return {
+      id: row.id,
+      name: row.name,
+      updatedAt: row.updated_at,
+      assets,
+      latestExecution,
+    };
+  });
+};
+
 export const portfolioQueries = {
   all: () => ["portfolios"] as const,
 
   lists: (getClient: SupabaseClientGetter = createBrowserClient) =>
     queryOptions({
       queryKey: [...portfolioQueries.all(), "list"] as const,
-      queryFn: async (): Promise<PortfolioSummary[]> => {
-        const supabase = await getClient();
-        const { data, error } = await supabase
-          .from("portfolios")
-          .select(
-            "id, name, updated_at, portfolio_assets(asset_ticker, custom_asset_id, ratio, shares, current_price, sort_order, assets(name, market, color), custom_assets(name, market, color)), execution_records(executed_at, actions)"
-          )
-          .order("updated_at", { ascending: false })
-          .order("executed_at", { referencedTable: "execution_records", ascending: false })
-          .limit(1, { referencedTable: "execution_records" });
-
-        if (error) throw error;
-
-        const heldTickers = [
-          ...new Set(
-            data.flatMap((row) => row.portfolio_assets.map((asset) => asset.asset_ticker).filter((t) => t !== null))
-          ),
-        ];
-        const latestClosePrices = await fetchLatestClosePrices(supabase, heldTickers);
-
-        return data.map((row) => {
-          const assets: PortfolioCardAsset[] = row.portfolio_assets
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map((asset) => {
-              const info = pickAssetInfo(asset.assets, asset.custom_assets);
-              return {
-                ticker: asset.asset_ticker ?? asset.custom_asset_id,
-                market: info.market as Market,
-                ratio: asset.ratio,
-                shares: asset.shares,
-                currentPrice: latestClosePrices.get(asset.asset_ticker ?? "") ?? asset.current_price,
-                color: info.color,
-                isCustom: asset.custom_asset_id !== null,
-              };
-            });
-
-          const latestExecution = row.execution_records[0]
-            ? summarizeExecution(row.execution_records[0].actions as ActionItem[])
-            : null;
-
-          return {
-            id: row.id,
-            name: row.name,
-            updatedAt: row.updated_at,
-            assets,
-            latestExecution,
-          };
-        });
-      },
+      queryFn: () => fetchPortfolioList(getClient),
       staleTime: 1000 * 30,
     }),
 

@@ -49,6 +49,78 @@ const enrichActions = (
   });
 };
 
+// rebalancingHistoryQueries.list()의 queryFn 본체. TanStack Query 캐시를
+// 거치지 않고 첫 페이지만 필요한 곳(예: /home의 서버 컴포넌트)에서도
+// 재사용할 수 있도록 별도 함수로 뺐다.
+export const fetchRebalancingHistoryPage = async (
+  filters: RebalancingHistoryFilters,
+  getClient: SupabaseClientGetter,
+  pageParam: RebalancingHistoryCursor = null
+): Promise<RebalancingHistoryPage> => {
+  const supabase = await getClient();
+  let query = supabase
+    .from("execution_records")
+    .select(
+      "id, portfolio_id, executed_at, total_budget, actions, portfolios(name), portfolio_snapshots(assets)"
+    )
+    .order("executed_at", { ascending: false })
+    .order("id", { ascending: false })
+    // 다음 페이지 존재 여부를 별도 조회 없이 판단하기 위해 한 건 더 가져온다.
+    .limit(PAGE_SIZE + 1);
+
+  if (filters.portfolioId) {
+    query = query.eq("portfolio_id", filters.portfolioId);
+  }
+  if (filters.dateFrom) {
+    query = query.gte(
+      "executed_at",
+      new Date(`${filters.dateFrom}T00:00:00`).toISOString()
+    );
+  }
+  if (filters.dateTo) {
+    query = query.lte(
+      "executed_at",
+      new Date(`${filters.dateTo}T23:59:59.999`).toISOString()
+    );
+  }
+  // 삭제로 서버 데이터가 줄어들어도 위치가 밀리지 않도록, 오프셋이 아닌
+  // 이전 페이지 마지막 항목(executed_at, id) 기준으로 다음 항목들을 조회한다.
+  if (pageParam) {
+    query = query.or(
+      `executed_at.lt.${pageParam.executedAt},and(executed_at.eq.${pageParam.executedAt},id.lt.${pageParam.id})`
+    );
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  const hasMore = data.length > PAGE_SIZE;
+  const rows = hasMore ? data.slice(0, PAGE_SIZE) : data;
+
+  const records = rows.map((row) => {
+    const portfolio = row.portfolios as unknown as { name: string } | null;
+    // portfolio_snapshots.execution_record_id에 UNIQUE 제약이 있어(1:1
+    // 관계) PostgREST가 배열이 아닌 단일 객체로 embed를 반환한다.
+    const snapshot = row.portfolio_snapshots as unknown as
+      | { assets: SnapshotAsset[] }
+      | null;
+
+    return {
+      id: row.id,
+      portfolioId: row.portfolio_id,
+      portfolioName: portfolio?.name ?? "삭제된 포트폴리오",
+      executedAt: row.executed_at,
+      totalBudget: row.total_budget,
+      actions: enrichActions(
+        row.actions as ActionItem[],
+        snapshot?.assets ?? []
+      ),
+    };
+  });
+
+  return { records, hasMore };
+};
+
 export const rebalancingHistoryQueries = {
   all: () => ["rebalancing-history"] as const,
 
@@ -58,74 +130,8 @@ export const rebalancingHistoryQueries = {
   ) =>
     infiniteQueryOptions({
       queryKey: [...rebalancingHistoryQueries.all(), "list", filters] as const,
-      queryFn: async ({
-        pageParam,
-      }: {
-        pageParam: RebalancingHistoryCursor;
-      }): Promise<RebalancingHistoryPage> => {
-        const supabase = await getClient();
-        let query = supabase
-          .from("execution_records")
-          .select(
-            "id, portfolio_id, executed_at, total_budget, actions, portfolios(name), portfolio_snapshots(assets)"
-          )
-          .order("executed_at", { ascending: false })
-          .order("id", { ascending: false })
-          // 다음 페이지 존재 여부를 별도 조회 없이 판단하기 위해 한 건 더 가져온다.
-          .limit(PAGE_SIZE + 1);
-
-        if (filters.portfolioId) {
-          query = query.eq("portfolio_id", filters.portfolioId);
-        }
-        if (filters.dateFrom) {
-          query = query.gte(
-            "executed_at",
-            new Date(`${filters.dateFrom}T00:00:00`).toISOString()
-          );
-        }
-        if (filters.dateTo) {
-          query = query.lte(
-            "executed_at",
-            new Date(`${filters.dateTo}T23:59:59.999`).toISOString()
-          );
-        }
-        // 삭제로 서버 데이터가 줄어들어도 위치가 밀리지 않도록, 오프셋이 아닌
-        // 이전 페이지 마지막 항목(executed_at, id) 기준으로 다음 항목들을 조회한다.
-        if (pageParam) {
-          query = query.or(
-            `executed_at.lt.${pageParam.executedAt},and(executed_at.eq.${pageParam.executedAt},id.lt.${pageParam.id})`
-          );
-        }
-
-        const { data, error } = await query;
-        if (error) throw error;
-
-        const hasMore = data.length > PAGE_SIZE;
-        const rows = hasMore ? data.slice(0, PAGE_SIZE) : data;
-
-        const records = rows.map((row) => {
-          const portfolio = row.portfolios as unknown as { name: string } | null;
-          // portfolio_snapshots.execution_record_id에 UNIQUE 제약이 있어(1:1
-          // 관계) PostgREST가 배열이 아닌 단일 객체로 embed를 반환한다.
-          const snapshot = row.portfolio_snapshots as unknown as
-            | { assets: SnapshotAsset[] }
-            | null;
-
-          return {
-            id: row.id,
-            portfolioId: row.portfolio_id,
-            portfolioName: portfolio?.name ?? "삭제된 포트폴리오",
-            executedAt: row.executed_at,
-            totalBudget: row.total_budget,
-            actions: enrichActions(
-              row.actions as ActionItem[],
-              snapshot?.assets ?? []
-            ),
-          };
-        });
-
-        return { records, hasMore };
-      },
+      queryFn: ({ pageParam }: { pageParam: RebalancingHistoryCursor }) =>
+        fetchRebalancingHistoryPage(filters, getClient, pageParam),
       initialPageParam: null as RebalancingHistoryCursor,
       getNextPageParam: (lastPage) => {
         if (!lastPage.hasMore) return undefined;

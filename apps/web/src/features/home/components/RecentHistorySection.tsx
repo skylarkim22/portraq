@@ -1,9 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import { RefreshCcw, ArrowRight } from "lucide-react";
 import { Card } from "@portraq/ui";
-import { useRebalancingHistory } from "@/features/rebalancing-history/hooks";
+import type { RebalancingHistoryRecord } from "@/features/rebalancing-history/queries";
 import { formatExecutedDate } from "@/lib/dateFormat";
 
 const RECENT_HISTORY_LIMIT = 3;
@@ -30,13 +28,12 @@ export const RecentHistorySkeleton = () => (
   </Card>
 );
 
-export const RecentHistorySection = () => {
-  const { data: historyPages } = useRebalancingHistory({
-    portfolioId: null,
-    dateFrom: null,
-    dateTo: null,
-  });
-  const records = (historyPages?.pages[0]?.records ?? []).slice(0, RECENT_HISTORY_LIMIT);
+type RecentHistorySectionProps = {
+  records: RebalancingHistoryRecord[];
+};
+
+export const RecentHistorySection = ({ records: allRecords }: RecentHistorySectionProps) => {
+  const records = allRecords.slice(0, RECENT_HISTORY_LIMIT);
 
   if (records.length === 0) return null;
 
