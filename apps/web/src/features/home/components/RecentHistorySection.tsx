@@ -6,28 +6,6 @@ import { formatExecutedDate } from "@/lib/dateFormat";
 
 const RECENT_HISTORY_LIMIT = 3;
 
-export const RecentHistorySkeleton = () => (
-  <Card data-testid="recent-history-skeleton" className="overflow-hidden p-0">
-    {Array.from({ length: RECENT_HISTORY_LIMIT }).map((_, index) => (
-      <div
-        key={index}
-        className={`flex items-center justify-between gap-3 p-4 ${
-          index > 0 ? "border-t border-border" : ""
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 shrink-0 animate-pulse rounded-[10px] bg-muted" />
-          <div className="h-[14px] w-28 animate-pulse rounded bg-muted" />
-        </div>
-        <div className="text-right">
-          <div className="mb-1 h-3 w-16 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-10 animate-pulse rounded bg-muted" />
-        </div>
-      </div>
-    ))}
-  </Card>
-);
-
 type RecentHistorySectionProps = {
   records: RebalancingHistoryRecord[];
 };
