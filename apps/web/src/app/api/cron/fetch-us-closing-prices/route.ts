@@ -1,5 +1,7 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { fetchUsClosingPrices } from "@/features/asset-prices/fetchUsClosingPrices";
+import { ASSET_PRICES_CACHE_TAG } from "@/features/asset-prices/getCachedAssetPriceClient";
 import { notifyDiscordFailure } from "@/features/asset-prices/notifyDiscordFailure";
 
 export const runtime = "nodejs";
@@ -27,6 +29,7 @@ export const GET = async (request: NextRequest) => {
   try {
     const result = await fetchUsClosingPrices({ supabaseUrl, serviceRoleKey, finnhubApiKey });
     console.log(`[fetch-us-closing-prices] ${JSON.stringify(result)}`);
+    if (result.status !== "no_holdings") revalidateTag(ASSET_PRICES_CACHE_TAG, "max");
     return NextResponse.json({ ok: true, result });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

@@ -9,6 +9,7 @@ import type {
 } from "@portraq/lib/types";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { SupabaseClientGetter } from "@/lib/supabase/types";
+import { getCachedAssetPriceClient } from "@/features/asset-prices/getCachedAssetPriceClient";
 
 export type PortfolioCardAsset = {
   ticker: string;
@@ -64,10 +65,15 @@ export const fetchLatestClosePrices = async (supabase: SupabaseClient, tickers: 
   const latestByTicker = new Map<string, number>();
   if (tickers.length === 0) return latestByTicker;
 
-  const { data, error } = await supabase
+  // asset_prices는 하루 1번만 배치로 갱신되는 공개 데이터라 서버 렌더링
+  // 중에는 Next.js Data Cache를 태워 이 왕복을 없앤다(#86). 브라우저/테스트
+  // (jsdom)에서는 window가 정의돼 있어 기존처럼 전달받은 클라이언트를 쓴다.
+  const client = typeof window === "undefined" ? getCachedAssetPriceClient() : supabase;
+
+  const { data, error } = await client
     .from("asset_prices")
     .select("ticker, close_price, price_date")
-    .in("ticker", tickers)
+    .in("ticker", [...tickers].sort())
     .order("price_date", { ascending: false });
 
   if (error) throw error;
