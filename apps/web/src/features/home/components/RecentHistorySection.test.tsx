@@ -52,7 +52,7 @@ describe("RecentHistorySection", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("로딩 중에는 기록이 없어도 로딩 문구를 보여준다", () => {
+  it("로딩 중에는 기록이 없어도 스켈레톤을 보여준다", () => {
     vi.mocked(useRebalancingHistory).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -61,6 +61,6 @@ describe("RecentHistorySection", () => {
     render(<RecentHistorySection />);
 
     expect(screen.getByText("최근 리밸런싱 기록")).toBeInTheDocument();
-    expect(screen.getByText("불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByTestId("recent-history-skeleton")).toBeInTheDocument();
   });
 });
