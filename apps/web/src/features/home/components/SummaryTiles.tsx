@@ -2,15 +2,19 @@
 
 import { Layers, Wallet } from "lucide-react";
 import { Card } from "@portraq/ui";
-import { usePortfolioList } from "@/features/portfolio/hooks";
-import { deriveHomeSummary } from "@/features/home/deriveHomeSummary";
 import { useCountUp } from "@/features/home/useCountUp";
 
-export const SummaryTiles = () => {
-  const { data: portfolios } = usePortfolioList();
-  const summary = deriveHomeSummary(portfolios ?? []);
-  const totalValue = useCountUp(summary.totalValue);
-  const portfolioCount = useCountUp(summary.portfolioCount);
+type SummaryTilesProps = {
+  totalValue: number;
+  portfolioCount: number;
+};
+
+export const SummaryTiles = ({
+  totalValue: totalValueInput,
+  portfolioCount: portfolioCountInput,
+}: SummaryTilesProps) => {
+  const totalValue = useCountUp(totalValueInput);
+  const portfolioCount = useCountUp(portfolioCountInput);
 
   return (
     <div className="grid grid-cols-2 gap-3">

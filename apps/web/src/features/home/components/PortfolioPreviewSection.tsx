@@ -1,9 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { Button, Card } from "@portraq/ui";
-import { usePortfolioList } from "@/features/portfolio/hooks";
+import type { PortfolioSummary } from "@/features/portfolio/queries";
 import { PortfolioListItem } from "@/features/portfolio/components/PortfolioListItem";
 
 const PORTFOLIO_PREVIEW_LIMIT = 3;
@@ -26,9 +24,12 @@ export const PortfolioPreviewSkeleton = () => (
   </div>
 );
 
-export const PortfolioPreviewSection = () => {
-  const { data: portfolios } = usePortfolioList();
-  const previewPortfolios = (portfolios ?? []).slice(0, PORTFOLIO_PREVIEW_LIMIT);
+type PortfolioPreviewSectionProps = {
+  portfolios: PortfolioSummary[];
+};
+
+export const PortfolioPreviewSection = ({ portfolios }: PortfolioPreviewSectionProps) => {
+  const previewPortfolios = portfolios.slice(0, PORTFOLIO_PREVIEW_LIMIT);
 
   return (
     <section className="mb-6">
@@ -45,7 +46,7 @@ export const PortfolioPreviewSection = () => {
         </Link>
       </div>
 
-      {portfolios?.length === 0 && (
+      {portfolios.length === 0 && (
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
           <p className="text-sm text-muted-foreground">
             아직 저장된 포트폴리오가 없습니다.
