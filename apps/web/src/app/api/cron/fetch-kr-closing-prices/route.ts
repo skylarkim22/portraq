@@ -1,5 +1,7 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { fetchKrClosingPrices } from "@/features/asset-prices/fetchKrClosingPrices";
+import { ASSET_PRICES_CACHE_TAG } from "@/features/asset-prices/getCachedAssetPriceClient";
 import { notifyDiscordFailure } from "@/features/asset-prices/notifyDiscordFailure";
 
 export const runtime = "nodejs";
@@ -28,6 +30,7 @@ export const GET = async (request: NextRequest) => {
     const { result, warnings } = await fetchKrClosingPrices({ supabaseUrl, serviceRoleKey, dataGoKrApiKey });
     for (const warning of warnings) console.warn(`[fetch-kr-closing-prices] ${warning}`);
     console.log(`[fetch-kr-closing-prices] ${JSON.stringify(result)}`);
+    if (result.status !== "no_holdings") revalidateTag(ASSET_PRICES_CACHE_TAG, "max");
     return NextResponse.json({ ok: true, result, warnings });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
