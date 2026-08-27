@@ -52,15 +52,16 @@ describe("RecentHistorySection", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("로딩 중에는 기록이 없어도 스켈레톤을 보여준다", () => {
+  it("데이터가 아직 없으면(로딩 중) 아무것도 렌더링하지 않는다", () => {
+    // /home은 항상 서버에서 rebalancingHistoryQueries.list()를 프리페치해
+    // hydrate하므로 이 컴포넌트가 렌더될 때 data는 이미 채워져 있다 — 이
+    // 테스트는 그 전제가 깨지는 경우에도 안전한지 확인하는 방어적 검증이다.
     vi.mocked(useRebalancingHistory).mockReturnValue({
       data: undefined,
-      isLoading: true,
     } as unknown as ReturnType<typeof useRebalancingHistory>);
 
-    render(<RecentHistorySection />);
+    const { container } = render(<RecentHistorySection />);
 
-    expect(screen.getByText("최근 리밸런싱 기록")).toBeInTheDocument();
-    expect(screen.getByTestId("recent-history-skeleton")).toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 });

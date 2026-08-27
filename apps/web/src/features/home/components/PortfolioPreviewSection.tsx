@@ -27,7 +27,7 @@ export const PortfolioPreviewSkeleton = () => (
 );
 
 export const PortfolioPreviewSection = () => {
-  const { data: portfolios, isLoading } = usePortfolioList();
+  const { data: portfolios } = usePortfolioList();
   const previewPortfolios = (portfolios ?? []).slice(0, PORTFOLIO_PREVIEW_LIMIT);
 
   return (
@@ -45,9 +45,7 @@ export const PortfolioPreviewSection = () => {
         </Link>
       </div>
 
-      {isLoading && <PortfolioPreviewSkeleton />}
-
-      {!isLoading && portfolios?.length === 0 && (
+      {portfolios?.length === 0 && (
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
           <p className="text-sm text-muted-foreground">
             아직 저장된 포트폴리오가 없습니다.
@@ -61,7 +59,7 @@ export const PortfolioPreviewSection = () => {
         </Card>
       )}
 
-      {!isLoading && previewPortfolios.length > 0 && (
+      {previewPortfolios.length > 0 && (
         <div className="flex flex-col gap-3">
           {previewPortfolios.map((portfolio) => (
             <PortfolioListItem key={portfolio.id} portfolio={portfolio} />
