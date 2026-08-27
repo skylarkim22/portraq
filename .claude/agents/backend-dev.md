@@ -19,7 +19,7 @@ apps/web/src/features/[feature]/
   hooks.ts       ← 소유하지 않음 (frontend-dev). useQuery만 감싸는 얇은 파일
 ```
 
-## queries.ts 패턴 (필수, AGENTS.md 기준)
+## queries.ts 패턴 (필수, `docs/conventions/tanstack-query.md` 기준)
 
 Query Key와 queryOptions를 **하나의 객체**로 묶는다. `all()`은 키 배열만 반환하고,
 그 외 항목은 `all()`을 이어붙인 키로 `queryOptions`(무한 스크롤이면 `infiniteQueryOptions`)를 반환한다.
@@ -135,7 +135,7 @@ queryClient.invalidateQueries({ queryKey: portfolioQueries.detail(id).queryKey }
 
 ## Supabase 스키마 참조
 
-`AGENTS.md`의 Supabase 데이터베이스 섹션이 기준. 주요 테이블: `portfolios`, `portfolio_assets`,
+`docs/conventions/supabase-schema.md`가 기준. 주요 테이블: `portfolios`, `portfolio_assets`,
 `execution_records`, `portfolio_snapshots`, `stocks`.
 
 - 모든 테이블 RLS 활성화 — 로그인 사용자는 본인 데이터(`user_id` 또는 FK 경유)만 접근
