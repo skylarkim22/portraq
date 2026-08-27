@@ -19,7 +19,7 @@ const portfolio = (id: string, name: string): PortfolioSummary => ({
 });
 
 describe("PortfolioPreviewSection", () => {
-  it("로딩 중에는 로딩 문구를 보여주고 카드/빈 상태는 보여주지 않는다", () => {
+  it("로딩 중에는 스켈레톤을 보여주고 카드/빈 상태는 보여주지 않는다", () => {
     vi.mocked(usePortfolioList).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -27,7 +27,7 @@ describe("PortfolioPreviewSection", () => {
 
     render(<PortfolioPreviewSection />);
 
-    expect(screen.getByText("불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByTestId("portfolio-preview-skeleton")).toBeInTheDocument();
     expect(
       screen.queryByText("아직 저장된 포트폴리오가 없습니다.")
     ).not.toBeInTheDocument();
