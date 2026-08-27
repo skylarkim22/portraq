@@ -19,18 +19,20 @@ const portfolio = (id: string, name: string): PortfolioSummary => ({
 });
 
 describe("PortfolioPreviewSection", () => {
-  it("로딩 중에는 스켈레톤을 보여주고 카드/빈 상태는 보여주지 않는다", () => {
+  it("데이터가 아직 없으면(로딩 중) 빈 상태와 카드 목록 모두 보여주지 않는다", () => {
+    // /home은 항상 서버에서 portfolioQueries.lists()를 프리페치해 hydrate하므로
+    // 이 컴포넌트가 렌더될 때 data는 이미 채워져 있다 — 이 테스트는 그 전제가
+    // 깨지는 경우(예: 프리페치 없이 재사용)에도 안전한지 확인하는 방어적 검증이다.
     vi.mocked(usePortfolioList).mockReturnValue({
       data: undefined,
-      isLoading: true,
     } as unknown as ReturnType<typeof usePortfolioList>);
 
     render(<PortfolioPreviewSection />);
 
-    expect(screen.getByTestId("portfolio-preview-skeleton")).toBeInTheDocument();
     expect(
       screen.queryByText("아직 저장된 포트폴리오가 없습니다.")
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "전체 보기" })).toBeInTheDocument();
   });
 
   it("포트폴리오가 없으면 빈 상태 안내와 CTA를 보여준다", () => {
