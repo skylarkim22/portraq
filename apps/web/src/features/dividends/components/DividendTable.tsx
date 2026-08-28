@@ -3,7 +3,7 @@ import { AlertTriangle, Pencil } from "lucide-react";
 import { InfoPopover } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
-import { fmtWon, monthLabel, PAY_SCHEDULE_LEGEND } from "@/features/dividends/formatDividend";
+import { fmtWon, monthLabel } from "@/features/dividends/formatDividend";
 import { groupByPortfolio } from "@/features/dividends/groupByPortfolio";
 import { NoData } from "@/features/dividends/components/NoData";
 import type { DividendRow } from "@/features/dividends/queries";
@@ -121,12 +121,7 @@ export const DividendTable = ({ rows, grouped, onEditRow }: DividendTableProps) 
           <tr>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-left font-bold text-[#6b6b7b]">종목명</th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">세팅비중</th>
-            <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-center font-bold text-[#6b6b7b]">
-              <span className="inline-flex items-center gap-1">
-                배당일
-                <InfoPopover label="배당일 설명">{PAY_SCHEDULE_LEGEND}</InfoPopover>
-              </span>
-            </th>
+            <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-center font-bold text-[#6b6b7b]">배당일</th>
             <th className="whitespace-nowrap border-b border-[#ebebef] bg-[#f8f9fe] p-2.5 text-right font-bold text-[#6b6b7b]">
               <span className="inline-flex items-center gap-1">
                 매수가

@@ -3,7 +3,7 @@ import { AlertTriangle, Pencil } from "lucide-react";
 import { InfoPopover } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
-import { fmtWon, PAY_SCHEDULE_LEGEND } from "@/features/dividends/formatDividend";
+import { fmtWon } from "@/features/dividends/formatDividend";
 import { groupByPortfolio } from "@/features/dividends/groupByPortfolio";
 import { NoData } from "@/features/dividends/components/NoData";
 import type { DividendRow } from "@/features/dividends/queries";
@@ -64,9 +64,7 @@ const DividendCard = ({ row, onEdit }: { row: DividendRow; onEdit: () => void })
             {row.expectedYield != null ? `${row.expectedYield}%` : <NoData reason={row.noDataReason} />}
           </span>
         </StatTile>
-        <StatTile label="배당일" description={PAY_SCHEDULE_LEGEND}>
-          {row.paySchedule ?? <NoData reason={row.noDataReason} />}
-        </StatTile>
+        <StatTile label="배당일">{row.paySchedule ?? <NoData reason={row.noDataReason} />}</StatTile>
         <StatTile label="매수가 · 수량">
           {fmtWon(row.avgPrice)} · {row.shares}주
         </StatTile>
