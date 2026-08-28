@@ -182,4 +182,14 @@ describe("sharesAsOfMonth", () => {
     expect(sharesAsOfMonth(timeline, "2026-08", 0)).toBe(150);
     expect(sharesAsOfMonth(timeline, "2026-09", 0)).toBe(150);
   });
+
+  it("체크포인트가 있는 달에는 preExistingOffset을 더해 등록 전부터 보유하던 수량까지 반영한다(#91)", () => {
+    // 233주를 등록 전부터 보유 중이던 종목에 36주만 추적된 buy 기록이 있는 경우.
+    const timeline = [{ date: "2026-08-01T00:00:00Z", shares: 36 }];
+    expect(sharesAsOfMonth(timeline, "2026-08", 233, 197)).toBe(233);
+  });
+
+  it("체크포인트가 없어 fallback을 타는 달에는 preExistingOffset을 더하지 않는다(이미 전체 수량임)", () => {
+    expect(sharesAsOfMonth([], "2026-07", 233, 197)).toBe(233);
+  });
 });
