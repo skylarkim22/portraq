@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { ActionItem, Market } from "@portraq/lib/types";
+import type { ActionItem, DividendFrequency, Market } from "@portraq/lib/types";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import { fetchLatestClosePrices } from "@/features/portfolio/queries";
 import type { SupabaseClientGetter } from "@/lib/supabase/types";
@@ -175,7 +175,7 @@ export const dividendQueries = {
               ? (dividendRecordsByTicker.get(holding.asset_ticker) ?? [])
               : [];
             const expectedYield = computeExpectedYield({ dividendRecords, currentPrice });
-            const dividendFrequency = info.dividend_frequency ?? null;
+            const dividendFrequency = (info.dividend_frequency as DividendFrequency | null | undefined) ?? null;
 
             rows.push({
               portfolioId: portfolio.id,
@@ -188,7 +188,7 @@ export const dividendQueries = {
               ratio: holding.ratio,
               avgPrice: purchase.avgPrice,
               shares: purchase.shares,
-              paySchedule: formatPaySchedule(info.dividend_months ?? null),
+              paySchedule: formatPaySchedule({ dividendFrequency, dividendMonths: info.dividend_months ?? null }),
               dividendSum,
               annualizedYield,
               expectedYield,
