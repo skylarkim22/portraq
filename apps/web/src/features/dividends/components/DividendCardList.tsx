@@ -3,25 +3,24 @@ import { AlertTriangle, Pencil } from "lucide-react";
 import { InfoPopover } from "@portraq/ui";
 import { formatAssetTicker } from "@portraq/lib/utils";
 import { computeDividendDeclineSignal } from "@/features/dividends/computeDividendTrend";
-import { PAY_SCHEDULE_LEGEND } from "@/features/dividends/computeDividendMetrics";
-import { fmtWon } from "@/features/dividends/formatDividend";
+import { fmtWon, PAY_SCHEDULE_LEGEND } from "@/features/dividends/formatDividend";
 import { groupByPortfolio } from "@/features/dividends/groupByPortfolio";
 import { NoData } from "@/features/dividends/components/NoData";
 import type { DividendRow } from "@/features/dividends/queries";
 
 const StatTile = ({
   label,
-  title,
+  description,
   children,
 }: {
   label: string;
-  title?: string;
+  description?: string;
   children: React.ReactNode;
 }) => (
   <div className="rounded-xl bg-[#f8f9fe] p-2.5">
     <div className="mb-[3px] flex items-center gap-1 text-[10px] font-semibold text-[#6b6b7b]">
       {label}
-      {title && <InfoPopover label={`${label} 설명`}>{title}</InfoPopover>}
+      {description && <InfoPopover label={`${label} 설명`}>{description}</InfoPopover>}
     </div>
     <div className="text-[13px] font-extrabold">{children}</div>
   </div>
@@ -65,7 +64,7 @@ const DividendCard = ({ row, onEdit }: { row: DividendRow; onEdit: () => void })
             {row.expectedYield != null ? `${row.expectedYield}%` : <NoData reason={row.noDataReason} />}
           </span>
         </StatTile>
-        <StatTile label="배당일" title={PAY_SCHEDULE_LEGEND}>
+        <StatTile label="배당일" description={PAY_SCHEDULE_LEGEND}>
           {row.paySchedule ?? <NoData reason={row.noDataReason} />}
         </StatTile>
         <StatTile label="매수가 · 수량">
@@ -73,7 +72,7 @@ const DividendCard = ({ row, onEdit }: { row: DividendRow; onEdit: () => void })
         </StatTile>
         <StatTile
           label="연 환산 수익률"
-          title="입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가"
+          description="입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가"
         >
           <span className="text-[#355df9]">
             {row.annualizedYield != null ? `${row.annualizedYield}%` : <NoData reason={row.noDataReason} />}
