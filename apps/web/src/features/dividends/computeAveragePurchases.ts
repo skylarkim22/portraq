@@ -111,10 +111,18 @@ export const computeSharesTimelines = (
 // 그 달의 보유 수량으로 추정한다. 그 이전에 실행 기록이 전혀 없으면(이 앱에
 // 등록하기 전부터 보유하던 종목 등) fallbackShares(보통 현재 실제 보유
 // 수량)를 그 달에도 이미 갖고 있었다는 가정으로 대신 쓴다.
+//
+// timeline은 execution_records의 buy/sell만 재생한 값이라, 앱 등록 전부터
+// 보유하던 수량(reconcileWithActualHoldings가 보정하는 부분)은 잡히지
+// 않는다. 체크포인트가 존재하는 달에도 그 pre-existing 수량은 계속
+// 보유 중이었던 것이므로, preExistingOffset으로 넘겨 받아 더해준다(#91).
+// fallback 경로(체크포인트 없음)는 이미 fallbackShares에 전체 보유 수량이
+// 들어있으므로 오프셋을 더하지 않는다.
 export const sharesAsOfMonth = (
   timeline: SharesCheckpoint[],
   monthKey: string,
-  fallbackShares: number
+  fallbackShares: number,
+  preExistingOffset = 0
 ): number => {
   const [year, month] = monthKey.split("-").map(Number);
   const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
@@ -124,5 +132,5 @@ export const sharesAsOfMonth = (
     if (new Date(checkpoint.date) > monthEnd) break;
     shares = checkpoint.shares;
   }
-  return shares ?? fallbackShares;
+  return shares === null ? fallbackShares : shares + preExistingOffset;
 };
