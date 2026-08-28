@@ -39,7 +39,7 @@ export const computeAveragePurchases = (
   return state;
 };
 
-export type ReconciledPurchase = { avgPrice: number; shares: number };
+export type ReconciledPurchase = { avgPrice: number; shares: number; preExistingShares: number };
 
 // buy/sell 액션으로 추적된 이동평균 매수단가(computeAveragePurchases 결과)는
 // 이 앱에 등록하기 전부터 이미 보유하고 있던 수량은 반영하지 못한다 —
@@ -47,6 +47,10 @@ export type ReconciledPurchase = { avgPrice: number; shares: number };
 // 최신 실제 보유 수량)가 계산된 shares보다 많으면 그 차이를 등록 시점의
 // 가격(fallbackPrice, 보통 마지막 실행가)에 매수한 것으로 간주해 평균
 // 단가에 반영한다. 최종 shares는 항상 portfolio_assets 기준이 진실이다.
+// preExistingShares(등록 전부터 보유하던 수량, 없으면 0)도 함께 반환한다 —
+// sharesAsOfMonth가 월별 timeline 체크포인트에 이 수량을 더해야 하기
+// 때문이다(#91). 이 값을 호출부에서 따로 재계산하면 여기 분기 로직과
+// 어긋날 수 있어, 계산을 한 곳에만 둔다.
 export const reconcileWithActualHoldings = ({
   computed,
   actualShares,
@@ -59,12 +63,14 @@ export const reconcileWithActualHoldings = ({
   const computedShares = computed?.shares ?? 0;
   const computedAvgPrice = computed?.avgPrice ?? 0;
 
-  if (actualShares <= 0) return { avgPrice: 0, shares: 0 };
-  if (computedShares >= actualShares) return { avgPrice: computedAvgPrice, shares: actualShares };
+  if (actualShares <= 0) return { avgPrice: 0, shares: 0, preExistingShares: 0 };
+  if (computedShares >= actualShares) {
+    return { avgPrice: computedAvgPrice, shares: actualShares, preExistingShares: 0 };
+  }
 
   const preExistingShares = actualShares - computedShares;
   const totalCost = computedAvgPrice * computedShares + fallbackPrice * preExistingShares;
-  return { avgPrice: totalCost / actualShares, shares: actualShares };
+  return { avgPrice: totalCost / actualShares, shares: actualShares, preExistingShares };
 };
 
 export type SharesCheckpoint = { date: string; shares: number };

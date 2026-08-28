@@ -76,7 +76,7 @@ describe("computeAveragePurchases", () => {
 describe("reconcileWithActualHoldings", () => {
   it("실제 보유 수량이 0이면 0/0을 반환한다", () => {
     const result = reconcileWithActualHoldings({ computed: undefined, actualShares: 0, fallbackPrice: 1000 });
-    expect(result).toEqual({ avgPrice: 0, shares: 0 });
+    expect(result).toEqual({ avgPrice: 0, shares: 0, preExistingShares: 0 });
   });
 
   it("buy 액션이 전혀 없어도(모두 hold) 실제 보유 수량 전체를 등록 시점 가격으로 반영한다", () => {
@@ -85,7 +85,7 @@ describe("reconcileWithActualHoldings", () => {
       actualShares: 200,
       fallbackPrice: 8710,
     });
-    expect(result).toEqual({ avgPrice: 8710, shares: 200 });
+    expect(result).toEqual({ avgPrice: 8710, shares: 200, preExistingShares: 200 });
   });
 
   it("추적된 매수 수량이 실제 보유 수량과 같으면 계산된 평균단가를 그대로 쓴다", () => {
@@ -94,7 +94,7 @@ describe("reconcileWithActualHoldings", () => {
       actualShares: 20,
       fallbackPrice: 999,
     });
-    expect(result).toEqual({ avgPrice: 150, shares: 20 });
+    expect(result).toEqual({ avgPrice: 150, shares: 20, preExistingShares: 0 });
   });
 
   it("추적된 매수 수량이 실제 보유 수량보다 적으면 차이만큼을 등록 시점 가격으로 섞어 평균을 낸다", () => {
@@ -104,7 +104,7 @@ describe("reconcileWithActualHoldings", () => {
       actualShares: 20,
       fallbackPrice: 200,
     });
-    expect(result).toEqual({ avgPrice: 150, shares: 20 });
+    expect(result).toEqual({ avgPrice: 150, shares: 20, preExistingShares: 10 });
   });
 
   it("추적된 매수 수량이 실제 보유 수량보다 많으면(일부 매도가 앱 밖에서 일어난 경우) 계산된 평균단가를 유지한다", () => {
@@ -113,7 +113,7 @@ describe("reconcileWithActualHoldings", () => {
       actualShares: 20,
       fallbackPrice: 999,
     });
-    expect(result).toEqual({ avgPrice: 100, shares: 20 });
+    expect(result).toEqual({ avgPrice: 100, shares: 20, preExistingShares: 0 });
   });
 });
 
