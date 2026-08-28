@@ -118,18 +118,28 @@ describe("computeExpectedYield", () => {
 });
 
 describe("formatPaySchedule", () => {
-  it("null이거나 빈 배열이면 null을 반환한다", () => {
-    expect(formatPaySchedule(null)).toBeNull();
-    expect(formatPaySchedule([])).toBeNull();
+  it("dividend_frequency가 없으면 null을 반환한다", () => {
+    expect(formatPaySchedule({ dividendFrequency: null, dividendMonths: [2, 5, 8, 11] })).toBeNull();
   });
 
-  it("오름차순으로 정렬해 '·'로 이어붙이고 '월'을 붙인다", () => {
-    expect(formatPaySchedule([11, 2, 8, 5])).toBe("2·5·8·11월");
+  it("monthly면 dividend_months와 무관하게 '월배당'만 반환한다", () => {
+    expect(formatPaySchedule({ dividendFrequency: "monthly", dividendMonths: null })).toBe("월배당");
+    expect(formatPaySchedule({ dividendFrequency: "monthly", dividendMonths: [1, 2, 3] })).toBe("월배당");
   });
 
-  it("1~12월이 전부 있으면 월배당으로 표시한다", () => {
-    expect(formatPaySchedule([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])).toBe("월배당");
-    expect(formatPaySchedule([12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1])).toBe("월배당");
+  it("quarterly/semiannual/annual이면 라벨 뒤에 오름차순 정렬한 월을 붙인다", () => {
+    expect(formatPaySchedule({ dividendFrequency: "quarterly", dividendMonths: [11, 2, 8, 5] })).toBe(
+      "분기배당 · 2·5·8·11월"
+    );
+    expect(formatPaySchedule({ dividendFrequency: "semiannual", dividendMonths: [12, 6] })).toBe(
+      "반기배당 · 6·12월"
+    );
+    expect(formatPaySchedule({ dividendFrequency: "annual", dividendMonths: [12] })).toBe("연배당 · 12월");
+  });
+
+  it("dividend_months가 없으면 라벨만 반환한다", () => {
+    expect(formatPaySchedule({ dividendFrequency: "quarterly", dividendMonths: null })).toBe("분기배당");
+    expect(formatPaySchedule({ dividendFrequency: "quarterly", dividendMonths: [] })).toBe("분기배당");
   });
 });
 

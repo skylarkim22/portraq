@@ -1,3 +1,4 @@
+import type { DividendFrequency } from "@portraq/lib/types";
 import type { DividendInputEntry } from "@/features/dividends/computeDividendTrend";
 
 export type AssetDividendRecord = { recordDate: string; amount: number };
@@ -73,14 +74,36 @@ export const computeExpectedYield = ({
   return Math.round((perShareAnnual / currentPrice) * 1000) / 10;
 };
 
-// assets.dividend_months([2,5,8,11]) → "2·5·8·11월" 형태로 포맷한다.
-// 1~12월이 전부 채워져 있으면(매달 지급) "월배당"으로 축약한다.
-export const formatPaySchedule = (dividendMonths: number[] | null): string | null => {
-  if (!dividendMonths || dividendMonths.length === 0) return null;
+// "배당일" 헤더 InfoPopover에 쓰는 범례. DividendTable/DividendCardList가
+// 공유해서 쓴다.
+export const PAY_SCHEDULE_LEGEND =
+  "월배당(매월)·분기배당(3개월 간격)·반기배당(6개월 간격)·연배당(연 1회) 지급을 뜻합니다. 옆 숫자는 실제 지급 이력에서 확인된 월입니다.";
+
+const PAY_SCHEDULE_FREQUENCY_LABELS: Record<DividendFrequency, string> = {
+  monthly: "월배당",
+  quarterly: "분기배당",
+  semiannual: "반기배당",
+  annual: "연배당",
+};
+
+// assets.dividend_frequency(월/분기/반기/연)를 라벨로, dividend_months를
+// 상세 월로 붙여 "분기배당 · 3·6·9·12월" 형태로 포맷한다(#93).
+// dividend_frequency는 dividend_months.length로부터 파생돼 항상 함께
+// 채워지는 값이라(scripts/backfill-kr-etf-dividends.mjs) 둘 다 있어야
+// 정상 표시되고, 월배당은 매달이라 상세 월을 덧붙이지 않는다.
+export const formatPaySchedule = ({
+  dividendFrequency,
+  dividendMonths,
+}: {
+  dividendFrequency: DividendFrequency | null;
+  dividendMonths: number[] | null;
+}): string | null => {
+  if (!dividendFrequency) return null;
+  const label = PAY_SCHEDULE_FREQUENCY_LABELS[dividendFrequency];
+  if (dividendFrequency === "monthly") return label;
+  if (!dividendMonths || dividendMonths.length === 0) return label;
   const sorted = [...dividendMonths].sort((a, b) => a - b);
-  const isEveryMonth = sorted.length === 12 && sorted.every((month, i) => month === i + 1);
-  if (isEveryMonth) return "월배당";
-  return `${sorted.join("·")}월`;
+  return `${label} · ${sorted.join("·")}월`;
 };
 
 export type DividendNoDataReason = "policy" | "new";
