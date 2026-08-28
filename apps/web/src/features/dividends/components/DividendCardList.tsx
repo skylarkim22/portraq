@@ -10,19 +10,19 @@ import type { DividendRow } from "@/features/dividends/queries";
 
 const StatTile = ({
   label,
-  title,
+  description,
   children,
 }: {
   label: string;
-  title?: string;
+  description?: string;
   children: React.ReactNode;
 }) => (
   <div className="rounded-xl bg-[#f8f9fe] p-2.5">
     <div className="mb-[3px] flex items-center gap-1 text-[10px] font-semibold text-[#6b6b7b]">
       {label}
-      {title && <InfoPopover label={`${label} 설명`}>{title}</InfoPopover>}
+      {description && <InfoPopover label={`${label} 설명`}>{description}</InfoPopover>}
     </div>
-    <div className="text-[13px] font-extrabold">{children}</div>
+    <div className="whitespace-pre-line text-[13px] font-extrabold">{children}</div>
   </div>
 );
 
@@ -70,7 +70,7 @@ const DividendCard = ({ row, onEdit }: { row: DividendRow; onEdit: () => void })
         </StatTile>
         <StatTile
           label="연 환산 수익률"
-          title="입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가"
+          description="입력월별 실제 보유 수량 기준 주당 배당금을 평균해 12개월로 환산 ÷ 매수 단가"
         >
           <span className="text-[#355df9]">
             {row.annualizedYield != null ? `${row.annualizedYield}%` : <NoData reason={row.noDataReason} />}
