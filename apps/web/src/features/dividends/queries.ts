@@ -154,14 +154,14 @@ export const dividendQueries = {
             // 보유 수량을 추정한다(연 환산 수익률이 중간 증좌로 왜곡되는
             // 문제 대응). timeline 이전 달은 현재 보유 수량으로 폴백한다.
             // timeline은 buy/sell만 재생하므로 앱 등록 전부터 보유하던
-            // 수량(reconcileWithActualHoldings가 채운 차이)은 빠져 있다 —
-            // 체크포인트가 있는 달에도 그 수량은 더해줘야 한다(#91).
+            // 수량(purchase.preExistingShares, reconcileWithActualHoldings가
+            // 계산)은 빠져 있다 — 체크포인트가 있는 달에도 그 수량은
+            // 더해줘야 한다(#91).
             const sharesTimeline = sharesTimelines.get(ticker) ?? [];
-            const preExistingOffset = Math.max(0, purchase.shares - (averagePurchases.get(ticker)?.shares ?? 0));
             const rawManualHistory = rawManualHistoryByHolding.get(holdingKey(portfolio.id, ticker)) ?? [];
             const manualHistory: DividendInputEntry[] = rawManualHistory.map((entry) => ({
               ...entry,
-              shares: sharesAsOfMonth(sharesTimeline, entry.month, purchase.shares, preExistingOffset),
+              shares: sharesAsOfMonth(sharesTimeline, entry.month, purchase.shares, purchase.preExistingShares),
             }));
 
             const dividendSum = computeDividendSum(manualHistory);
