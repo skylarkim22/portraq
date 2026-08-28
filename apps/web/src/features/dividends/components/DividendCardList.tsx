@@ -22,7 +22,7 @@ const StatTile = ({
       {label}
       {description && <InfoPopover label={`${label} 설명`}>{description}</InfoPopover>}
     </div>
-    <div className="text-[13px] font-extrabold">{children}</div>
+    <div className="whitespace-pre-line text-[13px] font-extrabold">{children}</div>
   </div>
 );
 

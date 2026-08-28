@@ -82,7 +82,8 @@ const PAY_SCHEDULE_FREQUENCY_LABELS: Record<DividendFrequency, string> = {
 };
 
 // assets.dividend_frequency(월/분기/반기/연)를 라벨로, dividend_months를
-// 상세 월로 붙여 "분기배당 · 3·6·9·12월" 형태로 포맷한다(#93).
+// 상세 월로 붙여 "분기배당\n3·6·9·12월" 형태로 포맷한다(#93). 줄바꿈은
+// 렌더링 쪽(whitespace-pre-line)에서 실제 줄바꿈으로 표시된다.
 // dividend_frequency는 dividend_months.length로부터 파생돼 항상 함께
 // 채워지는 값이라(scripts/backfill-kr-etf-dividends.mjs) 둘 다 있어야
 // 정상 표시되고, 월배당은 매달이라 상세 월을 덧붙이지 않는다.
@@ -98,7 +99,7 @@ export const formatPaySchedule = ({
   if (dividendFrequency === "monthly") return label;
   if (!dividendMonths || dividendMonths.length === 0) return label;
   const sorted = [...dividendMonths].sort((a, b) => a - b);
-  return `${label} · ${sorted.join("·")}월`;
+  return `${label}\n${sorted.join("·")}월`;
 };
 
 export type DividendNoDataReason = "policy" | "new";

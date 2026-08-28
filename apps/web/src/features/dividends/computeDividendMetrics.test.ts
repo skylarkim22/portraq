@@ -127,14 +127,14 @@ describe("formatPaySchedule", () => {
     expect(formatPaySchedule({ dividendFrequency: "monthly", dividendMonths: [1, 2, 3] })).toBe("월배당");
   });
 
-  it("quarterly/semiannual/annual이면 라벨 뒤에 오름차순 정렬한 월을 붙인다", () => {
+  it("quarterly/semiannual/annual이면 라벨과 오름차순 정렬한 월을 줄바꿈으로 이어붙인다", () => {
     expect(formatPaySchedule({ dividendFrequency: "quarterly", dividendMonths: [11, 2, 8, 5] })).toBe(
-      "분기배당 · 2·5·8·11월"
+      "분기배당\n2·5·8·11월"
     );
     expect(formatPaySchedule({ dividendFrequency: "semiannual", dividendMonths: [12, 6] })).toBe(
-      "반기배당 · 6·12월"
+      "반기배당\n6·12월"
     );
-    expect(formatPaySchedule({ dividendFrequency: "annual", dividendMonths: [12] })).toBe("연배당 · 12월");
+    expect(formatPaySchedule({ dividendFrequency: "annual", dividendMonths: [12] })).toBe("연배당\n12월");
   });
 
   it("dividend_months가 없으면 라벨만 반환한다", () => {

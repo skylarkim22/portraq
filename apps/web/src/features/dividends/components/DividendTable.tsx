@@ -59,7 +59,7 @@ const TableRow = ({ row, onEdit }: { row: DividendRow; onEdit: () => void }) => 
         <div className="mt-px text-[11px] text-[#9ca3af]">{formatAssetTicker(row.ticker, row.isCustom)}</div>
       </td>
       <td className="p-2.5 text-right font-bold">{row.ratio}%</td>
-      <td className="p-2.5 text-center">
+      <td className="whitespace-pre-line p-2.5 text-center">
         {row.paySchedule ?? <NoData reason={row.noDataReason} />}
       </td>
       <td className="p-2.5 text-right">{fmtWon(row.avgPrice)}</td>
