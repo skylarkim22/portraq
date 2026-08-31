@@ -4,8 +4,8 @@
 
 Portraq는 두 가지 서비스를 제공합니다.
 
-- **포트폴리오 관리** — 검증된 대가의 전략을 템플릿으로 불러오거나 직접 구성하고, 보유 현황을 반영한 리밸런싱 매수·매도 가이드로 매달 투자 실행을 안내합니다.
-- **매매 일지** — 매수·매도 시점의 이유와 수량·가격·세금을 기록해 투자 패턴을 객관적으로 돌아볼 수 있게 합니다.
+- **포트폴리오 관리** — 종목을 직접 검색해 비중까지 구성하거나 검증된 대가의 전략을 템플릿으로 불러오고, 보유 현황을 반영한 리밸런싱 매수·매도 가이드로 매달 투자 실행을 안내합니다.
+- **배당금 관리** — 종목별 실수령 배당금을 입력하면 월배당·분기배당·반기배당·연배당 주기와 최근 12개월 배당합, 매수 단가 대비 연 환산 수익률을 자동으로 계산합니다.
 
 두 서비스는 완전히 독립적으로 동작하며 각각 별도로 활용할 수 있습니다. 자세한 기획 배경과 기능 명세는 [`docs/PRD.md`](docs/PRD.md)를 참고하세요.
 
@@ -17,6 +17,7 @@ Portraq는 두 가지 서비스를 제공합니다.
 | 데이터 | Supabase (Auth, Postgres, RLS), TanStack Query v5 |
 | 상태 관리 | Zustand |
 | 폼·검증 | React Hook Form, Zod |
+| UI 인터랙션 | Radix UI, dnd-kit (드래그앤드롭), sonner (토스트) |
 | 스타일 | Tailwind CSS v4, shadcn/ui 기반 디자인 시스템 |
 | 모노레포 | pnpm workspaces + Turborepo |
 | 테스트 | Vitest, @testing-library/react |
@@ -111,7 +112,19 @@ pnpm storybook            # packages/ui 컴포넌트 문서 (Storybook)
 | `architecture-reviewer` | 파일 배치 규칙, 패키지 경계, 데이터 레이어 패턴, 의존성 방향 검증 |
 | `review-synthesizer` | 4개 리뷰 결과 종합, 최종 머지 가능 여부 판정 |
 
-이 외에도 기능 구현을 맡는 `frontend-dev`, 테스트 작성을 맡는 `unit-tester` 에이전트를 필요에 따라 호출해 작업을 위임했습니다.
+이 외에도 UI 구현을 맡는 `frontend-dev`, Supabase 데이터 레이어·RLS를 맡는 `backend-dev`, 와이어프레임 설계를 맡는 `ux-designer`, 테스트 작성을 맡는 `unit-tester`, 브라우저 기반 검증을 맡는 `qa-tester` 에이전트를 필요에 따라 호출해 작업을 위임했습니다.
+
+## 종가·배당 자동 배치
+
+`apps/web/vercel.json`에 등록된 Vercel Cron이 평일마다 보유 중인 종목의 확정 종가와 배당 정보를 자동으로 갱신합니다. GitHub Actions에서는 data.go.kr 접속이 차단되어 있어 실행 위치를 Vercel Cron으로 정했습니다.
+
+| 배치 | 실행 시각 (KST) | 데이터 소스 | 설명 |
+|------|------|------|------|
+| `fetch-kr-closing-prices` | 평일 09:30 | data.go.kr (공공데이터포털 금융위원회 시세정보) | 보유 중인 국내 종목의 확정 종가를 `asset_prices`에 upsert |
+| `fetch-us-closing-prices` | 평일 21:30 | Finnhub `/quote` | 보유 중인 미국 종목의 마지막 체결가를 확정 종가로 upsert |
+| `fetch-kr-stock-dividends` | 매일 22:00 | data.go.kr | 보유 중인 국내 종목의 배당 정보를 갱신 |
+
+각 배치는 `apps/web/src/app/api/cron/fetch-*/route.ts`에 구현되어 있으며, `CRON_SECRET`으로 인증하고 실패 시 Discord로 알림을 보냅니다. 로컬에서 수동 실행·dry-run이 필요하면 `scripts/fetch-kr-closing-prices.mjs`, `scripts/fetch-us-closing-prices.mjs`를 사용하세요.
 
 ## 주식 데이터 현황
 
