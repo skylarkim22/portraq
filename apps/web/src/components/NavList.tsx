@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { Award, Banknote, History, Home, NotebookText } from "lucide-react";
+import { Award, Banknote, History, Home } from "lucide-react";
 import { PortfolioNavItem } from "@/features/portfolio/components/PortfolioNavItem";
 
 const NAV_ITEMS_BEFORE = [{ href: "/home", label: "홈", icon: Home }];
 
+// 매매 일지(/trade-log) 메뉴는 임시로 숨김 처리
 const NAV_ITEMS_AFTER = [
   { href: "/rebalancing-history", label: "리밸런싱 기록", icon: History },
-  { href: "/trade-log", label: "매매 일지", icon: NotebookText },
   { href: "/dividends", label: "배당금 관리", icon: Banknote },
   { href: "/templates", label: "대가 포트폴리오", icon: Award },
 ];

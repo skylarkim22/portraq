@@ -4,7 +4,7 @@
 
 Portraq는 두 가지 서비스를 제공합니다.
 
-- **포트폴리오 관리** — 검증된 대가의 전략을 템플릿으로 불러오거나 직접 구성하고, 보유 현황을 반영한 리밸런싱 매수·매도 가이드로 매달 투자 실행을 안내합니다.
+- **포트폴리오 관리** — 종목을 직접 검색해 비중까지 구성하거나 검증된 대가의 전략을 템플릿으로 불러오고, 보유 현황을 반영한 리밸런싱 매수·매도 가이드로 매달 투자 실행을 안내합니다.
 - **매매 일지** — 매수·매도 시점의 이유와 수량·가격·세금을 기록해 투자 패턴을 객관적으로 돌아볼 수 있게 합니다.
 
 두 서비스는 완전히 독립적으로 동작하며 각각 별도로 활용할 수 있습니다. 자세한 기획 배경과 기능 명세는 [`docs/PRD.md`](docs/PRD.md)를 참고하세요.
@@ -17,6 +17,7 @@ Portraq는 두 가지 서비스를 제공합니다.
 | 데이터 | Supabase (Auth, Postgres, RLS), TanStack Query v5 |
 | 상태 관리 | Zustand |
 | 폼·검증 | React Hook Form, Zod |
+| UI 인터랙션 | Radix UI, dnd-kit (드래그앤드롭), sonner (토스트) |
 | 스타일 | Tailwind CSS v4, shadcn/ui 기반 디자인 시스템 |
 | 모노레포 | pnpm workspaces + Turborepo |
 | 테스트 | Vitest, @testing-library/react |
@@ -111,7 +112,7 @@ pnpm storybook            # packages/ui 컴포넌트 문서 (Storybook)
 | `architecture-reviewer` | 파일 배치 규칙, 패키지 경계, 데이터 레이어 패턴, 의존성 방향 검증 |
 | `review-synthesizer` | 4개 리뷰 결과 종합, 최종 머지 가능 여부 판정 |
 
-이 외에도 기능 구현을 맡는 `frontend-dev`, 테스트 작성을 맡는 `unit-tester` 에이전트를 필요에 따라 호출해 작업을 위임했습니다.
+이 외에도 UI 구현을 맡는 `frontend-dev`, Supabase 데이터 레이어·RLS를 맡는 `backend-dev`, 와이어프레임 설계를 맡는 `ux-designer`, 테스트 작성을 맡는 `unit-tester`, 브라우저 기반 검증을 맡는 `qa-tester` 에이전트를 필요에 따라 호출해 작업을 위임했습니다.
 
 ## 주식 데이터 현황
 

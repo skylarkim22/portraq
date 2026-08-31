@@ -54,7 +54,7 @@ export const HeroSection = () => {
                 margin: 0,
               }}
             >
-              대가의 전략으로
+              내가 설계한 포트폴리오로
               <br />
               <span style={{ color: "var(--portraq-primary)" }}>매달 적립</span>하세요
             </h1>
@@ -67,8 +67,9 @@ export const HeroSection = () => {
                 margin: 0,
               }}
             >
-              워런 버핏, 레이 달리오의 검증된 포트폴리오를 그대로 따라하세요.
-              종목 배분부터 매달 매수 수량까지 자동으로 계산해드립니다.
+              종목을 직접 골라 비중을 정하거나, 워런 버핏·레이 달리오 같은
+              대가의 전략을 템플릿으로 불러오세요. 매달 매수 수량까지
+              자동으로 계산해드립니다.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
               <a
@@ -80,7 +81,7 @@ export const HeroSection = () => {
               </a>
             </div>
             <div className="flex items-center gap-5 flex-wrap">
-              {["완전 무료", "대가 포트폴리오 5종"].map((t) => (
+              {["완전 무료", "종목 자유 구성", "대가 템플릿 5종"].map((t) => (
                 <div
                   key={t}
                   className="flex items-center gap-2"
@@ -184,12 +185,12 @@ export const HeroSection = () => {
                       marginBottom: 3,
                     }}
                   >
-                    대가 포트폴리오
+                    포트폴리오 예시
                   </div>
                   <div
                     style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)" }}
                   >
-                    워런 버핏 전략
+                    워런 버핏 전략 템플릿
                   </div>
                 </div>
                 <div className="flex gap-1">
