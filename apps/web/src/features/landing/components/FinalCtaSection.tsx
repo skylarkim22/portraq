@@ -31,8 +31,8 @@ export const FinalCtaSection = () => (
             margin: "0 auto 32px",
           }}
         >
-          워런 버핏, 레이 달리오의 검증된 포트폴리오를 그대로 따라 매달
-          적립하세요.
+          직접 구성한 포트폴리오든, 워런 버핏·레이 달리오의 검증된 전략이든
+          매달 자동으로 적립하세요.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <a
@@ -47,7 +47,7 @@ export const FinalCtaSection = () => (
           className="flex items-center justify-center gap-6 flex-wrap"
           style={{ marginTop: 32 }}
         >
-          {["완전 무료", "대가 포트폴리오 5종 무료"].map((text) => (
+          {["완전 무료", "종목 자유 구성", "대가 템플릿 5종 무료"].map((text) => (
             <div
               key={text}
               className="flex items-center gap-2"

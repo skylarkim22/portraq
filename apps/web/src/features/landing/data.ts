@@ -1,15 +1,10 @@
-export type JournalEntry = {
-  type: "buy" | "sell";
+export type DividendEntry = {
   ticker: string;
   name: string;
-  quantity: number;
-  price: string;
-  total: string;
-  pnl?: string;
-  pnlPct?: string;
-  tax?: string;
-  netPnl?: string;
-  memo: string;
+  market: "KR" | "US";
+  cycle: "월배당" | "분기배당" | "반기배당" | "연배당";
+  dividendSum: string;
+  yield: string;
 };
 
 export type Portfolio = {
@@ -124,98 +119,43 @@ export const portfolios: Portfolio[] = [
   },
 ];
 
-export const calDays: (number | null)[] = [
-  null,
-  ...Array.from({ length: 30 }, (_, i) => i + 1),
-  null,
-  null,
-  null,
-  null,
+export const dividendEntries: DividendEntry[] = [
+  {
+    ticker: "SCHD",
+    name: "Schwab US Dividend Equity ETF",
+    market: "US",
+    cycle: "분기배당",
+    dividendSum: "312,400원",
+    yield: "4.1%",
+  },
+  {
+    ticker: "O",
+    name: "Realty Income",
+    market: "US",
+    cycle: "월배당",
+    dividendSum: "96,800원",
+    yield: "5.2%",
+  },
+  {
+    ticker: "005930",
+    name: "삼성전자",
+    market: "KR",
+    cycle: "분기배당",
+    dividendSum: "148,200원",
+    yield: "2.3%",
+  },
+  {
+    ticker: "105560",
+    name: "KB금융",
+    market: "KR",
+    cycle: "반기배당",
+    dividendSum: "84,500원",
+    yield: "4.8%",
+  },
 ];
 
-export const journalDots: Record<number, "buy" | "sell" | "both"> = {
-  5: "buy",
-  10: "sell",
-  15: "buy",
-  22: "sell",
-  25: "both",
-};
-
-export const journalEntries: Record<number, JournalEntry[]> = {
-  5: [
-    {
-      type: "buy",
-      ticker: "AAPL",
-      name: "Apple Inc.",
-      quantity: 5,
-      price: "$213.40",
-      total: "$1,067.00",
-      memo: "2분기 실적 발표 전 저가 매수 기회. PER 기준 역사적 하단에 위치함.",
-    },
-  ],
-  10: [
-    {
-      type: "sell",
-      ticker: "TSLA",
-      name: "Tesla Inc.",
-      quantity: 3,
-      price: "$221.30",
-      total: "$663.90",
-      pnl: "+$122.40",
-      pnlPct: "+22.8%",
-      tax: "15,000원",
-      netPnl: "+149,052원",
-      memo: "목표가 도달, 일부 익절.",
-    },
-  ],
-  15: [
-    {
-      type: "buy",
-      ticker: "005930",
-      name: "삼성전자",
-      quantity: 10,
-      price: "62,400원",
-      total: "624,000원",
-      memo: "배당 시즌 앞두고 저가 분할 매수 2차.",
-    },
-  ],
-  22: [
-    {
-      type: "sell",
-      ticker: "BRK.B",
-      name: "Berkshire Hathaway",
-      quantity: 2,
-      price: "$183.20",
-      total: "$366.40",
-      pnl: "+$48.60",
-      pnlPct: "+15.3%",
-      tax: "8,200원",
-      netPnl: "+55,118원",
-      memo: "리밸런싱, 목표 비중 초과분 정리.",
-    },
-  ],
-  25: [
-    {
-      type: "buy",
-      ticker: "AAPL",
-      name: "Apple Inc.",
-      quantity: 3,
-      price: "$213.40",
-      total: "$640.20",
-      memo: "분할 매수 3차. 물타기 아닌 목표 비중 채우기.",
-    },
-    {
-      type: "sell",
-      ticker: "005930",
-      name: "삼성전자",
-      quantity: 5,
-      price: "64,000원",
-      total: "320,000원",
-      pnl: "+16,000원",
-      pnlPct: "+5.3%",
-      tax: "3,456원",
-      netPnl: "+12,544원",
-      memo: "목표 비율 초과, 일부 매도.",
-    },
-  ],
+export const dividendSummary = {
+  totalDividend: "641,900원",
+  avgYield: "3.9%",
+  totalCount: dividendEntries.length,
 };

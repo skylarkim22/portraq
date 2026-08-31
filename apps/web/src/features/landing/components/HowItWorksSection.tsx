@@ -6,8 +6,8 @@ import { SectionLabel } from "@/features/landing/components/SectionLabel";
 const steps = [
   {
     n: 1,
-    title: "대가 포트폴리오 선택",
-    desc: "5명의 투자 대가 중 마음에 드는 전략을 고르세요. CAGR과 MDD로 수익과 리스크를 직접 비교할 수 있습니다.",
+    title: "포트폴리오 만들기",
+    desc: "종목을 직접 검색해 담거나, 5명의 투자 대가 포트폴리오를 템플릿으로 불러오세요. CAGR과 MDD로 수익과 리스크도 바로 비교할 수 있습니다.",
     extra: (
       <div className="flex gap-2 flex-wrap" style={{ marginTop: 16 }}>
         <span className="badge badge-value">가치투자</span>
